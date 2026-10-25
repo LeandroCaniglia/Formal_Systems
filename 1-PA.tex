@@ -1,0 +1,854 @@
+\chapter{Formal Systems}
+
+\section{Introduction}
+
+A formal system is a deductive environment where mathematical truth is limited to strict syntactic derivation. It provides a finite alphabet, a grammar for well-formed sentences, a set of axioms, and inference rules that generate new sentences from existing ones. 
+
+In Homotopy Type Theory, the most general framework for a deductive environment is a type of statements paired with a dependent family of types representing their provability.
+
+\begin{defn}
+    A \textsl{formal system} consists of a type of well-formed \textsl{sentences} and a type family of valid \textsl{derivations} for those sentences. More precisely:
+    \[
+        \fun{System}\defeq\sum_{S\colon\univ}S\to\univ.
+    \]
+    Given a formal system\/ $\mathcal{F}\colon\fun{System}$, the type of valid \textsl{statements} is given by the first projection\/ $\pi_1(\mathcal{F})\colon\univ$. The \textsl{derivation family} is given by the second projection\/ $\pi_2(\mathcal{F})\colon\pi_1(\mathcal F)\to\univ$. 
+\end{defn}
+
+This generic type-theoretic definition does not inherently enforce any algorithmic structure. To model the strictly mechanical systems used in logic (such as Peano Arithmetic), we must instantiate this general architecture with purely syntactic inductive types. 
+
+By doing so, the statement type $S$ becomes a discrete collection of strings in a given alphabet, and the derivation family $\pi_2(\mathcal{F})$ is built from constructors that represent a finite number of deterministic applications of inference rules. This restriction disregards semantic intuition and guarantees the decidability of proof verification.
+
+\section{Peano Arithmetic}
+\begin{defn}[Syntax]
+    We will fix the countably infinite type of variables $\fun{Var}\defeq\N$ with canonical elements $x,y,z,\dots\colon\fun{Var}$.
+    \begin{enumerate}[a),font=\upshape]
+        \item The type of arithmetic \textsl{terms}, denoted $\fun{Term}\colon\univ$, is defined inductively by the following constructors:
+        \begin{itemize}
+            \item If $x\colon\fun{Var}$, then $\fun{var}(x)\colon\fun{Term}$ (written simply as $x$).
+            
+            \item The constant $0\colon\fun{Term}$.
+            
+            \item If $t\colon\fun{Term}$, then $s(t)\colon\fun{Term}$.
+            
+            \item If $t_1,t_2\colon\fun{Term}$, then $t_1+t_2\colon\fun{Term}$ and $t_1\cdot t_2\colon\fun{Term}$.
+        \end{itemize}
+        
+        \item The type of \textsl{well-formed formulas}, denoted $\fun{Form}\colon\univ$, is defined inductively by the following constructors:
+        \begin{itemize}
+            \item If $t_1,t_2\colon\fun{Term}$, then $t_1\doteq t_2\colon\fun{Form}$.
+            
+            \item If $\varphi\colon\fun{Form}$, then $\neg\varphi\colon\fun{Form}$.
+            
+            \item If $\varphi,\psi\colon\fun{Form}$, then $\varphi\imp\psi\colon\fun{Form}$.
+            
+            \item If $x\colon\fun{Var}$ and $\varphi\colon\fun{Form}$, then $\forall x\,\varphi\colon\fun{Form}$.
+        \end{itemize}
+        
+        Standard abbreviations are defined as follows:
+        \[
+            \begin{aligned}
+                \varphi\land\psi 
+                    &\defeq 
+                        \neg(\varphi\imp\neg\psi) \\
+                \varphi\lor\psi 
+                    &\defeq 
+                        \neg\varphi\imp\psi \\
+                \varphi\Leftrightarrow\psi 
+                    &\defeq 
+                        (\varphi\imp\psi) \land (\psi \imp \varphi) \\
+                \exists x\,\varphi 
+                    &\defeq 
+                        \neg\forall x\,\neg\varphi
+            \end{aligned}
+        \]
+    \end{enumerate}
+\end{defn}
+
+\begin{rem}
+    The semantic distinction between terms and formulas is that the latter evaluate to truth values. They act as logical propositions.
+\end{rem}
+
+\begin{rem}\label{rem:Var-equality-facts}
+    As proven in \citep{caniglia2025hott} for the type $\N$, given any two variables $x,y\colon\fun{Var}$, the identity type $x\eq{\fun{Var}}y$ is both a mere proposition and decidable. Hereafter, we will use these properties implicitly.
+\end{rem}
+
+\subsection{Structural Induction as Dependent Elimination}
+
+By defining the syntax of Peano Arithmetic via the inductive types $\fun{Term}$ and $\fun{Form}$, the type theory automatically equips them with their respective dependent eliminators (or induction principles).
+
+When we define a function or prove a property ``by structural induction,'' we are formally invoking these eliminators. 
+
+For terms, let $P\colon\fun{Term}\to\univ$ be a type family. The dependent eliminator for $\fun{Term}$ states that to construct an inhabitant of $\prod_{t\colon\fun{Term}}P(t)$, it is necessary and sufficient to provide a proof for each constructor, assuming the property holds for its sub-components. Formally, we must supply the following dependent functions:
+\begin{itemize}
+    \item $p_{\fun{var}}\colon\prod_{y\colon\fun{Var}}P(\fun{var}(y))$
+    \item $p_0\colon P(0)$
+    \item $p_s\colon\prod_{t\colon\fun{Term}}P(t)\to P(s(t))$
+    \item $p_+\colon\prod_{t_1,t_2\colon\fun{Term}}P(t_1)\times P(t_2)\to P(t_1+t_2)$
+    \item $p_\cdot\colon\prod_{t_1,t_2\colon\fun{Term}}P(t_1)\times P(t_2)\to P(t_1\cdot t_2)$
+\end{itemize}
+
+Similarly, for formulas, given a type family $Q\colon\fun{Form}\to\univ$, the dependent eliminator for $\fun{Form}$ requires us to supply:
+\begin{itemize}
+    \item $q_{\doteq}\colon\prod_{t_1,t_2\colon\fun{Term}}Q(t_1\doteq t_2)$
+    \item $q_{\neg}\colon\prod_{\varphi\colon\fun{Form}}Q(\varphi)\to Q(\neg\varphi)$
+    \item $q_{\imp}\colon\prod_{\varphi_1,\varphi_2\colon\fun{Form}}Q(\varphi_1)\times Q(\varphi_2)\to Q(\varphi_1\imp\varphi_2)$
+    \item $q_{\forall}\colon\prod_{y\colon\fun{Var}}\prod_{\varphi\colon\fun{Form}}Q(\varphi)\to Q(\forall y\,\varphi)$
+\end{itemize}
+Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colon\fun{Term}}P(t)$ and $f_Q\colon\prod_{\varphi\colon\fun{Form}}Q(\varphi)$.
+
+\begin{thm}[Injectivity of Constructors]\label{thm:constructor-injectivity}
+    The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are injective. For instance, for any terms\/ $t,u,t_1,t_2,u_1,u_2\colon\fun{Term}$ and formulas\/ $\varphi_1,\varphi_2,\psi_1,\psi_2\colon\fun{Form}$, the following implications hold:
+    \begin{enumerate}[a),font=\upshape]
+        \item If\/ $s(t)\eq{\fun{Term}}s(u)$, then\/ $t\eq{\fun{Term}}u$.
+        
+        \item If\/ $t_1+t_2\eq{\fun{Term}}u_1+u_2$, then\/ $(t_1\eq{\fun{Term}}u_1)\times(t_2\eq{\fun{Term}}u_2)$.
+        
+        \item Analogous implications hold for all other constructors of arity greater than zero. For instance, if\/ $(\varphi_1\imp\varphi_2)\eq{\fun{Form}}(\psi_1\imp\psi_2)$, then
+        \[
+            (\varphi_1\eq{\fun{Form}}\psi_1)
+            \times
+            (\varphi_2\eq{\fun{Form}}\psi_2).
+        \]
+    \end{enumerate}
+\end{thm}
+
+\begin{proof}\ 
+    \begin{enumerate}[a)]
+        \item Define a predecessor function $\fun{pred}\colon\fun{Term}\to\fun{Term}$ by structural recursion:
+        \begin{align*}
+            \fun{pred}(s(t)) &\defeq t \\
+            \fun{pred}(\tau) &\defeq 0 \quad \text{for all other constructors.}
+        \end{align*}
+        Given $p\colon s(t)\eq{\fun{Term}}s(u)$, applying the functorial action $\fun{ap}_{\fun{pred}}(p)$ yields a path $\fun{pred}(s(t))\eq{\fun{Term}}\fun{pred}(s(u))$, which definitionally reduces to $t\eq{\fun{Term}}u$.
+        
+        \item Define two projection functions, $\fun{left\_add}$ and $\fun{right\_add}$, from $\fun{Term}$ to $\fun{Term}$:
+        \begin{align*}
+            \fun{left\_add}(t_1 + t_2) &\defeq t_1 \\
+            \fun{left\_add}(\tau) &\defeq 0 \quad \text{for all other constructors,} \\[2mm]
+            \fun{right\_add}(t_1 + t_2) &\defeq t_2 \\
+            \fun{right\_add}(\tau) &\defeq 0 \quad \text{for all other constructors.}
+        \end{align*}
+        Given a path $q\colon t_1+t_2\eq{\fun{Term}}u_1+u_2$, $\fun{ap}_{\fun{left\_add}}(q)$ evaluates to $t_1\eq{\fun{Term}}u_1$, and $\fun{ap}_{\fun{right\_add}}(q)$ evaluates to $t_2\eq{\fun{Term}}u_2$. Pairing these paths constructs an inhabitant of the cartesian product $(t_1\eq{\fun{Term}}u_1)\times(t_2\eq{\fun{Term}}u_2)$.
+        
+        \item As in the previous two cases, we can define a projection function that returns the desired sub-component for the specific constructor and the default value~$0$ for terms or $\fun{var}(0)\doteq\fun{var}(0)$ for formulas, for all others. Applying $\fun{ap}$ along the assumed path then extracts the propositional equality of the sub-components.
+    \end{enumerate}
+\end{proof}
+
+\begin{thm}[Disjointness of Constructors]\label{thm:constructor-disjointness}
+    The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are pairwise disjoint. Consequently, paths between terms or formulas built from different constructors cannot exist. For instance, for any variable\/ $x\colon\fun{Var}$ and term\/ $t\colon\fun{Term}$:
+    \begin{enumerate}[a),font=\upshape]
+        \item $\neg(0\eq{\fun{Term}}s(t))$
+        \item $\neg(\fun{var}(x)\eq{\fun{Term}}0)$
+    \end{enumerate}
+    Analogous inequalities hold for all pairs of distinct constructors in\/ $\fun{Term}$ and\/ $\fun{Form}$.
+\end{thm}
+
+\begin{proof}\ 
+    \begin{enumerate}[a)]
+        \item Define the type family $D\colon\fun{Term}\to\univ$ by structural recursion:
+        \begin{align*}
+            D(0) &\defeq \fun{1} \\
+            D(\tau) &\defeq \fun{0} \quad \text{for all other constructors.}
+        \end{align*}
+        Suppose we have a proof path $p\colon 0\eq{\fun{Term}}s(t)$. This induces a function $\fun{transport}^D(p)\colon\fun{1}\to\fun{0}$. Thus, we can define the constant map
+        \begin{align*}
+            \zeta\colon(0\eq{\fun{Term}}s(t))\to\fun0\\
+            \lambda q.\,\fun{transport}^D(p,\fstar).
+        \end{align*}
+        
+        \item Define a similar family $D\colon\fun{Term}\to\univ$:
+        \begin{align*}
+            D(\fun{var}(y))&\defeq\fun{1}
+                \quad\text{for all }y\colon\fun{Var}\\
+            D(\tau)&\defeq\fun{0}
+                \quad\text{for all other constructors.}
+        \end{align*}
+        Assuming a path $p\colon\fun{var}(x)\eq{\fun{Term}}0$, proceed as before using $\fun{transport}^D(p)$ to construct a constant inhabitant of $\neg(\fun{var}(x)\eq{\fun{Term}}0)$. 
+    \end{enumerate}
+\end{proof}
+
+\begin{lem}[Action on Paths for Binary Functions]\label{lem:binap}
+    Let\/ $f\colon A\times B\to C$ be a binary function. If\/ $x_1,x_2\colon A$ and\/ $y_1,y_2\colon B$, given\/ $p\colon x_1\eq{A}x_2$ and\/ $q\colon y_1\eq{B}y_2$, there is an induced path
+    \[
+        \fun{binap}_f(p,q)\colon f(x_1,y_1)\eq{C}f(x_2,y_2).
+    \]
+\end{lem}
+
+\begin{proof}
+    Since
+    \begin{align*}
+        \fun{ap}_{f(\dummy,y_1)}(p)
+            &\colon f(x_1,y_1)\eq Cf(x_2,y_1)
+        \quad\text{and}\\
+        \fun{ap}_{f(x_2,\dummy)}(q)
+            &\colon f(x_2,y_1)\eq Cf(x_2,y_2),
+    \end{align*}
+    we can define
+    \[
+        \fun{binap}_f(p,q)\defeq
+            \fun{ap}_{f(\dummy,y_1)}(p)
+            \ct
+            \fun{ap}_{f(x_2,\dummy)}(q).
+    \]
+\end{proof}
+
+\begin{lem}[Congruence of Constructors]\label{lem:constructor-congruence}
+    The constructors for terms and formulas respect propositional equality. For instance, given terms\/ $t_1,t_2,u\colon\fun{Term}$, if\/ $t_1\eq{\fun{Term}}t_2$, then the following identities hold:
+    \begin{enumerate}[a),font=\upshape]
+        \item $s(t_1)\eq{\fun{Term}}s(t_2)$
+        
+        \item $(t_1+u)\eq{\fun{Term}}(t_2+u)$ and\/ $(u+t_1)\eq{\fun{Term}}(u+t_2)$
+        
+        \item $(t_1\doteq u)\eq{\fun{Form}}(t_2\doteq u)$ and\/ $(u\doteq t_1)\eq{\fun{Form}}(u\doteq t_2)$
+    \end{enumerate}
+    Analogous congruence properties hold for all other constructors in\/ $\fun{Term}$ and\/ $\fun{Form}$.
+\end{lem}
+
+\begin{proof}
+    We can simply apply the action on paths to construct the required identities.
+    
+    For example, fixing the right operand $u$, the application of the equality constructor defines a function
+    \begin{align*}
+        f_u\colon\fun{Term}&\to\fun{Form}\\
+        \tau&\mapsto\tau\doteq u.
+    \end{align*}
+    Given $p\colon t_1\eq{\fun{Term}}t_2$, we obtain $\fun{ap}_{f_u}(p)\colon(t_1\doteq u)\eq{\fun{Form}}(t_2\doteq u)$.
+    
+    The proofs for all other cases proceed similarly. For binary constructors like sum or multiplication, apply $\fun{binap}$ to the binary constructor function.
+\end{proof}
+
+\begin{thm}\label{thm:syntax-are-sets}
+    The inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are sets.
+\end{thm}
+
+\begin{proof}
+    By Hedberg's Theorem \citep{caniglia2025hott}, it suffices to show that identity types in $\fun{Term}$ and $\fun{Form}$ are decidable.
+
+    To show that the identity of terms $t\eq{\fun{Term}}u$ is decidable, we proceed by double structural induction.
+    \begin{itemize}
+        \item When $t\equiv\fun{var}(x)$ and $u\equiv\fun{var}(y)$, the decidability of $x\eq{\fun{Var}}y$ is a direct consequence of the decidability of $\N$. Indeed, if $x\eq{\fun{Var}}y$, the map $\fun{ap}_{\fun{var}}$ yields $t\eq{\fun{Term}}u$. If $\neg(x\eq{\fun{Var}}y)$, Theorem~\ref{thm:constructor-injectivity} gives
+        \[
+            (\fun{var}(x)\eq{\fun{Term}}\fun{var}(y))
+            \to
+            (x\eq{\fun{Var}}y),
+        \]
+        which produces a map
+        \[
+            \neg(x\eq{\fun{Var}}y)
+            \to
+            \neg(\fun{var}(x)\eq{\fun{Term}}\fun{var}(y)).
+        \]
+        
+        \item When $t$ and $u$ are built from different constructors, for instance, $t\equiv 0$ and $u\equiv s(u')$, the disjointness of constructors for freely generated inductive types directly provides a proof of $\neg(t\eq{\fun{Term}}u)$.
+        
+        \item When $t$ and $u$ come from the same composite constructor, for instance, $t\equiv t_1+t_2$ and $u\equiv u_1+u_2$, the inductive hypotheses provide decidability for the sub-components $(t_1, u_1)$ and $(t_2, u_2)$. If $t_1\eq{\fun{Term}}u_1$ and $t_2\eq{\fun{Term}}u_2$ both hold, the action on paths constructs $t\eq{\fun{Term}}u$. If either pair is unequal, the injectivity of the addition constructor implies $\neg(t\eq{\fun{Term}}u)$.
+    \end{itemize}
+    Since all combinations of constructors are covered, equality on $\fun{Term}$ is decidable. This proves that for any $t,u\colon\fun{Term}$, the identity type $t\eq{\fun{Term}}u$ is a mere proposition. Thus, $\fun{Term}$ is a set.
+
+    Second, we establish the decidability of equality for formulas by constructing a section for
+    \[
+        \prod_{\varphi,\psi\colon\fun{Form}} (\varphi\eq{\fun{Form}}\psi) + \neg(\varphi\eq{\fun{Form}}\psi).
+    \]
+    We proceed by double structural induction on $\varphi$ and $\psi$.
+    \begin{itemize}
+        \item Suppose that $\varphi\equiv t_1\doteq t_2$ and $\psi\equiv u_1\doteq u_2$. Relying on the decidability of equality for terms, we have to analyize two cases. If both equalities hold, the congruence of constructors yields $\varphi\eq{\fun{Form}}\psi$. Otherwise, we may suppose that $\neg(t_1\eq{\fun{Term}}u_1)$. By the injectivity of the $\doteq$ constructor, there is a projection $(\varphi\eq{\fun{Form}}\psi)\to(t_1\eq{\fun{Term}}u_1)$. Thus, $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from $\neg(t_1\eq{\fun{Term}}u_1)$.
+        
+        \item Mismatched constructors (e.g., $\neg\varphi'$ vs $\psi_1\to\psi_2$) are trivially distinct by the disjointness of constructors.
+        
+        \item For matching propositional connectives ($\neg$ and $\to$), as with composite terms, decidability follows from the inductive hypotheses.
+        
+        \item For universal quantifiers $\varphi\equiv\forall x\,\varphi'$ and $\psi\equiv\forall y\,\psi'$, we first branch on the decidability of $x\eq{\fun{Var}}y$. If the variables are equal, we evaluate the inductive hypothesis for $\varphi'$ and $\psi'$. If the variables are unequal, or if the subformulas are unequal, then $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from the injectivity of the $\forall$ constructor.
+    \end{itemize}
+    In conclusion, identities in $\fun{Form}$ are also decidable.
+\end{proof}
+
+\section{Free Variables}
+
+We begin with a set-theoretic approach to build intuition.
+
+\begin{defn}[Free variables]\label{defn:fv}
+    The \textsl{set of free variables of a term}, denoted\/ $\FV(t)$, is defined by induction on the structure of\/ $t\colon\fun{Term}$:
+    \begin{itemize}
+        \item If $x\colon\fun{Var}$, then $\FV(x)=\set x$.
+        \item $\FV(0)=\emptyset$.
+        \item $\FV(s(t))=\FV(t)$.
+        \item $\FV(t_1+t_2)=\FV(t_1)\cup\FV(t_2)$.
+        \item $\FV(t_1\cdot t_2)=\FV(t_1)\cup\FV(t_2)$.
+    \end{itemize}
+    
+    The \textsl{set of free variables of a formula}, denoted\/ $\FV(\varphi)$, is defined by induction on the structure of\/ $\varphi\colon\fun{Form}$:
+    \begin{itemize}
+        \item $\FV(t_1\doteq t_2)=\FV(t_1)\cup\FV(t_2)$.
+        \item $\FV(\neg\varphi)=\FV(\varphi)$.
+        \item $\FV(\varphi\imp\psi)=\FV(\varphi)\cup\FV(\psi)$.
+        \item $\FV(\forall x\,\varphi)=\FV(\varphi)\setminus\set x$.
+    \end{itemize}
+\end{defn}
+
+\begin{xmpl}
+    Here are some examples illustrating how the\/ $\FV$ operation computes the set of free variables for various terms and formulas.
+    \begin{align*}
+    \intertext{Terms:}
+        \FV(s(x)+(y\cdot0)) 
+            &=\FV(s(x))\cup\FV(y\cdot0)\\
+            &=\FV(x)\cup
+                \bigl(
+                    \FV(y)\cup\FV(0)
+                \bigr)\\
+            &=\set x\cup(\set y\cup\emptyset)\\
+            &=\set{x,y}.
+    \intertext{Formulas:}
+        \FV(x\doteq s(y)) 
+            &=\FV(x)\cup\FV(s(y))\\
+            &=\set x\cup\set y\\
+            &=\set{x,y}.\\[2mm]
+        \FV(\forall y\,(x\doteq y)) 
+            &=\FV(x\doteq y)\setminus\set y\\
+            &=(\set x\cup\set y)\setminus\set y\\
+            &=\set x.\\[2mm]
+        \FV\bigl(
+            (\forall x\,(x\doteq y))\imp(x\doteq0)
+        \bigr)
+            &=\FV(\forall x\,(x\doteq y))
+                \cup\FV(x\doteq0)\\
+            &=\bigl(
+                \FV(x\doteq y)\setminus\set x
+            \bigr)
+                \cup\FV(x\doteq0)\\
+            &=\bigl(
+                \set{x,y} \setminus\set x
+            \bigr)
+                \cup\set x\\
+            &=\set y\cup\set x\\
+            &=\set{x,y}.
+    \end{align*}
+    In the last formula, the variable $x$ is bound in the antecedent and free in the consequent. The entire formula therefore has $x$ as a free variable because there is at least one unbound occurrence.
+\end{xmpl}
+
+\begin{rem}
+    Now that we have established the semantics and intuition of free variables, we proceed to formally define the same concept under the requirements of homotopy type theory.
+\end{rem}
+
+\begin{defn}[Free Variables as Predicates]\label{defn:FV}
+    Using the notation of \citep{caniglia2025hott}, the \textsl{free variable maps} $\fun{Term}\to\fun{Pred}(\fun{Var})$ and $\fun{Form}\to\fun{Pred}(\fun{Var})$ assign to each term and formula a predicate indicating whether a given variable has any free occurrence in it. 
+
+    Both maps are denoted by $\fun{FV}$ and defined by structural induction. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
+    \begin{itemize}
+        \item $\fun{FV}(x)(y) \defeq y\eq{\fun{Var}}x$ for any $x\colon\fun{Var}$.
+        \item $\fun{FV}(0)(y)\defeq\fun0$.
+        \item $\fun{FV}(s(t))(y)\defeq\fun{FV}(t)(y)$.
+        \item $\fun{FV}(t_1+t_2)(y)\defeq\lVert\fun{FV}(t_1)(y)+\fun{FV}(t_2)(y)\rVert$.
+        \item $\fun{FV}(t_1\cdot t_2)(y)\defeq\lVert\fun{FV}(t_1)(y)+\fun{FV}(t_2)(y)\rVert$.
+    \end{itemize}
+    Similarly, for any $y\colon\fun{Var}$, the proposition $\fun{FV}(\varphi)(y)$ is given by:
+    \begin{itemize}
+        \item $\fun{FV}(t_1\doteq t_2)(y)\defeq\lVert\fun{FV}(t_1)(y)+\fun{FV}(t_2)(y)\rVert$.
+        \item $\fun{FV}(\neg\varphi)(y)\defeq\fun{FV}(\varphi)(y)$.
+        \item $\fun{FV}(\varphi\imp\psi)(y)\defeq\lVert\fun{FV}(\varphi)(y)+\fun{FV}(\psi)(y)\rVert$.
+        \item $\fun{FV}(\forall x\,\varphi)(y)\defeq\fun{FV}(\varphi)(y)\times\neg(y\eq{\fun{Var}}x)$.
+    \end{itemize}
+    Using this formalization, a formula $\varphi\colon\fun{Form}$ is \textsl{closed} if its free-variable predicate is uniformly false. Thus, the condition $\fun{isClosed}\colon\fun{Form}\to\fun{Prop}_\univ$ is defined as the dependent product:
+    \[
+        \fun{isClosed}(\varphi)\defeq
+            \prod_{y\colon\fun{Var}}
+                \neg\fun{FV}(\varphi)(y).
+    \]
+\end{defn}
+
+\begin{prop}\label{prop:FV-is-mere-prop}
+    For every term\/ $t\colon\fun{Term}$, every formula\/ $\varphi\colon\fun{Form}$, and every variable\/ $x\colon\fun{Var}$, the evaluations\/ $\fun{FV}(t)(x)$ and\/ $\fun{FV}(\varphi)(x)$ are mere propositions. Formally, the following types are inhabited:
+    \begin{align*}
+        &\prod_{t\colon\fun{Term}}\;
+        \prod_{x\colon\fun{Var}}
+            \fun{isProp}\bigl(\fun{FV}(t)(x)\bigr),\\[2mm]
+        &\prod_{\varphi\colon\fun{Form}}\;
+        \prod_{x\colon\fun{Var}}
+            \fun{isProp}\bigl(\fun{FV}(\varphi)(x)\bigr).
+    \end{align*}
+\end{prop}
+
+\begin{proof}
+    We proceed by structural induction on terms and formulas. Since $\fun{Var}$ is a set, the identity type $x\eq{\fun{Var}}y$ is a mere proposition. Thus, the conclusion holds for the base term $\fun{var}(y)$. It trivially holds for the term $0$, and the inductive hypothesis shows that it holds for $s(t)$ as well. The cases of term addition and multiplication are trivial because they evaluate to propositionally truncated types.
+
+    For formulas, the conclusion is a direct consequence of the inductive hypotheses and the fact that mere propositions are closed under cartesian products.
+    
+\end{proof}
+
+\begin{defn}[Substitution]\label{defn:substitution}
+    Let\/ $x\colon\fun{Var}$ be a variable and\/ $t\colon\fun{Term}$ a term. The \textsl{substitution of\/ $t$ for\/ $x$} in a term\/ $\tau$, denoted\/ $\tau[t/x]$, is defined by induction on the structure of\/ $\tau$:
+    \begin{itemize}
+        \item $\fun{var}(y)[t/x]\defeq\begin{cases}
+            t&\text{if }x\eq{\fun{Var}}y,\\ 
+            \fun{var}(y)&\text{if }\neg(x\eq{\fun{Var}}y). 
+        \end{cases}$
+        
+        \item $0[t/x]\defeq0$.
+        
+        \item $s(\tau)[t/x]\defeq s(\tau[t/x])$.
+        
+        \item $(\tau_1+\tau_2)[t/x]\defeq\tau_1[t/x]+\tau_2[t/x]$.
+        
+        \item $(\tau_1\cdot\tau_2)[t/x]\defeq\tau_1[t/x]\cdot\tau_2[t/x]$.
+    \end{itemize}
+
+    Similarly, the \textsl{capture-avoiding substitution of\/ $t$ for\/ $x$} in a formula\/ $\varphi$, denoted\/ $\varphi[t/x]$, is defined by induction on the structure of\/ $\varphi$:
+    \begin{itemize}
+        \item $(\tau_1\doteq \tau_2)[t/x]\defeq \tau_1[t/x]\doteq \tau_2[t/x]$.
+        
+        \item $(\neg\varphi)[t/x]\defeq\neg(\varphi[t/x])$.
+        
+        \item $(\varphi\imp \psi)[t/x]\defeq\varphi[t/x]\imp \psi[t/x]$.
+        
+        \item $(\forall y\,\varphi)[t/x]\defeq \begin{cases}
+            \forall y\,\varphi
+                &\text{if }x\eq{\fun{Var}}y,\\
+            \forall y\,(\varphi[t/x])
+                &\text{if }\neg(x\eq{\fun{Var}}y)
+                    \text{ and }\neg\fun{FV}(t)(y),\\
+            \forall z\,\varphi[z/y][t/x]
+                &\text{if }\neg(x\eq{\fun{Var}}y)
+                    \text{ and }\fun{FV}(t)(y),
+        \end{cases}$
+    \end{itemize}
+    where\/ $z\colon\fun{Var}$ is a variable such that\/ $\neg(z\eq{\fun{Var}}x)$ and\/ $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
+\end{defn}
+
+\begin{xmpl}
+    Here are three examples illustrating the behavior of capture-avoiding substitution in universally quantified formulas.
+
+    \begin{description}[font=\normalfont\scshape]
+        \item[Case 1: $x\eq{\fun{Var}}y$.]
+        \[
+            (\forall x\,(x\doteq z))[s(0)/x]
+                \equiv\forall x\,(x\doteq z).
+        \]
+        
+        \item[Case 2: $\neg(x\eq{\fun{Var}}y)$ and $\neg\fun{FV}(t)(y)$.]
+        \[
+            (\forall y\,(x\doteq y))[s(z)/x]
+                \equiv\forall y\,(s(z)\doteq y).
+        \]
+        
+        \item[Case 3: $\neg(x\eq{\fun{Var}}y)$ and $\fun{FV}(t)(y)$.] Consider
+        \[
+            (\forall y\,(\explain[\varphi]{x\doteq y}))[\explain[t]{y+s(0)/x}].
+        \]
+        First note that for any variable $v\colon\fun{Var}$, we have the following equalities in $\fun{Prop}_\univ$:
+        \begin{align*}
+            \fun{FV}(y+s(0))(v)
+                &\equiv\lVert\fun{FV}(y)(v)+\fun{FV}(s(0))(v)\rVert\\
+                &\equiv\lVert\fun{FV}(y)(v)+\fun{FV}(0)(v)\rVert\\
+                &\equiv\lVert\fun{FV}(y)(v)+\fun0\rVert\\
+                &\eq{\fun{Prop}_\univ}\fun{FV}(y)(v)\\
+                &\equiv(v\eq{\fun{Var}}y).
+        \end{align*}
+        Consequently, evaluating this at $v\equiv y$ yields
+        \[
+            \fun{FV}(y+s(0))(y)
+                \eq{\fun{Prop}_\univ}
+                (y\eq{\fun{Var}}y),
+        \]
+        which is inhabited by $\fun{refl}_y$. Therefore, if we were to blindly substitute $x$ with $y+s(0)$, the free variable $y$ would be captured, i.e., it would become bound. The definition tells us to proceed as follows:
+        \begin{enumerate}
+            \item Pick a fresh variable $z$ not present in the expressions, i.e., so that $\neg(z\eq{\fun{Var}}x)$ and $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
+            \item Rename the bound variable inside the subformula $\varphi$:
+            \[
+                (x\doteq y)[z/y]\equiv x\doteq z.
+            \]
+            \item Perform the original substitution on the renamed subformula:
+            \[
+                (x\doteq z)[y+s(0)/x]
+                    \equiv(y+s(0)\doteq z).
+            \]
+            \item Bind the fresh variable:
+            \[
+                \forall z\,(y+s(0)\doteq z).
+            \]
+        \end{enumerate}
+        Thus, we obtain:
+        \[
+            (\forall y\,(x\doteq y))[y+s(0)/x]
+                \equiv\forall z\,(y+s(0)\doteq z).
+        \]
+        Note how the free $y$ in the term $y+s(0)$ remains free.
+    \end{description}
+\end{xmpl}
+
+\begin{defn}
+    Let $t\colon\fun{Term}$ be a term, $x\colon\fun{Var}$ a variable, and $\varphi\colon\fun{Form}$ a formula. We say that $t$ is \textsl{free for\/ $x$ in\/ $\varphi$} (or \textsl{substitutable for\/ $x$ in\/ $\varphi$}) if the substitution of $t$ for the free occurrences of $x$ in $\varphi$ does not result in any free variable of $t$ becoming bound. Formally, this establishes a predicate $\fun{isFreeFor}(t,x,\varphi)\colon\fun{Prop}_\univ$ by structural induction on $\varphi$:
+    \begin{align*}
+        &\fun{isFreeFor}(t,x,\tau_1\doteq\tau_2)
+            \defeq\fun1\\
+        &\fun{isFreeFor}(t,x,\neg\psi)
+            \defeq\fun{isFreeFor}(t,x,\psi)\\
+        &\fun{isFreeFor}(t,x,\psi_1\imp\psi_2)
+            \defeq\fun{isFreeFor}(t,x,\psi_1)\times\fun{isFreeFor}(t,x,\psi_2)\\
+        &\fun{isFreeFor}(t,x,\forall y\,\psi)
+            \defeq\lVert(x\eq{}y)+\bigl(\neg(x\eq{}y)\times\neg\fun{FV}(t)(y)\times\fun{isFreeFor}(t,x,\psi)\bigr)\rVert.
+    \end{align*}
+\end{defn}
+
+\begin{lem}[Substitution Preserves Equality]\label{lem:subst-equality}
+    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi,\psi\colon\fun{Form}$. The substitution operation preserves propositional equality across all its arguments. Specifically, we have:
+    \begin{enumerate}[a),font=\upshape]
+        \item If\/ $\varphi\eq{\fun{Form}}\psi$, then\/ $\varphi[t/x]\eq{\fun{Form}}\psi[t/x]$.
+        \item If\/ $t\eq{\fun{Term}}u$, then\/ $\varphi[t/x]\eq{\fun{Form}}\varphi[u/x]$.
+        \item If\/ $x\eq{\fun{Var}}y$, then\/ $\varphi[t/x]\eq{\fun{Form}}\varphi[t/y]$.
+    \end{enumerate}
+    Analogous properties hold for term substitutions\/ $\tau[t/x]$.
+\end{lem}
+
+\begin{proof}
+    Consider the function 
+    \begin{align*}
+        \fun{subst}\colon
+            \fun{Form}\times\fun{Term}\times\fun{Var}
+                &\to\fun{Form}\\
+            (\varphi,t,x)&\mapsto\varphi[t/x].
+    \end{align*}
+    Since every function respects propositional equality via the action on paths, applying path induction to any of the three arguments induces a path in the codomain. For instance, given a proof $p\colon t\eq{\fun{Term}}u$, the functorial action of the substitution function yields the path
+    \[
+        \fun{ap}_{\fun{subst}(\varphi,\dummy,x)}(p)
+            \colon\varphi[t/x]\eq{\fun{Form}}\varphi[u/x].
+    \]
+    The proofs for cases a) and c) follow similarly. 
+\end{proof}
+
+\begin{prop}\label{prop:substitution-properties}
+    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi\colon\fun{Form}$. Substitution satisfies the following fundamental properties:
+    \begin{enumerate}[a),font=\upshape]
+        \item $\varphi[x/x]\eq{\fun{Form}}\varphi$.
+        
+        \item If\/ $\neg\fun{FV}(\varphi)(x)$, then\/ $\varphi[t/x]\eq{\fun{Form}}\varphi$.
+        
+        \item If\/ $\neg(x\eq{\fun{Var}}y)$ and\/ $\neg\fun{FV}(u)(x)$, then\/ $\varphi[t/x][u/y]\eq{\fun{Form}}\varphi[u/y][t[u/y]/x]$.
+    \end{enumerate}
+    Analogous properties hold for term substitutions.
+\end{prop}
+
+\begin{proof} 
+    In all three cases, we proceed by structural induction on $\varphi$. 
+    \begin{enumerate}[a),font=\upshape]
+        \item 
+        \begin{itemize}
+            \item If $\varphi\equiv \tau_1\doteq \tau_2$, then $(\tau_1\doteq \tau_2)[x/x]\equiv \tau_1[x/x]\doteq \tau_2[x/x]$. By Definition~\ref{defn:substitution}, this is $\tau_1\doteq \tau_2$.
+            
+            \item For the propositional connectives, the definition of substitution distributes the operation directly over the subformulas. We illustrate this with the implication $\varphi \equiv\psi_1\imp\psi_2$. By definition
+            \[
+                \neg\fun{FV}(\psi_1\imp\psi_2)(x)
+                \equiv
+                \neg\lVert
+                    \fun{FV}(\psi_1)(x)
+                    +
+                    \fun{FV}(\psi_2)(x)
+                \rVert,
+            \]
+            which logically implies both $\neg\fun{FV}(\psi_1)(x)$ and $\neg\fun{FV}(\psi_2)(x)$. The result follows by distributing the substitution:
+            \begin{align*}
+                (\psi_1\imp \psi_2)[x/x] 
+                    &\equiv \psi_1[x/x]\imp\psi_2[x/x] \\
+                    &\eq{\fun{Form}}\psi_1\imp\psi_2 
+                        &&\text{; IH}
+            \end{align*}
+            The case of negation, $\varphi\equiv\neg\psi$, follows the same logic.
+            
+            \item If $\varphi\equiv\forall y\,\psi$, there are two cases:
+            \begin{enumerate}[i)]
+                \item If $x\eq{\fun{Var}}y$, then by definition $(\forall x\,\psi)[x/x]\equiv\forall x\,\psi$.
+                
+                \item If $\neg(x\eq{\fun{Var}}y)$, then since $\fun{FV}(x)(y)\equiv y\eq{\fun{Var}}x$, which is false, we get $(\forall y\,\psi)[x/x]\equiv\forall y\,(\psi[x/x])$. By the inductive hypothesis, this is propositionally equal to $\forall y\,\psi$.
+            \end{enumerate}
+        \end{itemize}
+        
+        \item 
+        \begin{itemize}
+            \item If $\varphi\equiv \tau_1\doteq \tau_2$, then $\neg\fun{FV}(\tau_1\doteq \tau_2)(x)$ implies both $\neg\fun{FV}(\tau_1)(x)$ and $\neg\fun{FV}(\tau_2)(x)$. The conclusion follows by the induction hypothesis.
+            
+            \item The propositional connective cases follow directly from the induction hypothesis.
+            
+            \item Suppose $\varphi\equiv\forall y\,\psi$. If $x\eq{\fun{Var}}y$, the substitution of $t$ for $x$ returns $\varphi$, as stated. Otherwise, $\neg(x\eq{\fun{Var}}y)$. Without loss of generality, we may assume that the bound variable $y$ satisfies $\neg\fun{FV}(t)(y)$. Then the substitution yields $\forall y\,(\psi[t/x])$. Since Definition~\ref{defn:FV} establishes the identity
+            $
+                \fun{FV}(\forall y\,\psi)(x)
+                \equiv
+                \fun{FV}(\psi)(x)
+                \times
+                \neg(x\eq{\fun{Var}}y),
+            $
+            and we have $\neg\fun{FV}(\forall y\,\psi)(x)$ by hypothesis, we deduce $\neg\fun{FV}(\psi)(x)$. Thus, the inductive hypothesis implies $\psi[t/x]\eq{\fun{Form}}\psi$, and so the substitution in $\varphi$ reduces to $\forall y\,\psi$.
+        \end{itemize}
+        
+        \item
+        \begin{itemize}
+            \item For terms, the base case $\fun{var}(v)$ has three subcases:
+            \begin{enumerate}[i)]
+                \item Case $v\eq{\fun{Var}}x$: Since we have the premise $\neg(x\eq{\fun{Var}}y)$, this case also implies $\neg(v\eq{\fun{Var}}y)$.
+                \begin{align*}
+                    \lhs&\equiv v[t/x][u/y]\\
+                        &\eq{\fun{Term}}x[t/x][u/y]
+                            &&;\ \text{Lem.~\ref{lem:subst-equality}}\\
+                        &\equiv t[u/y].\\[2mm]
+                    \rhs&\equiv v[u/y][t[u/y]/x]\\
+                        &\eq{\fun{Term}} v[t[u/y]/x]
+                            &&;\ \neg(v\eq{\fun{Var}}y)\\
+                        &\eq{\fun{Term}} t[u/y]
+                            &&;\ v\eq{\fun{Var}}x.
+                \end{align*}
+                
+                \item Case $v\eq{\fun{Var}}y$:
+                \begin{align*}
+                    \lhs&\equiv v[t/x][u/y]\\
+                        &\eq{\fun{Term}}y[t/x][u/y]
+                            &&;\ \text{Lem.~\ref{lem:subst-equality}}\\
+                        &\equiv y[u/y]
+                            &&;\ \neg(x\eq{\fun{Var}}y)\\
+                        &\equiv u.\\[2mm]
+                    \rhs&\equiv v[u/y][t[u/y]/x]\\
+                        &\eq{\fun{Term}}y[u/y][t[u/y]/x]
+                            &&;\ \text{Lem.~\ref{lem:subst-equality}}\\
+                        &\equiv u[t[u/y]/x]\\
+                        &\eq{\fun{Term}} u
+                            &&;\ \text{part b), since } \neg\fun{FV}(u)(x).
+                \end{align*}
+                
+                \item Case $\neg(v\eq{\fun{Var}}x)$ and $\neg(v\eq{\fun{Var}}y)$: 
+                \begin{align*}
+                    \lhs&\equiv v[t/x][u/y]\\
+                        &\eq{\fun{Term}} v[u/y]
+                            &&;\ \neg(v\eq{\fun{Var}}x)\\
+                        &\eq{\fun{Term}} v
+                            &&;\ \neg(v\eq{\fun{Var}}y).\\[2mm]
+                    \rhs&\equiv v[u/y][t[u/y]/x]\\
+                        &\eq{\fun{Term}} v[t[u/y]/x]
+                            &&;\ \neg(v\eq{\fun{Var}}y)\\
+                        &\eq{\fun{Term}} v
+                            &&;\ \neg(v\eq{\fun{Var}}x).
+                \end{align*}
+            \end{enumerate}
+            
+            \item For composite terms and propositional connectives, the substitution operations distribute directly over the constructors. In the case of term addition, we have
+            \begin{align*}
+                (\tau_1+\tau_2)[t/x][u/y]
+                    &\equiv
+                        (\tau_1[t/x]+\tau_2[t/x])[u/y]\\
+                    &\equiv
+                        \tau_1[t/x][u/y]+\tau_2[t/x][u/y] \\
+                    &\eq{\fun{Term}}
+                        \tau_1[u/y][t[u/y]/x]
+                        +\tau_2[u/y][t[u/y]/x]
+                        &&\text{; IH}\\
+                    &\equiv
+                        (
+                            \tau_1[u/y]+\tau_2[u/y]
+                        )
+                        [t[u/y]/x] \\
+                    &\equiv
+                        (\tau_1+\tau_2)[u/y][t[u/y]/x].
+            \end{align*}
+            The same argument applies to multiplication, atomic equalities, and the propositional connectives (e.g., $\varphi \equiv \psi_1 \imp \psi_2$).
+            
+            \item If $\varphi\equiv\forall z\,\psi$, we can assume that the bound variable $z$ satisfies $\neg(z\eq{\fun{Var}}x)$ and $\neg(z\eq{\fun{Var}}y)$, as well as $\neg\fun{FV}(t)(z)$ and $\neg\fun{FV}(u)(z)$. Therefore, neither substitution modifies or is captured by $z$. The operations distribute inside the quantifier:
+            \begin{align*}
+                (\forall z\,\psi)[t/x][u/y]
+                    &\equiv\forall z\,(\psi[t/x][u/y])\\
+                    &\eq{\fun{Form}}\forall z\,(\psi[u/y][t[u/y]/x])
+                        &&\text{; IH}\\
+                    &\equiv(\forall z\,\psi)[u/y][t[u/y]/x].
+            \end{align*}\qedhere
+        \end{itemize}
+    \end{enumerate}
+\end{proof}
+
+\begin{defn}[Derivations]
+    The \textsl{derivation family} of Peano Arithmetic is the inductive type family $\fun{Der}\colon\fun{Form}\to\univ$ (unambiguously denoted by $\fun{Der}_{\fun{PA}}$) generated by the following axiom constructors and inference rules, for all formulas $\varphi,\psi,\chi\colon\fun{Form}$, variables $x,y,z\colon\fun{Var}$, and terms $t,t_1,t_2\colon\fun{Term}$:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{Logical Axiom Schemas} (First-Order Logic with Equality):
+        \begin{enumerate}[i),font=\upshape]
+            \item $\fun{ax}_{\fun{L1}}(\varphi,\psi)\colon\fun{Der}\bigl(\varphi\imp(\psi\imp\varphi)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L2}}(\varphi,\psi,\chi)\colon\fun{Der}\bigl((\varphi\imp(\psi\imp\chi))\to((\varphi\imp\psi)\imp(\varphi\imp\chi))\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L3}}(\varphi,\psi)\colon\fun{Der}\bigl((\neg\psi\imp\neg\varphi)\imp(\varphi\imp\psi)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L4}}(\varphi,x,t)\colon\fun{Der}\bigl((\forall x\,\varphi)\imp\varphi[t/x]\bigr)$, where $t$ is free for $x$ in $\varphi$.
+            
+            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, where $x\notin\FV(\varphi)$.
+            
+            \item $\fun{ax}_{\fun{Eq1}}(t)\colon\fun{Der}(t\doteq t)$.
+            
+            \item $\fun{ax}_{\fun{Eq2}}(\varphi,z,t_1,t_2)\colon\fun{Der}\bigl(t_1\doteq t_2\imp(\varphi[t_1/z]\imp\varphi[t_2/z])\bigr)$, where $t_1$ and $t_2$ are free for $z$ in $\varphi$.
+        \end{enumerate}
+        \item \textsl{Non-Logical Axioms:}
+        \begin{enumerate}[i),font=\upshape]
+            \item $\fun{ax}_{\fun{PA1}}\colon\fun{Der}\bigl(\forall x\,\neg(s(x)\doteq0)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{PA2}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\doteq s(y)\imp x\doteq y)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{PA3}}\colon\fun{Der}\bigl(\forall x\,(0+x\doteq x)\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA4}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)+y\doteq s(x+y))\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA5}}\colon\fun{Der}\bigl(\forall x\,(0\cdot x\doteq0)\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA6}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\cdot y\doteq(x\cdot y)+y)\bigr)$.
+
+            \item $\fun{ax}_{\fun{Ind}}(\varphi,x)\colon
+                \fun{Der}\bigl(
+                    (
+                        \varphi[0/x]\land\forall x\,
+                        (\varphi\imp\varphi[s(x)/x])
+                    )
+                    \imp\forall x\,\varphi
+                \bigr)$.
+        \end{enumerate}
+        \item \textsl{Rules of Inference:}
+        \begin{enumerate}[i),font=\upshape]
+            \item Modus Ponens:
+            \[
+                \fun{mp}_{\varphi,\psi}\colon\fun{Der}(\varphi)\to\fun{Der}(\varphi\imp\psi)\to\fun{Der}(\psi).
+            \]
+            \item Universal Generalization:
+            \[
+                \fun{gen}_{\varphi,x}\colon\fun{Der}(\varphi)\to\fun{Der}(\forall x\,\varphi).
+            \]
+        \end{enumerate}
+    \end{enumerate}
+\end{defn}
+
+\begin{defn}[Free Variables \& Closed Formulas]
+    A formula $\varphi\colon\fun{Form}$ is \textsl{closed} (or is a \textsl{sentence}) if it contains no free variables. The predicate $\fun{isClosed}\colon\fun{Form}\to\univ$ is defined by the identity type:
+    \[
+        \fun{isClosed}(\varphi)
+            \defeq
+                \eq{\mathcal P(\fun{Var})}
+                \emptyset.
+    \]
+\end{defn}
+
+\begin{rem}[The Two Levels of a Formal System]
+    The presentation of Peano Arithmetic (and formal systems in general) consists of two levels:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{The Mechanical Level\/} ($\fun{Form}$): Establishes the internal machinery of the derivation family $\fun{Der}$. It requires the broader domain of all well-formed formulas to allow for intermediate proof steps.
+        
+        \item \textsl{The Semantic Level\/} ($\fun{Sent}$): The goal of a formal system is to establish mathematical truths. Since only sentences make self-contained, evaluable claims about the domain, this level restricts the derivation family's output to $\fun{Sent}$, representing the final theorems of the theory.
+    \end{enumerate}
+    \[
+    \begin{tikzpicture}[node distance=2cm, auto, thick, >=stealth]
+        % Nodes
+        \node (Terms) [draw, rectangle, rounded corners, align=center, minimum height=1.2cm] {Terms \\ \small e.g., $x, 0, s(x)$};
+        
+        \node (Open) [draw, rectangle, rounded corners, align=center, right of=Terms, node distance=4.0cm, minimum height=1.2cm] {Open Formulas \\ \small e.g., $x\doteq0$};
+        
+        \node (Sentences) [draw, rectangle, rounded corners, align=center, right of=Open, node distance=4cm, minimum height=1.2cm] {Sentences \\ \small e.g., $\forall x\,(x\doteq0)$};
+        
+        \node (Derivations) [draw, rectangle, rounded corners, align=center, below of=Open, node distance=2.5cm, minimum height=1.2cm] {Derivations \\ \small(Proof Steps)};
+    
+        % Edges
+        \draw[->] (Terms) -- node[above] {$\doteq$} (Open);
+        \draw[->] (Open) edge[loop above, looseness=6, min distance=2mm] node[left] {$\to, \neg\ $} (Open);
+        \draw[->] (Open) -- node[above] {$\forall$} (Sentences);
+        \draw[->, dashed] (Derivations) -- node[left] {\small operate on} (Open);
+        \draw[->, dashed] (Derivations) -- node[below right, align=center] {\small produce \\ \small theorems} (Sentences);
+    \end{tikzpicture}
+    \]
+\end{rem}
+
+\begin{defn}[Peano Arithmetic as a Formal System]
+    Peano Arithmetic complies with the definition of $\fun{System}\defeq\sum_{S\colon\univ}S\to\univ$ at two levels:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{At the level of formulas:} Setting the first projection to be the type of all well-formed formulas, we define
+        \[
+            \fun{PA}_{\fun{Form}}\defeq
+                \dep{
+                    \fun{Form},\fun{Der}
+                }
+                \colon\fun{System},
+        \]
+        where $\pi_1(\fun{PA}_{\fun{Form}})\equiv\fun{Form}\colon\univ$ and $\pi_2(\fun{PA}_{\fun{Form}})\equiv\fun{Der}\colon\fun{Form}\to\univ$.
+        
+        \item \textsl{At the level of sentences:} Restricting the first projection strictly to closed formulas $\fun{Sent}$, we define the restricted derivation family $\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$ by $\fun{Der}_{\fun{Sent}}\bigl((\varphi,p)\bigr)\defeq\fun{Der}(\varphi)$, which yields
+        \[
+            \fun{PA}\defeq
+                \dep{
+                    \fun{Sent},
+                    \fun{Der}_{\fun{Sent}}
+                }
+                \colon\fun{System},
+        \]
+        where $\pi_1(\fun{PA})=\fun{Sent}\colon\univ$ and $\pi_2(\fun{PA})=\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$.
+    \end{enumerate}
+\end{defn}
+
+
+
+\section {G\"odel Numbering}
+
+\begin{defn}
+    The \textsl{syntax} of the formal system (under consideration) is a purely syntactic inductive type\/ $\fun{Syntax}$.
+    \[
+        \fun{Syntax}\colon\univ
+    \]
+     Its \textsl{G\"odel numbering} is a  function assigning a natural number to each object in this type.
+    \begin{align*}
+        \fun{gn}\colon\fun{Syntax}&\to\N\\
+        s&\mapsto\gn{s}.
+    \end{align*}
+\end{defn}
+
+For this coding to be sound, the numbering function must be injective. In Homotopy Type Theory, we express this by inhabiting a type that guarantees identical Gödel numbers imply identical syntactic objects.
+
+\begin{thm}
+    The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:
+    \[
+        \fun{isInj}(\fun{gn})\defeq
+        \prod_{s_1,s_2\colon\fun{Syntax}} 
+            (\gn{s_1}\eq\N\gn{s_2})
+                \to (s_1 \eq{\fun{Syntax}}s_2).
+    \]
+\end{thm}
+
+
+Furthermore, because the syntax is generated inductively and finitely, we can decide whether any given natural number is the Gödel number of a valid syntactic object. We express this by stating that the image of the function/ $\gn\dummy$ is decidable over the natural numbers.
+
+\begin{thm}
+    The image of the function\/ $\fun{gn}$ is decidable over the natural numbers:
+    \[
+        \prod_{n\colon\N}\;
+            \Bigl(
+                \sum_{s\colon\fun{Syntax}}\gn s\eq\N n)
+            \Bigr) 
+            + 
+            \Bigl(
+                \sum_{s\colon\fun{Syntax}}
+                    (\gn s\eq\N n)\to\fun0
+            \Bigr).
+    \]
+\end{thm}
+
+\newpage
+
+
+The type family signature taking a non-dependent pair
+\[
+    \fun{Proof}\colon\N\times\N\to\univ.
+\]
+
+\begin{thm}
+    For every\/ $n,m\colon\N$, the type\/ $\fun{Proof}(n,m)$ is a mere proposition.
+\end{thm}
+
+The provability type for a sentence $m$ (a dependent sum)
+\[
+    \sum_{n\colon\N}\fun{Proof}(n,m)
+\]
+
+A valid proof witness inhabiting the dependent sum type
+\[
+    \dep{n,p}\colon\sum_{n\colon\N}
+        \fun{Proof}(n,m)
+\]
+
+The decidability of the proof relation over all non-dependent pairs
+\[
+    \prod_{n,m\colon\N}
+        \fun{Proof}(n,m)+(\fun{Proof}(n,m)\to\fun0).
+\]

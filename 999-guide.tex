@@ -1,0 +1,28 @@
+\newpage
+
+
+The type family signature taking a non-dependent pair
+\[
+    \fun{Proof}\colon\N\times\N\to\univ.
+\]
+
+\begin{thm}
+    For every\/ $n,m\colon\N$, the type\/ $\fun{Proof}(n,m)$ is a mere proposition.
+\end{thm}
+
+The provability type for a sentence $m$ (a dependent sum)
+\[
+    \sum_{n\colon\N}\fun{Proof}(n,m)
+\]
+
+A valid proof witness inhabiting the dependent sum type
+\[
+    \dep{n,p}\colon\sum_{n\colon\N}
+        \fun{Proof}(n,m)
+\]
+
+The decidability of the proof relation over all non-dependent pairs
+\[
+    \prod_{n,m\colon\N}
+        \fun{Proof}(n,m)+(\fun{Proof}(n,m)\to\fun0).
+\]

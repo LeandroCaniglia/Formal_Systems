@@ -1,0 +1,43 @@
+\documentclass[openany]{book}
+
+% --- Metadata ---
+\author{Leandro Caniglia}
+\date{October 2026}
+
+\input{preamble}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vfill % Dynamically balance vertical space at the top
+    
+    % Main Title
+    {\fontsize{33}{40}\selectfont \bfseries Formal Systems\par}
+    \vspace{0.6cm}
+    
+    % Subtitle
+    {\fontsize{19}{24}\selectfont \slshape A detailed presentation under homotopy type theory\par}
+    \vspace{2.5cm}
+    
+    % Author
+    {\Large Leandro Caniglia\par}
+    \vspace{0.3cm}
+    
+    % Date
+    {\large October 2026\par}
+    
+    \vfill % Pushes the content gracefully into a balanced vertical block
+\end{titlepage}
+\let\cleardoublepage\clearpage
+\frontmatter
+\phantomsection
+\pdfbookmark[0]{\contentsname}{toc}
+\tableofcontents
+\mainmatter
+\setlength{\parindent}{0pt}
+\include{1-PA}
+\backmatter
+\bibliographystyle{natbib/plainnat}
+\bibliography{bibliography}
+\end{document}
