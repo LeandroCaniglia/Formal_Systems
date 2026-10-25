@@ -1,0 +1,154 @@
+\chapter{Arithmetization of Syntax}
+
+\section{G\"odel Numbering}
+
+\begin{defn}
+    For the formal system of Peano Arithmetic, the \textsl{syntax} is the coproduct of the inductive types for terms and formulas:
+    \[
+        \fun{Syntax}\defeq\fun{Term}+\fun{Form}.
+    \]
+    Its \textsl{G\"odel numbering} is a function assigning a unique natural number to each syntactic object:
+    \begin{align*}
+        \fun{gn}\colon\fun{Syntax}&\to\N\\
+        s&\mapsto\gn{s}.
+    \end{align*}
+\end{defn}
+
+For this coding to be sound, the numbering function must be injective.
+
+To construct the G\"odel numbering constructively, we rely on the Fundamental Theorem of Arithmetic. By mapping each syntactic constructor to a unique power of $2$, and encoding its sub-components into subsequent prime factors ($3$ and $5$), we guarantee that every expression maps to a unique natural number.
+
+We construct the mapping in two stages: first by defining structural recursors for terms and formulas, and then by uniting them via the coproduct eliminator for the syntax type.
+
+\begin{defn}
+    We define the functions
+    \[
+        \fun{gn}_{\fun{Term}}\colon\fun{Term}\to\N
+        \quad\text{and}\quad
+        \fun{gn}_{\fun{Form}}\colon\fun{Form}\to\N
+    \]
+    by structural recursion. 
+    
+    For terms,
+    \begin{align*}
+        \fun{gn}_{\fun{Term}}(\fun{var}(x))
+            &\defeq 2^1\cdot3^x\\
+        \fun{gn}_{\fun{Term}}(0)
+            &\defeq 2^2\\
+        \fun{gn}_{\fun{Term}}(s(t))
+            &\defeq 2^3\cdot3^{\fun{gn}_{\fun{Term}}(t)}\\
+        \fun{gn}_{\fun{Term}}(t_1+t_2)
+            &\defeq
+                2^4
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot
+                5^{\fun{gn}_{\fun{Term}}(t_2)}\\
+        \fun{gn}_{\fun{Term}}(t_1\cdot t_2)
+            &\defeq
+                2^5
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot
+                5^{\fun{gn}_{\fun{Term}}(t_2)}
+    \intertext{For formulas,}
+        \fun{gn}_{\fun{Form}}(t_1\doteq t_2)
+            &\defeq
+                2^6
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot 5^{\fun{gn}_{\fun{Term}}(t_2)} \\
+        \fun{gn}_{\fun{Form}}(\neg\varphi)
+            &\defeq
+                2^7
+                \cdot
+                3^{\fun{gn}_{\fun{Form}}(\varphi)}\\
+        \fun{gn}_{\fun{Form}}(\varphi\imp\psi)
+            &\defeq
+                2^8
+                \cdot
+                3^{\fun{gn}_{\fun{Form}}(\varphi)}
+                \cdot
+                5^{\fun{gn}_{\fun{Form}}(\psi)}\\
+        \fun{gn}_{\fun{Form}}(\forall x\,\varphi)
+            &\defeq
+                2^9
+                \cdot
+                3^x
+                \cdot 5^{\fun{gn}_{\fun{Form}}(\varphi)}.
+    \end{align*}
+    Since the type $\fun{Syntax}$ is defined as the coproduct $\fun{Term}+\fun{Form}$, we construct the global G\"odel numbering function $\fun{gn}\colon\fun{Syntax}\to\N$ by applying the non-dependent eliminator for coproducts. For any $c\colon\fun{Syntax}$:
+    \[
+        \fun{gn}(c)\defeq 
+        \begin{cases}
+            \fun{gn}_{\fun{Term}}(t)
+                &\text{if }c\equiv\fun{inl}(t),\\
+            \fun{gn}_{\fun{Form}}(\varphi)
+                &\text{if }c\equiv\fun{inr}(\varphi).
+        \end{cases}
+    \]
+\end{defn}
+
+\begin{thm}
+    The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:\/
+    \[
+        \fun{isInj}(\fun{gn})\defeq
+        \prod_{s_1,s_2\colon\fun{Syntax}} 
+        (\gn{s_1}\eq{\N}\gn{s_2})
+        \to (s_1 \eq{\fun{Syntax}}s_2).
+    \]
+\end{thm}
+
+Furthermore, because the syntax is generated inductively and finitely, we can decide whether any given natural number is the G\"odel number of a valid syntactic object. We express this by stating that the image of the function $\gn{\dummy}$ is decidable over the natural numbers.
+
+\begin{thm}
+    The image of the function\/ $\fun{gn}$ is decidable over the natural numbers. Formally, we express this by inhabiting the type:\/
+    \[
+        \prod_{n\colon\N}\;
+        \Bigl(
+        \sum_{s\colon\fun{Syntax}}
+        (\gn{s}\eq{\N} n)
+        \Bigr) 
+        + 
+        \Bigl(
+        \Bigl(
+        \sum_{s\colon\fun{Syntax}}
+        (\gn{s}\eq{\N} n)
+        \Bigr)
+        \to\fun0
+        \Bigr).
+    \]
+\end{thm}
+
+With the syntax encoded as natural numbers, we can arithmetize the derivation family. A derivation is encoded as a sequence of numbers, which itself is assigned a G\"odel number. We define the proof relation as a type family over pairs of natural numbers.
+
+\begin{defn}
+    The \textsl{proof predicate} is a type family taking a non-dependent pair of natural numbers, where the first represents the G\"odel number of a candidate derivation and the second represents the G\"odel number of a sentence:
+    \[
+        \fun{Proof}\colon\N\times\N\to\univ.
+    \]
+\end{defn}
+
+\begin{thm}
+    For every\/ $n,m\colon\N$, the type\/ $\fun{Proof}(n,m)$ is a mere proposition.
+\end{thm}
+
+\begin{thm}
+    The proof relation is decidable over all non-dependent pairs. We express this by inhabiting the type:\/
+    \[
+        \prod_{n,m\colon\N}
+        \fun{Proof}(n,m)+(\fun{Proof}(n,m)\to\fun0).
+    \]
+\end{thm}
+
+\begin{defn}
+    The \textsl{provability type} for a sentence with G\"odel number $m$ is defined as the dependent sum over the proof predicate:
+    \[
+        \fun{Provable}(m)\defeq\sum_{n\colon\N}\fun{Proof}(n,m).
+    \]
+    A valid proof witness inhabiting this type is a dependent pair:
+    \[
+        \dep{n,p}\colon\sum_{n\colon\N}\fun{Proof}(n,m),
+    \]
+    where $n$ is the G\"odel number of the derivation and $p$ is the computational evidence that $n$ genuinely proves $m$.
+\end{defn}
