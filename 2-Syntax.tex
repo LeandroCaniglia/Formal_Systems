@@ -79,13 +79,12 @@ We construct the mapping in two stages: first by defining structural recursors f
     \end{align*}
     Since the type $\fun{Syntax}$ is defined as the coproduct $\fun{Term}+\fun{Form}$, we construct the global G\"odel numbering function $\fun{gn}\colon\fun{Syntax}\to\N$ by applying the non-dependent eliminator for coproducts. For any $c\colon\fun{Syntax}$:
     \[
-        \fun{gn}(c)\defeq 
-        \begin{cases}
-            \fun{gn}_{\fun{Term}}(t)
-                &\text{if }c\equiv\fun{inl}(t),\\
-            \fun{gn}_{\fun{Form}}(\varphi)
-                &\text{if }c\equiv\fun{inr}(\varphi).
-        \end{cases}
+        \fun{gn}\defeq\fun{ind}_{\fun{Term}+\fun{Form}}
+            (
+                \N,
+                \fun{gn}_{\fun{Term}},
+                \fun{gn}_{\fun{Form}}
+            ).
     \]
 \end{defn}
 
@@ -99,35 +98,699 @@ We construct the mapping in two stages: first by defining structural recursors f
     \]
 \end{thm}
 
-Furthermore, because the syntax is generated inductively and finitely, we can decide whether any given natural number is the G\"odel number of a valid syntactic object. We express this by stating that the image of the function $\gn{\dummy}$ is decidable over the natural numbers.
+\begin{proof}
+    This follows from the unique factorization theorem of natural numbers.
+    
+    If $\gn{s_1}\eq{\N}\gn{s_2}$, then $s_1$ and $s_2$ cannot be mismatched elements of $\fun{Syntax}$ because terms yield exponents of $2$ between $1$ and $5$, and formulas between $6$ and~$9$.
+
+    If both are terms, they must be built from the same constructor; otherwise, their numbers would have distinct exponents for~$2$. Depending on the constructor, examining the exponents of $3$ and $5$ yields the conclusion by structural induction.
+
+    If both are formulas, a similar argument shows that they must be equal in $\fun{Form}$.
+\end{proof}
 
 \begin{thm}
-    The image of the function\/ $\fun{gn}$ is decidable over the natural numbers. Formally, we express this by inhabiting the type:\/
+    The fibers of the function\/ $\fun{gn}$ are decidable. In other words, the type
     \[
-        \prod_{n\colon\N}\;
-        \Bigl(
-        \sum_{s\colon\fun{Syntax}}
-        (\gn{s}\eq{\N} n)
-        \Bigr) 
-        + 
-        \Bigl(
-        \Bigl(
-        \sum_{s\colon\fun{Syntax}}
-        (\gn{s}\eq{\N} n)
-        \Bigr)
-        \to\fun0
-        \Bigr).
+        \prod_{n\colon\N}
+            \fun{fib}_{\fun{gn}}(n)
+            +
+            \neg\fun{fib}_{\fun{gn}}(n)
     \]
+    is inhabited.
 \end{thm}
 
-With the syntax encoded as natural numbers, we can arithmetize the derivation family. A derivation is encoded as a sequence of numbers, which itself is assigned a G\"odel number. We define the proof relation as a type family over pairs of natural numbers.
+\begin{proof}
+    We proceed by strong induction on $n\colon\N$. To simplify the notation we will use `$=$' instead of `$\eq\N$'.
+    
+    Our inductive hypothesis assumes that for all $m<n$, the coproduct
+    \[\tag{$\ast$}
+        \fun{fib}_{\fun{gn}}(m)+\neg\fun{fib}_{\fun{gn}}(m)
+    \]
+    is inhabited. We analyze the given $n$ by cases:
 
-\begin{defn}
-    The \textsl{proof predicate} is a type family taking a non-dependent pair of natural numbers, where the first represents the G\"odel number of a candidate derivation and the second represents the G\"odel number of a sentence:
+    For $n\equiv0$ and $n\equiv1$, no fiber is inhabited because it is easy to see by structural induction that $\gn s\ge2$ for all $s\colon\fun{Syntax}$. More precisely, given $\dep{s,e}\colon\fun{fib}_{\fun{gn}}(n)$, the path $e$ satisfies $e\colon\gn{s}=n$, which contradicts $\gn{s}\ge2$, allowing us to \textit{construct the negation}, i.e., to map $\dep{s,e}$ to $\fun0$.
+
+    For $n\ge2$, we algorithmically compute its unique prime factorization. Let $k$ be the exponent of the prime factor $2$.
+    
+    If $k<1$ or $k>9$, we can construct a witness of $\neg\fun{fib}_{\fun{gn}}(n)$ because structural induction shows that we must have $1\le k\le 9$.
+
+    If $1\le k\le9$, we analyze the values of $k$ and the exponents of $3$ and $5$.
+    
+    If any prime factor strictly greater than $5$, or greater than $3$ for unary constructors, divides $n$, we construct the negation. Otherwise, we rely on the  inductive hypothesis $(\ast)$ applied to the exponents. To validate the application of~$(\ast)$, observe that $m<p^m\le n$ for any prime~$p$, which implies that we must have $m<n$.
+    
+    \begin{itemize}
+        \item If $k=1$, $n\equiv2^1\cdot3^x$. We construct the dependent pair $\dep{\fun{inl}(\fun{var}(x)),\fun{refl}_n}$.
+        
+        \item If $k=2$ and $n=2^2\cdot3^0$, we construct $\dep{\fun{inl}(0), \fun{refl}}$; otherwise, if $n\ne 2^2\cdot3^0$, we construct the negation.
+        
+        \item If $k=3$, $n=2^3\cdot3^m$. If the induction hypothesis yields a fiber containing a term $t$, we construct $\dep{\fun{inl}(s(t)),\fun{refl}_n}$. If it yields a formula or the negation, we construct the negation.
+        
+        \item If $k=4$ and $n=2^4\cdot3^a\cdot 5^b$, we invoke $(\ast)$ on both. If they both yield terms $t_1$ and $t_2$, we construct $\dep{\fun{inl}(t_1+t_2),\fun{refl}}$. If either hypothesis yields a formula or a negation, we construct the negation.
+        
+        \item For all other values of $k$ (5 through 9), we analogously apply the inductive hypothesis to the exponents of $3$ and $5$.
+    \end{itemize}
+    Since the process constructs an inhabitant of the coproduct in all branches, the fibers of $\fun{gn}$ are decidable.
+\end{proof}
+
+\section{Derivations}
+
+\begin{defn}[Derivations]
+    The \textsl{derivation family} of Peano Arithmetic is the inductive type family $\fun{Der}\colon\fun{Form}\to\univ$ (unambiguously denoted by $\fun{Der}_{\fun{PA}}$) generated by the following axiom constructors and inference rules, for all formulas $\varphi,\psi,\chi\colon\fun{Form}$, variables $x,y,z\colon\fun{Var}$, and terms $t,t_1,t_2\colon\fun{Term}$:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{Logical Axiom Schemas} (First-Order Logic with Equality):
+        \begin{enumerate}[i),font=\upshape]
+            \item $\fun{ax}_{\fun{L1}}(\varphi,\psi)\colon\fun{Der}\bigl(\varphi\imp(\psi\imp\varphi)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L2}}(\varphi,\psi,\chi)\colon\fun{Der}\bigl((\varphi\imp(\psi\imp\chi))\to((\varphi\imp\psi)\imp(\varphi\imp\chi))\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L3}}(\varphi,\psi)\colon\fun{Der}\bigl((\neg\psi\imp\neg\varphi)\imp(\varphi\imp\psi)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{L4}}(\varphi,x,t)\colon\fun{Der}\bigl((\forall x\,\varphi)\imp\varphi[t/x]\bigr)$, where $t$ is free for $x$ in $\varphi$.
+            
+            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, where $x\notin\FV(\varphi)$.
+            
+            \item $\fun{ax}_{\fun{Eq1}}(t)\colon\fun{Der}(t\doteq t)$.
+            
+            \item $\fun{ax}_{\fun{Eq2}}(\varphi,z,t_1,t_2)\colon\fun{Der}\bigl(t_1\doteq t_2\imp(\varphi[t_1/z]\imp\varphi[t_2/z])\bigr)$, where $t_1$ and $t_2$ are free for $z$ in $\varphi$.
+        \end{enumerate}
+        \item \textsl{Non-Logical Axioms:}
+        \begin{enumerate}[i),font=\upshape]
+            \item $\fun{ax}_{\fun{PA1}}\colon\fun{Der}\bigl(\forall x\,\neg(s(x)\doteq0)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{PA2}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\doteq s(y)\imp x\doteq y)\bigr)$.
+            
+            \item $\fun{ax}_{\fun{PA3}}\colon\fun{Der}\bigl(\forall x\,(0+x\doteq x)\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA4}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)+y\doteq s(x+y))\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA5}}\colon\fun{Der}\bigl(\forall x\,(0\cdot x\doteq0)\bigr)$.
+
+            \item $\fun{ax}_{\fun{PA6}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\cdot y\doteq(x\cdot y)+y)\bigr)$.
+
+            \item $\fun{ax}_{\fun{Ind}}(\varphi,x)\colon
+                \fun{Der}\bigl(
+                    (
+                        \varphi[0/x]\land\forall x\,
+                        (\varphi\imp\varphi[s(x)/x])
+                    )
+                    \imp\forall x\,\varphi
+                \bigr)$.
+        \end{enumerate}
+        \item \textsl{Rules of Inference:}
+        \begin{enumerate}[i),font=\upshape]
+            \item Modus Ponens:
+            \[
+                \fun{mp}_{\varphi,\psi}\colon\fun{Der}(\varphi)\to\fun{Der}(\varphi\imp\psi)\to\fun{Der}(\psi).
+            \]
+            \item Universal Generalization:
+            \[
+                \fun{gen}_{\varphi,x}\colon\fun{Der}(\varphi)\to\fun{Der}(\forall x\,\varphi).
+            \]
+        \end{enumerate}
+    \end{enumerate}
+\end{defn}
+
+
+\begin{rem}
+    The presentation of Peano Arithmetic (and formal systems in general) consists of two levels:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{The Mechanical Level\/} ($\fun{Form}$): Establishes the internal machinery of the derivation family $\fun{Der}$. It requires the broader domain of all well-formed formulas to allow for intermediate proof steps.
+        
+        \item \textsl{The Semantic Level\/} ($\fun{Sent}$): The goal of a formal system is to establish mathematical truths. Since only sentences make self-contained, evaluable claims about the domain, this level restricts the derivation family's output to $\fun{Sent}$, representing the final theorems of the theory.
+    \end{enumerate}
     \[
-        \fun{Proof}\colon\N\times\N\to\univ.
+    \begin{tikzpicture}[node distance=2cm, auto, thick, >=stealth]
+        % Nodes
+        \node (Terms) [draw, rectangle, rounded corners, align=center, minimum height=1.2cm] {Terms \\ \small e.g., $x, 0, s(x)$};
+        
+        \node (Open) [draw, rectangle, rounded corners, align=center, right of=Terms, node distance=4.0cm, minimum height=1.2cm] {Open Formulas \\ \small e.g., $x\doteq0$};
+        
+        \node (Sentences) [draw, rectangle, rounded corners, align=center, right of=Open, node distance=4cm, minimum height=1.2cm] {Sentences \\ \small e.g., $\forall x\,(x\doteq0)$};
+        
+        \node (Derivations) [draw, rectangle, rounded corners, align=center, below of=Open, node distance=2.5cm, minimum height=1.2cm] {Derivations \\ \small(Proof Steps)};
+    
+        % Edges
+        \draw[->] (Terms) -- node[above] {$\doteq$} (Open);
+        \draw[->] (Open) edge[loop above, looseness=6, min distance=2mm] node[left] {$\to, \neg\ $} (Open);
+        \draw[->] (Open) -- node[above] {$\forall$} (Sentences);
+        \draw[->, dashed] (Derivations) -- node[left] {\small operate on} (Open);
+        \draw[->, dashed] (Derivations) -- node[below right, align=center] {\small produce \\ \small theorems} (Sentences);
+    \end{tikzpicture}
+    \]
+\end{rem}
+
+
+\begin{defn}[Peano Arithmetic as a Formal System]
+    Peano Arithmetic complies with the definition of $\fun{System}\defeq\sum_{S\colon\univ}S\to\univ$ at two levels:
+    \begin{enumerate}[a),font=\upshape]
+        \item \textsl{At the level of formulas:} Setting the first projection to be the type of all well-formed formulas, we define
+        \[
+            \fun{PA}_{\fun{Form}}\defeq
+                \dep{
+                    \fun{Form},\fun{Der}
+                }
+                \colon\fun{System},
+        \]
+        where $\pi_1(\fun{PA}_{\fun{Form}})\equiv\fun{Form}\colon\univ$ and $\pi_2(\fun{PA}_{\fun{Form}})\equiv\fun{Der}\colon\fun{Form}\to\univ$.
+        
+        \item \textsl{At the level of sentences:} Restricting the first projection strictly to closed formulas $\fun{Sent}$, we define the restricted derivation family $\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$ by $\fun{Der}_{\fun{Sent}}\bigl((\varphi,p)\bigr)\defeq\fun{Der}(\varphi)$, which yields
+        \[
+            \fun{PA}\defeq
+                \dep{
+                    \fun{Sent},
+                    \fun{Der}_{\fun{Sent}}
+                }
+                \colon\fun{System},
+        \]
+        where $\pi_1(\fun{PA})\eq{}\fun{Sent}\colon\univ$ and $\pi_2(\fun{PA})\eq{}\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$.
+    \end{enumerate}
+\end{defn}
+
+
+\section{Finite Sequences}
+
+\begin{lem}
+    For any natural numbers\/ $k_1, k_2 \colon \N$, there is a canonical equivalence
+    \[
+        e_{k_1,k_2} \colon \fun{Fin}(k_1 + k_2) \simeq \fun{Fin}(k_1) + \fun{Fin}(k_2).
+    \]
+\end{lem}
+
+\begin{proof}
+    We construct the equivalence by induction on $k_2\colon\N$. Recall that
+    \begin{itemize}
+        \item $\fun{Fin}(0)\defeq\fun0$, and
+        \item $\fun{Fin}(\fun{succ}(k))\defeq\fun{Fin}(k)+\fun1$.
+    \end{itemize}
+    For the base case $k_2\equiv0$, we must inhabit the type
+    \[
+        \fun{Fin}(k_1+0)\simeq\fun{Fin}(k_1)+\fun{Fin}(0).
+    \]
+    Since $k_1+0\eq\N k_1$, we can define $e_{k_1,0}\defeq\fun{inl}$, which yields an equivalence between $\fun{Fin}(k_1)$ and $\fun{Fin}(k_1)+\fun0$.
+
+    For the inductive step $k_2\equiv\fun{succ}(m)$, assume the inductive hypothesis provides an equivalence
+    \[
+        e_{k_1,m}\colon\fun{Fin}(k_1+m)
+            \simeq\fun{Fin}(k_1)+\fun{Fin}(m).
+    \]
+    Then, we can construct the equivalence for $\fun{succ}(m)$ as
+    \begin{align*}
+        \fun{Fin}(k_1+\fun{succ}(m))
+            &\simeq\fun{Fin}(\fun{succ}(k_1+m))\\
+            &\equiv\fun{Fin}(k_1+m)+\fun1\\
+            &\simeq(\fun{Fin}(k_1)+\fun{Fin}(m))+\fun1
+                &&\text{; by }e_{k_1,m}\\
+            &\simeq\fun{Fin}(k_1)+(\fun{Fin}(m)+\fun1)
+                &&\text{; assoc.}\\
+            &\equiv\fun{Fin}(k_1)+\fun{Fin}(\fun{succ}(m)).
+    \end{align*}
+\end{proof}
+
+\begin{defn}[Sequence Concatenation]
+    Let $A$ be a type. Given two natural numbers $h, k \colon \N$ and two indexing functions
+    \[
+        f_1\colon\fun{Fin}(h)\to A
+        \quad\text{and}\quad
+        f_2\colon\fun{Fin}(k)\to A,
+    \]
+    their \textsl{concatenation}
+    \[
+        f_1\ct f_2\colon\fun{Fin}(h+k)\to A
+    \]
+    is defined by composing the coproduct elimination map 
+    \[
+        \fun{rec}_{\fun{Fin}(h)+\fun{Fin}(k)}(A,f_1,f_2)
+            \colon\fun{Fin}(h)+\fun{Fin}(k)\to A
+    \]
+    with the canonical equivalence $e_{h,k}$:
+    \[
+        f_1\ct f_2\defeq f\circ e_{h,k}.
     \]
 \end{defn}
+
+\begin{defn}[Cartesian Power]
+    For any type $A$, we define the $m$-ary cartesian power $A^m$ by recursion on $m\colon\N$:
+    \begin{align*}
+        A^0&\defeq\fun1\\
+        A^{m+1}&\defeq A^m\times A.
+    \end{align*}
+    The elements of $A^m$ are standard right-nested tuples, which we will represent with the notation $\formseq{a_0,\dots,a_{m-1}}$.
+\end{defn}
+
+\begin{prop}[Sequence Representation]
+    For any type\/ $A$ and natural number\/ $m \colon \N$, there is an equivalence
+    \[
+        (\fun{Fin}(m)\to A)\simeq A^m.
+    \]
+\end{prop}
+
+\begin{proof}
+    We proceed by induction on $m \colon \N$.
+    
+    For the base case $m \equiv 0$, the goal reduces to $(\fun{Fin}(0)\to A)\simeq A^0$, which holds because
+    \begin{align*}
+        \fun{Fin}(0)\to A
+            &\equiv\fun0\to A\\
+            &\simeq\fun1
+                &&\text{; }\fun{rec}_{\fun0}(A)\mapsto\fstar\\
+            &\equiv A^0.
+    \intertext{For the inductive step $m\equiv k+1$, let $g\colon(\fun{Fin}(k)\to A)\simeq A^k$. We have,}
+        (\fun{Fin}(k+1)\to A)
+            &\equiv(\fun{Fin}(k)+\fun1)\to A)\\
+            &\simeq(\fun{Fin}(k)\to A)\times(\fun1\to A)
+                &&\text{; }\fun{rec}_{\fun{Fin}(k)+\fun1}(A)\\
+            &\simeq A^k\times A
+                &&\text{; IH} + (\fun1\to A)\simeq A\\
+            &\equiv A^{k+1}.
+    \end{align*}
+\end{proof}
+
+\section{Arithmetization}
+
+\begin{defn}[Formula Sequences]
+    A \textsl{formula sequence} is formalized as the $\Sigma$-type
+    \[
+        \fun{Seq}(\fun{Form})
+            \defeq\sum_{k\colon\N}\fun{Fin}(k)\to\fun{Form}.
+    \]
+    Inhabitants of this type are dependent pairs $\dep{k,f}$, where the function~$f$ assigns a formula to each index $i<k$. The informal notation we adopted represents $f$ by
+    \[
+        \formseq{\varphi_0,\varphi_1,\dots,\varphi_{k-1}},
+    \]
+    with $\varphi_i\equiv f(i)$ for $i\colon\fun{Fin}(k)$.
+\end{defn}
+
+To bridge the inductive type family $\fun{Der}$ with the sequential representation used for \textit{arithmetization} we need the following
+    
+\begin{defn}[Derivation Flattening]
+    Given two sequences
+    \[
+        \varsigma_1\equiv\dep{k_1,f_1}
+        \quad\text{and}\quad
+        \varsigma_2\equiv\dep{k_2,f_2},
+    \]
+    their \textsl{concatenation}
+    \[
+        \varsigma_1\ct \varsigma_2
+    \]
+    is the dependent pair $\dep{k_1+k_2,f}$, where the indexing function
+    \[
+        f\colon\fun{Fin}(k_1+k_2)\to\fun{Form}
+    \]
+    is constructed by horizontal composition from:
+    \[
+        \begin{tikzcd}[column sep=1.0cm]
+                &\fun{Fin}(k_1)
+                    \arrow[rd,"f_1"]
+                    \arrow[d,"\fun{inl}"']\\
+            \fun{Fin}(k_1+k_2)
+                    \arrow[r,"{e_{k_1,k_2}}"]
+                &\fun{Fin}(k_1)+\fun{Fin}(k_2)
+                    \arrow[r,"h",pos=0.3]
+                &\fun{Form}\\
+                &\fun{Fin}(k_2)
+                    \arrow[ru,"f_2"']
+                    \arrow[u,"\fun{inr}"]
+        \end{tikzcd}
+    \]
+    where $h$ is recursively defined by
+    \[
+        h\circ\fun{inl}\defeq f_1
+        \quad\text{and}\quad
+        h\circ\fun{inr}\defeq f_2.
+    \]
+    Thus, 
+    \[
+        f\defeq h\circ e_{k_1,k_2}.
+    \]
+
+    Given $\varphi\colon\fun{Form}$, the \textsl{singleton sequence} is defined as
+    \[
+        \formseq{\varphi}\defeq\dep{
+            1,
+            \lambda x\colon\fun{Fin}(1).\,\varphi
+        }.
+    \]
+    This allows us to append $\varphi$ to a sequence $\varsigma$ by setting
+    \[
+        \varsigma\ct\varphi
+            \defeq \varsigma\ct\formseq{\varphi}.
+    \]
+    
+    We define the flattening function
+    \[
+        \fun{flatten}\colon\prod_{\chi\colon\fun{Form}}\fun{Der}(\chi)\to\fun{Seq}(\fun{Form})
+    \]
+    by structural recursion on the constructors of $\fun{Der}$, explicitly passing both the target formula and the derivation tree as arguments:
+    \begin{enumerate}[a),font=\upshape]
+        \item For any axiom constructor, the sequence has length $1$ and the function always transforms that axiom into its corresponding singleton sequence. For example, for the first logical axiom, the target formula is $\varphi\imp(\psi\imp\varphi)$:
+        \[
+            \fun{flatten}\bigl(\varphi\imp(\psi\imp\varphi), \fun{ax}_{\fun{L1}}(\varphi,\psi)\bigr)
+            \defeq\formseq{\varphi\imp(\psi\imp\varphi)}.
+        \]
+        This base case logic applies identically to all logical and non-logical axiom constructors.
+        
+        \item For the Modus Ponens rule, the target formula is the conclusion $\psi$. We concatenate the recursively flattened sequences of the premises and append the conclusion:
+        \[
+            \fun{flatten}\bigl(\psi, \fun{mp}_{\varphi,\psi}(d_1,d_2)\bigr)
+                \defeq
+                    \fun{flatten}(\varphi, d_1)
+                    \ct
+                    \fun{flatten}(\varphi\imp\psi, d_2)
+                    \ct
+                    \psi.
+        \]
+        
+        \item For the Universal Generalization rule, the target formula is $\forall x\,\varphi$. We take the flattened sequence of the premise and append the generalized conclusion:
+        \[
+            \fun{flatten}\bigl(\forall x\,\varphi, \fun{gen}_{\varphi,x}(d)\bigr) \defeq \fun{flatten}(\varphi, d) \ct \forall x\,\varphi.
+        \]
+    \end{enumerate}
+\end{defn}
+
+
+\begin{rem}[Derivations as Abstract Syntax Trees]
+    The inductive family $\fun{Der}$ produces terms that possesses the structure of Abstract Syntax Trees (AST). 
+    
+    In this correspondence, every application of a constructor represents a node, and every recursive argument of type $\fun{Der}$ represents an outgoing edge connecting the parent node to a sub-derivation. The constructors dictate the local branching of the proof tree:
+    \begin{itemize}
+        \item \textsc{Leaves:} The logical and non-logical axiom constructors $\fun{ax}$ take no arguments of type $\fun{Der}$. Consequently, they yield nodes with zero outgoing edges. They are the leaves of the tree, holding their arguments as internal state.
+        
+        \item \textsc{Unary Branches:} The Universal Generalization rule $\fun{gen}$ takes exactly one derivation as an argument. Applying it yields a node with a single outgoing edge pointing to its premise.
+        
+        \item \textsc{Binary Branches} The Modus Ponens rule $\fun{mp}$ takes two derivations as arguments. Applying it yields a branching node with two outgoing edges pointing to its respective premises.
+    \end{itemize}
+    From this perspective, the $\fun{flatten}$ function operates as a post-order (Depth First Search) traversal algorithm. It walks the AST from the axiom leaves to the root conclusion, aggregating the internal formulas into a flat sequence.
+
+    To write down a valid classical proof sequence, a formula cannot appear in the sequence until the premises justifying it have already been established. Post-order enforces this dependency. Thus, by the time a Modus Ponens node is reached, both of its premises have already been flattened into the sequence.
+\end{rem}
+
+\begin{xmpls}
+    Here are three examples demonstrating how the $\fun{flatten}$ function unpacks a structurally valid derivation tree into a flat sequence of formulas.
+
+    \begin{description}[font=\normalfont\scshape]
+        \item[A Single Axiom.]
+        Consider the non-logical axiom stating that zero is a left identity for addition. The derivation tree is just a single leaf constructor:
+        \[
+            d_1\defeq\fun{ax}_{\fun{PA3}}
+                \colon\fun{Der}\bigl(
+                    \forall x\,(0+x\doteq x)
+                \bigr).
+        \]
+        Applying the base case of the flattening function yields a singleton sequence:
+        \[
+            \fun{flatten}\bigl(\forall x\,(0+x\doteq x), d_1\bigr)
+                \equiv\formseq{\forall x\,(0+x\doteq x)}.
+        \]
+        This sequence represents a candidate derivation containing exactly one formula.
+        
+        \item[Modus Ponens.]
+        Let us construct a derivation proving $\neg(s(0) \doteq 0)$. This requires the first Peano axiom, a logical axiom for universal instantiation, and an application of Modus Ponens. We first construct the premises:
+        \begin{align*}
+            d_A &\defeq \fun{ax}_{\fun{PA1}} \colon \fun{Der}\bigl(\forall x\,\neg(s(x) \doteq 0)\bigr) \\
+            d_B &\defeq \fun{ax}_{\fun{L4}}\bigl(\neg(s(x) \doteq 0), x, 0\bigr) \colon \fun{Der}\bigl(\forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0)\bigr).
+        \end{align*}
+        We now apply the Modus Ponens constructor to form the final derivation:
+        \[
+            d_3 \defeq \fun{mp}_{\forall x\,\neg(s(x) \doteq 0), \neg(s(0) \doteq 0)}(d_A, d_B).
+        \]
+        The associated abstract syntactic tree can be visualized as
+        \[
+            \begin{tikzpicture}[
+                level distance=1.5cm,
+                sibling distance=3.5cm,
+                edge from parent/.style={draw, -stealth}
+                ]
+                \node {$\fun{mp}_{\forall x\,\neg(s(x)\doteq 0),\,\neg(s(0)\doteq 0)}$}
+                    child {
+                        node {$\fun{ax}_{\fun{PA1}}$}
+                        edge from parent node[above left, xshift=0.2cm] {$\scriptstyle d_A$}
+                    }
+                    child {
+                        node {$\fun{ax}_{\fun{L4}}\bigl(\neg(s(x)\doteq 0),x,0\bigr)$}
+                        edge from parent node[above right, xshift=-0.25cm] {$\scriptstyle d_B$}
+                    };
+            \end{tikzpicture}
+        \]
+        Applying the flattening function decomposes the tree:
+        \begin{align*}
+            \fun{flatten}\bigl(\neg(s(0) \doteq 0), d_3\bigr)
+                &\equiv
+                    \fun{flatten}\bigl(\forall x\,\neg(s(x) \doteq 0), d_A\bigr)
+                    \\&\quad
+                    \ct\fun{flatten}\bigl(\forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0), d_B\bigr)
+                    \\&\quad
+                    \ct\neg(s(0)\doteq0).
+        \end{align*}
+        Since both
+        \[
+            \fun{flatten}\bigl(\forall x\,\neg(s(x)\doteq0),d_A\bigr)
+        \]
+        and
+        \[
+            \fun{flatten}
+                \bigl(
+                    \forall x\,\neg(s(x)\doteq0) 
+                        \imp\neg(s(0)\doteq0),
+                    d_B
+                \bigr)
+        \]
+        are sequences of length 1, their concatenation is a sequence of length 2. Appending the conclusion yields a final sequence of length $1 + 1 + 1 = 3$. This is represented as the dependent pair $\dep{3, g}$, where $g\colon\fun{Fin}(3)\to\fun{Form}$ traces the exact step-by-step classical proof:
+        \begin{align*}
+            g(0) &\equiv \forall x\,\neg(s(x) \doteq 0) \\
+            g(1) &\equiv \forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0) \\
+            g(2) &\equiv \neg(s(0) \doteq 0).
+        \end{align*}
+
+        \item[Universal Generalization.]
+        Suppose we take the derivation $d_1$ from the previous example and apply the universal generalization rule to a new variable~$y$. The derivation tree grows one node taller:
+        \[
+            d_2\defeq
+                \fun{gen}_{\forall x\,(0+x\doteq x),y}(d_1) \colon
+                \fun{Der}\bigl(
+                    \forall y\,\forall x\,(0+x\doteq x)
+                \bigr).
+        \]
+        Let $\varphi\defeq\forall x\,(0+x\doteq x)$. Applying the flattening function recursively, we get:
+        \begin{align*}
+            \fun{flatten}(\forall y\,\varphi)
+                &\equiv
+                    \fun{flatten}(\varphi)
+                    \ct
+                    \forall y\,\varphi\\
+                &\equiv
+                    \formseq{\forall x\,(0+x \doteq x)}
+                    \ct
+                    \forall y\,\forall x\,(0+x\doteq x).
+        \end{align*}
+        Evaluating the concatenation operator yields a sequence of length 2, represented as $\dep{2, f}$, where the indexing function $f\colon\fun{Fin}(2)\to\fun{Form}$ evaluates to:
+        \begin{align*}
+            f(0) &\equiv \forall x\,(0+x \doteq x) \\
+            f(1) &\equiv \forall y\,\forall x\,(0+x \doteq x).
+        \end{align*}
+        
+    \end{description}
+\end{xmpls}
+
+\begin{lem}[Bounded Minimalization]\label{lem:muk<=n P(k)}
+    For any family of mere propositions\/ $P\colon\N\to\univ$, there exists a function
+    \begin{alignat*}{2}
+        \mu_P\colon\Bigl(
+            \prod_{k\colon\N}P(k)+\neg P(k)
+        \Bigr)
+        &\to\N&&\to\N\\
+        d&\mapsto n&&\mapsto\mu k\le n\;P(k),
+    \end{alignat*}
+    that finds the smallest\/ $k\le n$ satisfying\/ $P(k)$, or returns\/ $n+1$ if no such\/ $k$ exists. The rightmost expression is the standard notation used to represent this application.
+\end{lem}
+
+\begin{proof}
+    For any $k\colon\N$, we introduce the auxiliary function
+    \begin{align*}
+        g_k\colon P(k)+\neg P(k)&\to\N\\
+        \fun{inl}(p)&\mapsto k\\
+        \fun{inr}(\zeta)&\mapsto k+1.
+    \end{align*}
+    Let $d\colon\prod_{k\colon\N}(P(k)+\neg P(k))$ be a decision function. We define the application $\mu_P(d)(n)$ by recursion on~$n\colon\N$. 
+    
+    For the base case $n\equiv0$, we set
+    \[
+        \mu_P(d)(0)\defeq g_0(d(0)).
+    \]
+    For the inductive step $n \equiv m+1$, let $x\defeq\mu_P(d)(m)$. We define a second auxiliary function
+    \begin{align*}
+        h_{x,m}\colon(x\le m)+(x>m)&\to\N\\
+        \fun{inl}(u)&\mapsto x\\
+        \fun{inr}(v)&\mapsto g_{m+1}(d(m+1)).
+    \end{align*}
+    Since the inequality $x\le m$ is decidable, it yields a decision term
+    \[
+        e\colon(x\le m)+(x>m).
+    \]
+    Hence, we specify the inductive step by setting
+    \[
+        \mu_P(d)(m+1)\defeq h_{x,m}(e).
+    \]
+    
+    To verify that $\mu_P(d)(n)$ satisfies the specified properties, we proceed by induction on $n\colon\N$. 
+    
+    The base case $n\equiv0$ easily follows because $\mu_P(d)(0)\equiv g_0(d(0))$. If $d(0) \equiv \fun{inl}(p)$, the function returns $0$, which is the minimum. If $d(0) \equiv \fun{inr}(\zeta)$, no such $k$ exists, and the function correctly returns $0+1=1$.
+    
+    For the inductive step $m+1$, the inductive hypothesis states that $x\defeq\mu_P(d)(m)$ is the smallest $k\le m$ satisfying $P(k)$, or $m+1$ if no such $k$ exists.
+    
+    If $e\equiv\fun{inl}(u)$, then $x\le m$. By the inductive hypothesis, $x$ is the smallest $k\le m$ satisfying $P(k)$. Since $x\le m < m+1$, the term $x$ is also the smallest $k\le m+1$ satisfying $P(k)$. The function correctly returns $h_{x,m}(\fun{inl}(u))\equiv x$.
+    
+    If $e\equiv\fun{inr}(v)$, then $x>m$. By the inductive hypothesis, this implies $x\equiv m+1$, meaning no $k\le m$ satisfies $P(k)$. Thus, $\mu_P(d)(m+1)\equiv g_{m+1}(d(m+1))$. If $P(m+1)$ holds, since no strictly smaller $k$ satisfies the predicate, $m+1$ is the minimum and the function returns it. If $\neg P(m+1)$ holds, no $k\le m+1$ satisfies the predicate, and the function returns $(m+1)+1=m+2$.
+
+    Here is a flow diagram illustrating the function:
+    \medskip
+    \[
+    \begin{tikzpicture}[>=stealth,font=\small]
+        % Nodes
+        \node (start) at (0, 0) [draw, rounded corners, inner sep=4pt] {Evaluate $\mu_P(d)(m+1)$ given $x \defeq \mu_P(d)(m)$};
+        \node (dec1) at (0, -1.3) [draw, inner sep=4pt] {$e \colon (x \le m) + (x > m)$};
+        \node (retX) at (-3.0, -2.5) [draw, rounded corners, inner sep=4pt] {Return $x$};
+        \node (dec2) at (3.0, -2.5) [draw, inner sep=4pt] {$d(m+1) \colon P(m+1) + \neg P(m+1)$};
+        \node (retM1) at (0.0, -3.5) [draw, rounded corners, inner sep=4pt] {Return $m+1$};
+        \node (retM2) at (6.0, -3.5) [draw, rounded corners, inner sep=4pt] {Return $m+2$};
+    
+        % Arrows
+        \draw[->] (start) -- (dec1);
+        \draw[->] (dec1) -| node[above] {$\fun{inl}(u)$} (retX);
+        \draw[->] (dec1) -| node[above] {$\fun{inr}(v)$} (dec2);
+        \draw[->] (dec2) -| node[above,xshift=-2pt] {$\fun{inl}(p)$} (retM1);
+        \draw[->] (dec2) -| node[above,xshift=2pt] {$\fun{inr}(\zeta)$} (retM2);
+    \end{tikzpicture}
+    \]
+\end{proof}
+
+\begin{defns}\ 
+    \begin{description}[font=\normalfont\scshape]
+        \item[Prime Sequence:]
+        The predicate $\fun{isPrime}\colon\N\to\univ$ is defined by
+        \[
+            \fun{isPrime}(n)
+                \defeq
+                    (n\ge2)
+                    \times
+                    \prod_{k\le n}
+                        k\mid n\to(k\eq \N1)+(k\eq \N n).
+        \]
+        As shown in \citep[Chapter~3]{caniglia2025hott} the bounded $\Pi$-type is decidable because each of the types composing the expression are decidable and the product base is $k\le n$. Because the branches of the coproduct are mutually exclusive for $n\ge2$, we deduce that $\fun{isPrime}$ is, moreover, a family of mere propositions. 
+    
+        To construct the sequence of all primes, we rely on Bertrand's Postulate, which guarantees that for any integer $x\ge1$, there exists a prime $k$ such that $x<k\le2x$. 
+        
+        For a fixed $x\colon\N$, we define a decidable family of mere propositions identifying primes strictly greater than $x$:
+        \[
+            P_{>x}(k)\defeq\fun{isPrime}(k)\times(k>x).
+        \]
+        Let $d_x\colon\prod_{k\colon\N}P_{>x}(k)+\neg P_{>x}(k)$ be the decision function for this family.
+        
+        The sequence $p_i\colon\N\to\N$ is defined by structural recursion on the index $i\colon\N$. For the base case $i \equiv 0$, we set:
+        \[
+            p_0 \defeq 2.
+        \]
+        For the inductive step $i\equiv m+1$, assuming $p_m$ has been constructed, we use bounded minimalization and set:
+        \[
+            p_{m+1}\defeq\mu_{P_{>p_m}}(d_{p_m})(2p_m).
+        \]
+        With the notation established in Lemma~\ref{lem:muk<=n P(k)}, this is written as:
+        \[
+            p_{m+1} \defeq \mu k \le 2p_m \; \bigl(\fun{isPrime}(k) \times (k > p_m)\bigr).
+        \]
+        
+        \item[Sequence Length:]
+        The function $\fun{len}\colon\N\to\N$ returns the length of the sequence encoded by $n$. We define it as the smallest index $k\le n$ such that $p_k$ does not divide $n$. Using the bounded minimalization operator, we write:
+        \[
+            \fun{len}(n)\defeq\mu k\le n\;(p_k\nmid n).
+        \]
+        To demonstrate that $\fun{len}$ is well-defined, we construct it as an inhabitant of the function type $\N\to\N$ by invoking Lemma~\ref{lem:muk<=n P(k)}.
+    
+        Fix a natural number $n\colon\N$. We define the type family $P_n\colon\N\to\univ$ by
+        \[
+            P_n(k)\defeq p_k\nmid n.
+        \]
+        Divisibility over the natural numbers is a decidable mere proposition. Because the negation of any decidable mere proposition is also a decidable mere proposition, $P_n(k)$ is a decidable family of mere propositions.
+    
+        Let
+        \[
+            d_n\colon\prod_{k\colon\N}
+                P_n(k)+\neg P_n(k)
+        \]
+        denote the decision function for this family. Then,
+        \[
+            \mu_{P_n}(d_n)(n) \colon \N
+        \]
+        and we can define
+        \begin{align*}
+            \fun{len}\colon\N&\to\N\\
+            n&\mapsto\mu_{P_n}(d_n)(n).
+        \end{align*}
+        This establishes that $\fun{len}$ is an inhabitant of $\N\to\N$. Writing this application in the notation established in Lemma \ref{lem:muk<=n P(k)} yields the definition:
+        \[
+            \fun{len}(n)\defeq
+                \mu k\le n\;(p_k\nmid n).
+        \]
+
+        \item[The Proof Predicate:] The \textsl{proof predicate} is a type family taking a non-dependent pair of natural numbers, where the first represents the G\"odel number of a candidate derivation and the second represents the G\"odel number of a sentence:
+        \[
+            \fun{Proof}\colon\N\times\N\to\univ.
+        \]
+        \needspace{3\baselineskip}
+        To formalize this type family constructively, we rely on the existence of primitive recursive functions for sequence manipulation. We assume
+        \begin{itemize}
+            \item a length function $\fun{len}\colon\N\to\N$ and
+            
+            \item an extraction function $\fun{nth}\colon\N\times\N\to\N$ returning the G\"odel number of the sequence element at index $i$. 
+        \end{itemize}
+        Furthermore, we assume bounded, decidable predicates for the rules of the system:
+        \begin{itemize}
+            \item $\fun{isAx}(x)$ indicates if $x$ encodes a logical or non-logical axiom,
+            
+            \item $\fun{isMP}(x,y,z)$ indicates if $z$ follows from $x$ and $y$ via Modus Ponens, and
+            
+            \item $\fun{isGen}(x,z)$ indicates if $z$ follows from $x$ via Universal Generalization.
+        \end{itemize}
+        The type family $\fun{Proof}\colon\N\times\N\to\univ$ is defined as the cartesian product of the termination condition (the sequence concludes with the sentence $m$) and the step-by-step sequence validation. For any $n,m\colon\N$, we define:
+        \begin{align*}
+            \fun{Proof}(n,m)\defeq\;&(0<\fun{len}(n))\\
+                &\times
+                    \bigl(
+                        \fun{nth}(
+                            n,
+                            \fun{pred}(\fun{len}(n))
+                        )
+                        \eq{\N}
+                        m
+                    \bigr)\\
+                &\times\prod_{i\colon\N}
+                    (i<\fun{len}(n))\to\fun{ValidStep}(n,i).
+        \end{align*}
+        Here, $\fun{ValidStep}(n,i)$ is the local validation predicate asserting that the $i$-th step is either an axiom or the valid result of an inference rule applied to strictly prior steps in the sequence:
+        \[
+            \fun{ValidStep}(n,i)\defeq\lVert\fun{vs}(n,i)\rVert,
+        \]
+        with
+        \begin{align*}
+            \fun{vs}(n,i)\defeq\;
+                &\fun{isAx}(\fun{nth}(n,i))\\
+                &+\sum_{j\colon\N}\;\sum_{k\colon\N}
+                    (j<i)
+                    \times(k<i)
+                    \times\fun{isMP}(
+                        \fun{nth}(n,j),
+                        \fun{nth}(n,k),
+                        \fun{nth}(n,i)
+                    )\\
+                &+\sum_{j\colon\N}(j<i)
+                    \times\fun{isGen}(
+                        \fun{nth}(n,j),
+                        \fun{nth}(n,i)
+                    )
+        \end{align*}
+        The propositional truncation guarantees that the entire expression remains a mere proposition, as a single step could theoretically be justified in multiple ways.
+    \end{description}
+\end{defns}
 
 \begin{thm}
     For every\/ $n,m\colon\N$, the type\/ $\fun{Proof}(n,m)$ is a mere proposition.
