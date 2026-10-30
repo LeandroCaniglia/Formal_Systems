@@ -10,6 +10,6 @@ This work develops formal deductive systems from the ground up as type-theoretic
 
 * **Formal Syntax & ASTs:** Inductive definitions of terms, formulas, variable binding, and capture-avoiding substitution. 
 * **Proof Theory & Deductive Systems:** Formalization of derivation trees and inference rules for Peano Arithmetic. 
-* **Arithmetization (Gödel Numbering):** Unique prime-factorization encodings of syntax trees, finite sequences, and proof derivations into $\mathbb{N}$. 
+* **Arithmetization (Gödel Numbering):** Unique prime-factorization encodings of syntax trees, finite sequences, and proof derivations into ℕ. 
 * **Decidable Metamathematics:** Constructive proofs establishing the decidability of syntactic identity and proof verification. 
 * **Constructive Foundations:** Built strictly within Homotopy Type Theory, leveraging path induction, identity types, $\Sigma$-types, and $\Pi$-types.
