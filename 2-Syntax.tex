@@ -212,14 +212,9 @@ We construct the mapping in two stages: first by defining structural recursors f
 
 
 \begin{rem}
-    The presentation of Peano Arithmetic (and formal systems in general) consists of two levels:
-    \begin{enumerate}[a),font=\upshape]
-        \item \textsl{The Mechanical Level\/} ($\fun{Form}$): Establishes the internal machinery of the derivation family $\fun{Der}$. It requires the broader domain of all well-formed formulas to allow for intermediate proof steps.
-        
-        \item \textsl{The Semantic Level\/} ($\fun{Sent}$): The goal of a formal system is to establish mathematical truths. Since only sentences make self-contained, evaluable claims about the domain, this level restricts the derivation family's output to $\fun{Sent}$, representing the final theorems of the theory.
-    \end{enumerate}
+    The presentation of Peano Arithmetic (and formal systems in general) consists of two levels. Open formulas and sentences. The former allow for intermediate proof steps. The latter state mathematical truths: the theorems of the theory.
     \[
-    \begin{tikzpicture}[node distance=2cm, auto, thick, >=stealth]
+    \begin{tikzpicture}[node distance=2cm, auto, thick, >=stealth,font=\small]
         % Nodes
         \node (Terms) [draw, rectangle, rounded corners, align=center, minimum height=1.2cm] {Terms \\ \small e.g., $x, 0, s(x)$};
         
@@ -241,9 +236,9 @@ We construct the mapping in two stages: first by defining structural recursors f
 
 
 \begin{defn}[Peano Arithmetic as a Formal System]
-    Peano Arithmetic complies with the definition of $\fun{System}\defeq\sum_{S\colon\univ}S\to\univ$ at two levels:
+    There are two ways in which Peano Arithmetic conforms to the definition of $\fun{System}\defeq\sum_{S\colon\univ}(S\to\univ)$:
     \begin{enumerate}[a),font=\upshape]
-        \item \textsl{At the level of formulas:} Setting the first projection to be the type of all well-formed formulas, we define
+        \item Using well-formed formulas:
         \[
             \fun{PA}_{\fun{Form}}\defeq
                 \dep{
@@ -251,9 +246,14 @@ We construct the mapping in two stages: first by defining structural recursors f
                 }
                 \colon\fun{System},
         \]
-        where $\pi_1(\fun{PA}_{\fun{Form}})\equiv\fun{Form}\colon\univ$ and $\pi_2(\fun{PA}_{\fun{Form}})\equiv\fun{Der}\colon\fun{Form}\to\univ$.
+        where $\fun{Form}\colon\univ$ and $\fun{Der}\colon\fun{Form}\to\univ$.
         
-        \item \textsl{At the level of sentences:} Restricting the first projection strictly to closed formulas $\fun{Sent}$, we define the restricted derivation family $\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$ by $\fun{Der}_{\fun{Sent}}\bigl((\varphi,p)\bigr)\defeq\fun{Der}(\varphi)$, which yields
+        \item Using sentences (closed formulas). We define the type of sentences as the dependent sum of a formula paired with a proof that its set of free variables is empty:
+        \[
+            \fun{Sent}\defeq\sum_{\varphi\colon\fun{Form}}
+                \neg\FV(\varphi).
+        \]
+        The formal system based strictly on sentences is then defined as:
         \[
             \fun{PA}\defeq
                 \dep{
@@ -262,109 +262,101 @@ We construct the mapping in two stages: first by defining structural recursors f
                 }
                 \colon\fun{System},
         \]
-        where $\pi_1(\fun{PA})\eq{}\fun{Sent}\colon\univ$ and $\pi_2(\fun{PA})\eq{}\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$.
+        where $\fun{Der}_{\fun{Sent}}\colon\fun{Sent}\to\univ$ is defined by evaluating the underlying derivation on the first projection:
+        \[
+            \fun{Der}_{\fun{Sent}}
+                \bigl(
+                    \dep{\varphi,\zeta}
+                \bigr)
+                \defeq\fun{Der}(\varphi).
+        \]
     \end{enumerate}
 \end{defn}
 
 
 \section{Finite Sequences}
-
-\begin{lem}
-    For any natural numbers\/ $k_1, k_2 \colon \N$, there is a canonical equivalence
-    \[
-        e_{k_1,k_2} \colon \fun{Fin}(k_1 + k_2) \simeq \fun{Fin}(k_1) + \fun{Fin}(k_2).
-    \]
-\end{lem}
-
-\begin{proof}
-    We construct the equivalence by induction on $k_2\colon\N$. Recall that
+ Recall that the family of finite sets $\fun{Fin}\colon\N\to\univ$ is inductively defined by
     \begin{itemize}
         \item $\fun{Fin}(0)\defeq\fun0$, and
         \item $\fun{Fin}(\fun{succ}(k))\defeq\fun{Fin}(k)+\fun1$.
     \end{itemize}
-    For the base case $k_2\equiv0$, we must inhabit the type
-    \[
-        \fun{Fin}(k_1+0)\simeq\fun{Fin}(k_1)+\fun{Fin}(0).
-    \]
-    Since $k_1+0\eq\N k_1$, we can define $e_{k_1,0}\defeq\fun{inl}$, which yields an equivalence between $\fun{Fin}(k_1)$ and $\fun{Fin}(k_1)+\fun0$.
 
-    For the inductive step $k_2\equiv\fun{succ}(m)$, assume the inductive hypothesis provides an equivalence
+\begin{defn}[Finite Sequences]
+    For any type $A\colon\univ$ and natural number $n\colon\N$, the type of \textsl{finite sequences} of length $n$ in $A$ is the function type
     \[
-        e_{k_1,m}\colon\fun{Fin}(k_1+m)
-            \simeq\fun{Fin}(k_1)+\fun{Fin}(m).
+        \fun{Seq}(A,n)\defeq\fun{Fin}(n)\to A.
     \]
-    Then, we can construct the equivalence for $\fun{succ}(m)$ as
+    Under this representation, indexing into a sequence $s\colon\fun{Seq}(A,n)$ at position $i\colon\fun{Fin}(n)$ is simply function application $s(i)$. In particular:
+    \begin{enumerate}[a),font=\upshape]
+        \item The empty sequence of length $0$ is given by the eliminator of the empty type:
+        \[
+            \varepsilon\defeq\fun{rec}_{\fun0}(A)\colon\fun{Seq}(A,0).
+        \]
+        \item Given $s\colon\fun{Seq}(A,n)$ and $a\colon A$, the \textsl{right-extension} $s\rwct a\colon\fun{Seq}(A,\fun{succ}(n))$ that appends $a$ at the end of $s$ is defined via coproduct elimination on $\fun{Fin}(\fun{succ}(n))\equiv\fun{Fin}(n)+\fun1$:
+        \[
+            s\rwct a\defeq\fun{rec}_{\fun{Fin}(n)+\fun1}(A,s,\lambda x.\,a).
+        \]
+        \item A \textsl{singleton sequence} $\formseq{a}\colon\fun{Seq}(A,1)$ is obtained as $\varepsilon\triangleright a$.
+    \end{enumerate}
+\end{defn}
+
+\begin{lem}
+    For any natural numbers\/ $k_1,k_2\colon\N$, there is a canonical equivalence
+    \[
+        e_{k_1,k_2}\colon\fun{Fin}(k_1+k_2)
+            \simeq\fun{Fin}(k_1)+\fun{Fin}(k_2).
+    \]
+\end{lem}
+
+\begin{proof}
+    We construct the equivalence by induction on $k_1\colon\N$.
+    
+    For the base case $k_1\equiv0$, we must inhabit the type
+    \[
+        \fun{Fin}(0+k_2)\simeq\fun{Fin}(0)+\fun{Fin}(k_2).
+    \]
+    Since $0+k_2\eq\N k_2$, we can define $e_{0,k_2}\defeq\fun{inr}$, which reduces to an equivalence between $\fun{Fin}(k_2)$ and $\fun0+\fun{Fin}(k_2$).
+
+    For the inductive step $k_1\equiv\fun{succ}(m)$, assume the inductive hypothesis provides an equivalence
+    \[
+        e_{m,k_2}\colon\fun{Fin}(m+k_2)
+            \simeq\fun{Fin}(m)+\fun{Fin}(k_2).
+    \]
+    Then, we can construct the equivalence for $\fun{succ}(m)$ as the composite
     \begin{align*}
-        \fun{Fin}(k_1+\fun{succ}(m))
-            &\simeq\fun{Fin}(\fun{succ}(k_1+m))\\
-            &\equiv\fun{Fin}(k_1+m)+\fun1\\
-            &\simeq(\fun{Fin}(k_1)+\fun{Fin}(m))+\fun1
-                &&\text{; by }e_{k_1,m}\\
-            &\simeq\fun{Fin}(k_1)+(\fun{Fin}(m)+\fun1)
-                &&\text{; assoc.}\\
-            &\equiv\fun{Fin}(k_1)+\fun{Fin}(\fun{succ}(m)).
+        \fun{Fin}(\fun{succ}(m)+k_2)
+            &\equiv\fun{Fin}(\fun{succ}(m+k_2))\\
+            &\equiv\fun{Fin}(m+k_2)+\fun1\\
+            &\simeq(\fun{Fin}(m)+\fun{Fin}(k_2))+\fun1
+                &&\text{; by }e_{m,k_2}\\
+            &\simeq(\fun{Fin}(m)+\fun1)+\fun{Fin}(k_2)
+                &&\text{; comm.~\& assoc.}\\
+            &\equiv\fun{Fin}(\fun{succ}(m))+\fun{Fin}(k_2).
     \end{align*}
 \end{proof}
 
 \begin{defn}[Sequence Concatenation]
-    Let $A$ be a type. Given two natural numbers $h, k \colon \N$ and two indexing functions
+    Let $A\colon\univ$ be a type. Given two natural numbers $k_1,k_2\colon\N$ and two finite sequences
     \[
-        f_1\colon\fun{Fin}(h)\to A
+        f_1\colon\fun{Seq}(A,k_1)
         \quad\text{and}\quad
-        f_2\colon\fun{Fin}(k)\to A,
+        f_2\colon\fun{Seq}(A,k_2),
     \]
     their \textsl{concatenation}
     \[
-        f_1\ct f_2\colon\fun{Fin}(h+k)\to A
+        f_1\ct f_2\colon\fun{Seq}(A,k_1+k_2)
     \]
     is defined by composing the coproduct elimination map 
     \[
-        \fun{rec}_{\fun{Fin}(h)+\fun{Fin}(k)}(A,f_1,f_2)
-            \colon\fun{Fin}(h)+\fun{Fin}(k)\to A
+        f\defeq\fun{rec}_{\fun{Fin}(k_1)+\fun{Fin}(k_2)}
+            (A,f_1,f_2)
+            \colon\fun{Fin}(k_1)+\fun{Fin}(k_2)\to A
     \]
-    with the canonical equivalence $e_{h,k}$:
+    with the canonical equivalence $e_{k_1,k_2}$:
     \[
-        f_1\ct f_2\defeq f\circ e_{h,k}.
+        f_1\ct f_2\defeq f\circ e_{k_1,k_2}.
     \]
 \end{defn}
-
-\begin{defn}[Cartesian Power]
-    For any type $A$, we define the $m$-ary cartesian power $A^m$ by recursion on $m\colon\N$:
-    \begin{align*}
-        A^0&\defeq\fun1\\
-        A^{m+1}&\defeq A^m\times A.
-    \end{align*}
-    The elements of $A^m$ are standard right-nested tuples, which we will represent with the notation $\formseq{a_0,\dots,a_{m-1}}$.
-\end{defn}
-
-\begin{prop}[Sequence Representation]
-    For any type\/ $A$ and natural number\/ $m \colon \N$, there is an equivalence
-    \[
-        (\fun{Fin}(m)\to A)\simeq A^m.
-    \]
-\end{prop}
-
-\begin{proof}
-    We proceed by induction on $m \colon \N$.
-    
-    For the base case $m \equiv 0$, the goal reduces to $(\fun{Fin}(0)\to A)\simeq A^0$, which holds because
-    \begin{align*}
-        \fun{Fin}(0)\to A
-            &\equiv\fun0\to A\\
-            &\simeq\fun1
-                &&\text{; }\fun{rec}_{\fun0}(A)\mapsto\fstar\\
-            &\equiv A^0.
-    \intertext{For the inductive step $m\equiv k+1$, let $g\colon(\fun{Fin}(k)\to A)\simeq A^k$. We have,}
-        (\fun{Fin}(k+1)\to A)
-            &\equiv(\fun{Fin}(k)+\fun1)\to A)\\
-            &\simeq(\fun{Fin}(k)\to A)\times(\fun1\to A)
-                &&\text{; }\fun{rec}_{\fun{Fin}(k)+\fun1}(A)\\
-            &\simeq A^k\times A
-                &&\text{; IH} + (\fun1\to A)\simeq A\\
-            &\equiv A^{k+1}.
-    \end{align*}
-\end{proof}
-
 \section{Arithmetization}
 
 \begin{defn}[Formula Sequences]
@@ -382,7 +374,7 @@ We construct the mapping in two stages: first by defining structural recursors f
 
 To bridge the inductive type family $\fun{Der}$ with the sequential representation used for \textit{arithmetization} we need the following
     
-\begin{defn}[Derivation Flattening]
+\begin{defn}[Concatenation]
     Given two sequences
     \[
         \varsigma_1\equiv\dep{k_1,f_1}
@@ -436,21 +428,42 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \varsigma\ct\varphi
             \defeq \varsigma\ct\formseq{\varphi}.
     \]
+\end{defn}
+
+\begin{rem}[Abstract Syntax Trees]
+    The inductive family $\fun{Der}$ produces inhabitants that possess the structure of Abstract Syntax Trees (AST). 
     
+    In this correspondence, constructors represent nodes, and recursive arguments of type $\fun{Der}$ represent outgoing edges from the parent node to a sub-derivation. The constructors build the branching of the proof tree:
+    \begin{description}[font=\normalfont\scshape] 
+        \item[Leaves:] The logical and non-logical axiom constructors $\fun{ax}$ take no arguments of type $\fun{Der}$. Hence, they yield nodes with no outgoing edges, i.e., the leaves of the tree. They internal state is given by their arguments, which have types $\fun{Term}$ and $\fun{Form}$.
+        
+        \item[Unary Branches:] The Universal Generalization rule $\fun{gen}$ takes exactly one derivation as an argument. Applying it yields a node with a single outgoing edge pointing to its premise.
+        
+        \item[Binary Branches] The Modus Ponens rule $\fun{mp}$ takes two derivations as arguments. Applying it yields a branching node with two outgoing edges pointing to its premises.
+    \end{description}
+    The $\fun{flatten}$ function operates as a post-order (Depth First Search) traversal algorithm. This way of traversing the syntax tree ensure, for instance, that when a Modus Ponens is reached, both of its premises have already been flattened into the sequence.
+\end{rem}
+
+\begin{defn}[Derivation Flattening]
     We define the flattening function
     \[
         \fun{flatten}\colon\prod_{\chi\colon\fun{Form}}\fun{Der}(\chi)\to\fun{Seq}(\fun{Form})
     \]
     by structural recursion on the constructors of $\fun{Der}$, explicitly passing both the target formula and the derivation tree as arguments:
     \begin{enumerate}[a),font=\upshape]
-        \item For any axiom constructor, the sequence has length $1$ and the function always transforms that axiom into its corresponding singleton sequence. For example, for the first logical axiom, the target formula is $\varphi\imp(\psi\imp\varphi)$:
+        \item For any axiom constructor, the function always transforms that axiom into its corresponding singleton sequence. For example,
         \[
             \fun{flatten}\bigl(\varphi\imp(\psi\imp\varphi), \fun{ax}_{\fun{L1}}(\varphi,\psi)\bigr)
             \defeq\formseq{\varphi\imp(\psi\imp\varphi)}.
         \]
         This base case logic applies identically to all logical and non-logical axiom constructors.
         
-        \item For the Modus Ponens rule, the target formula is the conclusion $\psi$. We concatenate the recursively flattened sequences of the premises and append the conclusion:
+        \item For the Universal Generalization rule, we take the flattened sequence of the premise and append the generalized conclusion:
+        \[
+            \fun{flatten}\bigl(\forall x\,\varphi, \fun{gen}_{\varphi,x}(d)\bigr) \defeq \fun{flatten}(\varphi, d) \ct \forall x\,\varphi.
+        \]
+        
+        \item For the Modus Ponens rule, we concatenate the recursively flattened sequences of the premises and append the conclusion:
         \[
             \fun{flatten}\bigl(\psi, \fun{mp}_{\varphi,\psi}(d_1,d_2)\bigr)
                 \defeq
@@ -460,30 +473,9 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                     \ct
                     \psi.
         \]
-        
-        \item For the Universal Generalization rule, the target formula is $\forall x\,\varphi$. We take the flattened sequence of the premise and append the generalized conclusion:
-        \[
-            \fun{flatten}\bigl(\forall x\,\varphi, \fun{gen}_{\varphi,x}(d)\bigr) \defeq \fun{flatten}(\varphi, d) \ct \forall x\,\varphi.
-        \]
     \end{enumerate}
 \end{defn}
 
-
-\begin{rem}[Derivations as Abstract Syntax Trees]
-    The inductive family $\fun{Der}$ produces terms that possesses the structure of Abstract Syntax Trees (AST). 
-    
-    In this correspondence, every application of a constructor represents a node, and every recursive argument of type $\fun{Der}$ represents an outgoing edge connecting the parent node to a sub-derivation. The constructors dictate the local branching of the proof tree:
-    \begin{itemize}
-        \item \textsc{Leaves:} The logical and non-logical axiom constructors $\fun{ax}$ take no arguments of type $\fun{Der}$. Consequently, they yield nodes with zero outgoing edges. They are the leaves of the tree, holding their arguments as internal state.
-        
-        \item \textsc{Unary Branches:} The Universal Generalization rule $\fun{gen}$ takes exactly one derivation as an argument. Applying it yields a node with a single outgoing edge pointing to its premise.
-        
-        \item \textsc{Binary Branches} The Modus Ponens rule $\fun{mp}$ takes two derivations as arguments. Applying it yields a branching node with two outgoing edges pointing to its respective premises.
-    \end{itemize}
-    From this perspective, the $\fun{flatten}$ function operates as a post-order (Depth First Search) traversal algorithm. It walks the AST from the axiom leaves to the root conclusion, aggregating the internal formulas into a flat sequence.
-
-    To write down a valid classical proof sequence, a formula cannot appear in the sequence until the premises justifying it have already been established. Post-order enforces this dependency. Thus, by the time a Modus Ponens node is reached, both of its premises have already been flattened into the sequence.
-\end{rem}
 
 \begin{xmpls}
     Here are three examples demonstrating how the $\fun{flatten}$ function unpacks a structurally valid derivation tree into a flat sequence of formulas.
