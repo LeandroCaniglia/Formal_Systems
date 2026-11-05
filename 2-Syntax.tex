@@ -88,7 +88,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     \]
 \end{defn}
 
-\begin{thm}
+\begin{thm}\label{thm:gn-is-injective}
     The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:\/
     \[
         \fun{isInj}(\fun{gn})\defeq
@@ -108,7 +108,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     If both are formulas, a similar argument shows that they must be equal in $\fun{Form}$.
 \end{proof}
 
-\begin{thm}
+\begin{thm}\label{thm:gn-has-decidable-fibers}
     The fibers of the function\/ $\fun{gn}$ are decidable. In other words, the type
     \[
         \prod_{n\colon\N}
@@ -150,7 +150,9 @@ We construct the mapping in two stages: first by defining structural recursors f
         \item For all other values of $k$ (5 through 9), we analogously apply the inductive hypothesis to the exponents of $3$ and $5$.
     \end{itemize}
     Since the process constructs an inhabitant of the coproduct in all branches, the fibers of $\fun{gn}$ are decidable.
+    
 \end{proof}
+
 
 \section{Derivations}
 
@@ -234,6 +236,44 @@ We construct the mapping in two stages: first by defining structural recursors f
     \]
 \end{rem}
 
+\begin{cor}[Decidable Inference Rules]
+    There exist decidable families of mere propositions
+    \[
+        \fun{isAx}\colon\N\to\univ,\quad
+        \fun{isMP}\colon\N\to\N\to\N\to\univ,
+        \quad\text{and}\quad
+        \fun{isGen}\colon\N\to\N\to\univ,
+    \]
+    equipped with decision functions
+    \begin{align*}
+        d_{\fun{Ax}}&\colon\prod_{x\colon\N}\fun{isAx}(x)+\neg\fun{isAx}(x),\\
+        d_{\fun{MP}}&\colon\prod_{x,y,z\colon\N}\fun{isMP}(x,y,z)+\neg\fun{isMP}(x,y,z),\quad\text{and}\\
+        d_{\fun{Gen}}&\colon\prod_{x,z\colon\N}\fun{isGen}(x,z)+\neg\fun{isGen}(x,z),
+    \end{align*}
+    such that
+    \begin{itemize}
+        \item $\fun{isAx}(x)$ indicates whether $x$ encodes a logical or non-logical axiom,
+        \item $\fun{isMP}(x,y,z)$ indicates whether $z$ follows from $x$ and $y$ via Modus Ponens, and
+        \item $\fun{isGen}(x,z)$ indicates whether $z$ follows from $x$ via Universal Generalization.
+    \end{itemize}
+\end{cor}
+
+\begin{proof}
+    By Theorem~\ref{thm:gn-is-injective}, the function $\fun{gn}$ is injective. Since Theorem~\ref{thm:syntax-are-sets} implies that $\fun{Syntax}$ is a decidable set, we deduce that $\fun{gn}$ is an embedding \citep[Chapter~4]{caniglia2025hott}. Consequently, the fibers of $\fun{gn}$ are mere propositions, meaning each natural number encodes at most one unique syntactic tree.
+
+    By Theorem~\ref{thm:gn-has-decidable-fibers}, these fibers are also decidable. Given natural numbers $x,y,z\colon\N$, we apply the decision function to their respective fibers. This yields a case analysis.
+
+    In the case of Modus Ponens, the analysis is the following
+    \begin{itemize}
+        \item If any of the numbers $x$, $y$, or $z$ do not belong to the image of $\fun{gn}$, they do not encode valid formulas. In this case, $\fun{isMP}(x,y,z)$ cannot hold, and we return $\fun{inr}$.
+        \item If all three belong to the image of $\fun{gn}$, the decision function provides their corresponding unique formulas $\varphi_x, \varphi_y, \varphi_z\colon\fun{Form}$ such that $\fun{gn}(\varphi_x)\equiv x$, $\fun{gn}(\varphi_y)\equiv y$, and $\fun{gn}(\varphi_z)\equiv z$.
+    \end{itemize}
+    Modus Ponens dictates that $z$ follows from $x$ and $y$ if, and only if, $\varphi_y$ is syntactically equivalent to the implication $\varphi_x\imp\varphi_z$. Since equality in $\fun{Form}$ is decidable by Theorem~\ref{thm:syntax-are-sets}, we compute the decision for $\varphi_y\eq{\fun{Form}}(\varphi_x\imp\varphi_z)$. If the formulas are equal, we return $\fun{inl}$ to confirm $\fun{isMP}(x,y,z)$; otherwise, we return~$\fun{inr}$.
+
+    Similar arguments apply to $\fun{isAx}$ and $\fun{isGen}$.
+\end{proof}
+
+
 
 \begin{defn}[Peano Arithmetic as a Formal System]
     There are two ways in which Peano Arithmetic conforms to the definition of $\fun{System}\defeq\sum_{S\colon\univ}(S\to\univ)$:
@@ -281,7 +321,7 @@ We construct the mapping in two stages: first by defining structural recursors f
         \item $\fun{Fin}(\fun{succ}(k))\defeq\fun{Fin}(k)+\fun1$.
     \end{itemize}
 
-\begin{defn}[Finite Sequences]
+\begin{defn}[Finite Sequences]\label{defn:finite-seq}
     For any type $A\colon\univ$ and natural number $n\colon\N$, the type of \textsl{finite sequences} of length $n$ in $A$ is the function type
     \[
         \fun{Seq}(A,n)\defeq\fun{Fin}(n)\to A.
@@ -357,76 +397,463 @@ We construct the mapping in two stages: first by defining structural recursors f
         f_1\ct f_2\defeq f\circ e_{k_1,k_2}.
     \]
 \end{defn}
+
+\begin{rem}\label{rem:emb}
+    Let $k\colon\N$. The \textsl{canonical embedding} function
+    \[
+        \fun{emb}_k\colon\fun{Fin}(k)\to\N
+    \]
+    is defined by induction on $k$.
+    \begin{itemize}
+        \item Base case $k\equiv0$: Since $\fun{Fin}(0)\equiv\fun0$ we define $\fun{emb}_0\defeq\fun{rec}_{\fun0}(\N)$.
+        
+        \item Inductive step $k\equiv\fun{succ}(j)$: Since $\fun{Fin}(\fun{succ}(j))\equiv\fun{Fin}(j)+\fun1$, we define the function by pattern matching:
+        \begin{align*}
+            \fun{emb}_{\fun{succ}(j)}(\fun{inl}(x))
+                &\defeq \fun{emb}_j(x),\\
+            \fun{emb}_{\fun{succ}(j)}(\fun{inr}(\fstar))
+                &\defeq\fun{succ}(j).
+        \end{align*}
+    \end{itemize}
+\end{rem}
+
+\begin{lem}\label{lem:bounded-Fin-embedding}
+    For every\/ $k\colon\N$, there is a dependent function
+    \[
+        \delta_k\colon\prod_{x\colon\fun{Fin}(k)}
+            \fun{emb}_k(x)<k.
+    \]
+\end{lem}
+
+\begin{proof}
+    For every $k\colon\N$, let $P_k\colon\fun{Fin}(k)\to\univ$ be defined by $P_k(x)\defeq\fun{emb}_k(x)<k$. The result follows by induction on $k$.
+    
+    For the base case $k\equiv0$, we have
+    \[
+        \fun{ind}_{\fun0}(P_0)\colon
+            \prod_{x\colon\fun{Fin}(0)}\fun{emb}_0(x)<0,
+    \]
+    which is trivially inhabited because $\fun{Fin}(0)\equiv\fun0$.
+    
+    For the inductive step, suppose we have constructed $\delta_k$. We must construct $\delta_{\fun{succ}(k)}$. 
+
+    Let
+    \[
+        \fun{lt}(h)\colon(h<k)\to(h<\fun{succ}(k))
+    \]
+    and
+    \[
+        \fun{lt}_{\fun{succ}}(k)\colon k<\fun{succ}(k).
+    \]
+    Proceeding by case analysis on $\fun{Fin}(\fun{succ}(k))\equiv\fun{Fin}(k)+\fun1$, we define
+    \[
+        \delta_{\fun{succ}(k)}(y)
+            \defeq\begin{cases}
+                \fun{lt}(\delta_k(x))
+                    &\text{if }y\equiv\fun{inl}(x),\\
+                \fun{lt}_{\fun{succ}}(k)
+                    &\text{if }y\equiv\fun{inr}(\fstar).
+            \end{cases}
+    \]
+    To verify that $\delta_{\fun{succ}(k)}$ is well-typed, we must show that the assigned term inhabits the type $\fun{emb}_{\fun{succ}(k)}(y)<\fun{succ}(k)$. We evaluate both cases:
+    \begin{itemize}
+        \item For $y\equiv\fun{inl}(x)$, we have $\fun{emb}_{\fun{succ}(k)}(\fun{inl}(x))\equiv\fun{emb}_k(x)$. By the inductive hypothesis, $\delta_k(x)\colon\fun{emb}_k(x)<k$ and so $\fun{lt}(\delta_k(x))\colon\fun{emb}_k(x)<\fun{succ}(k)$.
+        
+        \item For $y\equiv\fun{inr}(\fstar)$, we have $\fun{emb}_{\fun{succ}(k)}(\fun{inr}(\fstar))\equiv k$. Then
+        \[
+            \fun{lt}_{\fun{succ}}(k)\colon
+                \bigl(k<\fun{succ}(k)\bigr)
+                \equiv
+                \bigl(
+                    \fun{emb}_{\fun{succ}(k)}(
+                        \fun{inr}(\fstar)
+                    )
+                    <\fun{succ}(k)
+                \bigr).
+        \]
+    \end{itemize}
+\end{proof}
+
+\begin{prop}\label{prop:emb-is-an-embedding}
+    For every\/ $k\colon\N$, the function
+    \[
+        \fun{emb}_k\colon\fun{Fin}(k)\to\N
+    \]
+    is an embedding.
+\end{prop}
+
+\begin{proof}
+    Because both $\fun{Fin}(k)$ and $\N$ are sets, it suffices to show that for all $x,y\colon\fun{Fin}(k)$, there is a map
+    \[
+        (\fun{emb}_k(x)\eq\N\fun{emb}_k(y))
+        \to
+        (x\eq{\fun{Fin}(k)}y).
+    \]
+    We proceed by induction on $k$.
+    
+    For the base case $k\equiv0$, the claim is trivially true because $\fun{Fin}(0)\equiv0$ is a set.
+    
+    For the inductive step $k\equiv\fun{succ}(j)$, we assume the injectivity of $\fun{emb}_j$. Given $x,y\colon\fun{Fin}(k)\equiv\fun{Fin}(j)+\fun1$, we analyze the cases on the coproduct:
+    \begin{itemize}
+        \item If $x\equiv\fun{inl}(u)$ and $y\equiv\fun{inl}(v)$ for some $u,v\colon\fun{Fin}(j)$, then the equality $\fun{emb}_k(x)\eq\N\fun{emb}_k(y)$ evaluates to $\fun{emb}_j(u)\eq\N\fun{emb}_j(v)$. By the inductive hypothesis, this implies $u\eq{\fun{Fin}(j)}v$, and therefore $\fun{inl}(u)\eq{\fun{Fin}(k)}\fun{inl}(v)$.
+        
+        \item If $x\equiv\fun{inr}(\fstar)$ and $y\equiv\fun{inr}(\fstar)$, then they are trivially equal because $\fun1$ is a contractible type.
+        
+        \item If $x=\fun{inl}(u)$ and $y=\fun{inr}(\fstar)$, then $\fun{emb}_k(x)=\fun{emb}_j(u)$ and $\fun{emb}_k(y)=j$. By Lemma~\ref{lem:bounded-Fin-embedding}, $\fun{emb}_j(u)<j$. In particular, $\fun{emb}_j(u)\neq j$, rendering the premise of the injectivity implication false.
+        
+        \item The symmetric case where $x=\fun{inr}(\star)$ and $y=\fun{inl}(v)$ holds for the same reason.
+    \end{itemize}
+    Thus, $\fun{emb}_k$ is injective, completing the induction.
+\end{proof}
+
+\begin{lem}\label{lem:decidable-bounded-types}
+    Let\/ $P\colon\N\to\univ$ be a family of decidable types. For any natural number\/ $n\colon\N$, the dependent types
+    \[
+        \sum_{x\colon\fun{Fin}(n)}P(\fun{emb}_n(x))
+        \quad\text{and}\quad
+        \prod_{x\colon\fun{Fin}(n)}P(\fun{emb}_n(x))
+    \]
+    are decidable.
+\end{lem}
+
+\begin{proof}
+    \citep[Chapter 3]{caniglia2025hott}.
+\end{proof}
+
+\begin{thm}\label{thm:fin-equiv-bound}
+    For any natural number\/ $n\colon\N$, the map
+    \begin{align*}
+        \fun{Fin}(n)&\to\sum_{i\colon\N}i<n\\
+        j&\mapsto\dep{\fun{emb}_n(j),\delta_n(j)}
+    \end{align*}
+    is an equivalence.
+\end{thm}
+
+\begin{proof}
+    Let $e_n$ denote the map of the theorem statement. We construct a quasi-inverse
+    \[
+        g_n\colon\Bigl(\sum_{i\colon\N}i<n\Bigr)
+            \to\fun{Fin}(n)
+    \]
+    by induction on $n\colon\N$.
+
+    For the base case $n\equiv0$, define 
+    \[
+        g_0(\dep{i,u})
+            \defeq\fun{rec}_{\fun0}(\fun{Fin}(0),u).
+    \]
+
+    For the inductive step $n\equiv\fun{succ}(k)$, using that $\fun{Fin}(\fun{succ}(k))\equiv\fun{Fin}(k)+\fun1$, consider the canonical equivalence
+    \[
+        \tau\colon(i<\fun{succ}(k))
+            \xto\simeq(i<k)+(i\eq\N k).
+    \]
+    Since $\delta_k(x)\colon\fun{emb}_k(x)<k$, the definitions of $\fun{lt}$, $\fun{lt}_{\fun{succ}}$, and $\tau$ yield
+    \begin{align}
+        \tau(\fun{lt}(\delta_k(x)))
+            &\eq{}\fun{inl}(\delta_k(x))
+                &&\label{eq:tau-lt=inl}\\
+        \tau(\fun{lt}_{\fun{succ}}(k))
+            &\eq{}\fun{inr}(\fun{refl}_k)
+                &&\label{eq:tau-lt_succ=inr}
+    \end{align}
+    Define
+    \begin{equation}\label{eq:g_succ}
+        g_{\fun{succ}(k)}(\dep{i,u})
+            \defeq
+                \begin{cases}
+                    \fun{inl}(g_k(\dep{i,v}))
+                        &\text{if }\tau(u)=\fun{inl}(v),\; v\colon i<k,\\
+                    \fun{inr}(\fstar)
+                        &\text{if }\tau(u)=\fun{inr}(\epsilon),\; \epsilon\colon i\eq\N k.
+                \end{cases}
+    \end{equation}
+    We claim that $g_n$ and $e_n$ are mutually inverse. The proof works by induction on $n\colon\N$.
+    
+    The base case $n\equiv0$ holds trivially since both domain and codomain are empty.
+    
+    For the inductive step $n\equiv\fun{succ}(k)$, assume the homotopies hold for $k$:
+    \begin{enumerate}[i)]
+        \item To show $g_{\fun{succ}(k)}(e_{\fun{succ}(k)}(y))=y$ for $y\colon\fun{Fin}(k)+\fun1$, we proceed by case analysis on $y$.
+        
+        For $y\equiv\fun{inl}(x)$, we have
+        \begin{align*}
+            g_n(
+                e_n(\fun{inl}(x))
+            )
+                &\equiv g_n\bigl(
+                    \dep{
+                        \fun{emb}_{\fun{succ}(k)}(
+                            \fun{inl}(x)
+                        ),
+                        \delta_{\fun{succ}(k)}(
+                            \fun{inl}(x)
+                        )
+                    }
+                \bigr)\\
+                &\equiv g_{\fun{succ}(k)}\bigl(
+                    \dep{
+                        \fun{emb}_k(x),
+                        \fun{lt}(\delta_k(x))
+                    }
+                \bigr)\\
+                &=\fun{inl}\bigl(
+                    g_k(\dep{\fun{emb}_k(x),\delta_k(x)})
+                \bigr)
+                    &&\text{; \eqref{eq:tau-lt=inl} \& \eqref{eq:g_succ}}\\
+                &\equiv\fun{inl}(g_k(e_k(x)))\\
+                &=\fun{inl}(x)
+                    &&\text{; IH.}
+        \end{align*}
+        
+        For $y\equiv\fun{inr}(\fstar)$, we have
+        \begin{align*}
+            g_n(e_n(\fun{inr}(\fstar)))
+                &\equiv g_n\bigl(
+                    \dep{
+                        \fun{emb}_{\fun{succ}(k)}(
+                            \fun{inr}(\fstar)
+                        ),
+                        \delta_{\fun{succ}(k)}(
+                            \fun{inr}(\fstar)
+                        )
+                    }
+                \bigr)\\
+                &\equiv g_{\fun{succ}(k)}\bigl(
+                    \dep{
+                        k,
+                        \fun{lt}_{\fun{succ}}(k)
+                    }
+                \bigr)\\
+                &=\fun{inr}(\fstar)
+                    &&\text{; \eqref{eq:tau-lt_succ=inr} \& \eqref{eq:g_succ}.}
+        \end{align*}
+        
+        \item To inhabit the identity type
+        \[
+            e_{\fun{succ}(k)}(g_{\fun{succ}(k)}(\dep{i,u}))=\dep{i,u}
+        \]
+        for $\dep{i,u}\colon\sum_{i\colon\N}i<\fun{succ}(k)$, observe that because $i<\fun{succ}(k)$ is a mere proposition, equality in the $\Sigma$-type is equivalent to equality of the first projections:
+        \begin{align*}
+            \bigl(
+                e_n(g_n(\dep{i,u}))\eq{}\dep{i,u}
+            \bigr)
+                &\simeq\bigl(
+                    \pi_1(e_n(g_n(\dep{i,u})))
+                    \eq\N
+                    \pi_1(\dep{i,u})
+                \bigr)\\
+                &\equiv\bigl(
+                    \fun{emb}_n(g_n(\dep{i,u}))
+                    \eq\N
+                    i
+                \bigr).
+        \end{align*}
+        We now proceed by case analysis on $\tau(u)$.
+        
+        If $\tau(u)=\fun{inl}(v)$ with $v\colon i<k$, we have
+        \begin{align*}
+            \fun{emb}_n(
+                g_{\fun{succ}(k)}(\dep{i,u})
+            )
+                &\eq{}\fun{emb}_{\fun{succ}(k)}(
+                    \fun{inl}(g_k(\dep{i,v}))
+                )
+                    &&\text{; \eqref{eq:g_succ}}\\
+                &\equiv\fun{emb}_k(g_k(\dep{i,v}))\\
+                &\equiv\pi_1(e_k(g_k(\dep{i,v})))\\
+                &\eq{}\pi_1(\dep{i,v})
+                    &&\text{; IH}\\
+                &\equiv i.
+        \intertext{If $\tau(u)=\fun{inr}(\epsilon)$ with $\epsilon\colon i\eq\N k$, then}
+            \fun{emb}_n(
+                g_{\fun{succ}(k)}(\dep{i,u})
+            )
+                &=\fun{emb}_{\fun{succ}(k)}(\fun{inr}(\fstar))
+                    &&\text{; \eqref{eq:g_succ}}\\
+                &\equiv k\\
+                &\eq\N i
+                    &&\text{; }\epsilon^{-1}.
+        \end{align*}
+    \end{enumerate}
+    Thus, $e_n$ and $g_n$ are mutually inverse, establishing the equivalence.
+\end{proof}
+
+\begin{ntn}\label{ntn:bound_n}
+    The equivalence maps $e_n$ and $g_n$ defined in the theorem will be respectively denoted by
+    \[
+        \fun{bound}_n\colon
+            \fun{Fin}(n)\to\sum_{i\colon\N}i<n
+        \quad\text{and}\quad
+        \fun{unbound}_n\colon
+            \Bigl(\sum_{i\colon\N}i<n\Bigr)\to\fun{Fin}(n).
+    \]
+\end{ntn}
+
+\begin{lem}\label{lem:transport-ap}
+    Let\/ $A$ and\/ $B$ be types, $h\colon A\to B$ a function, and\/ $P\colon B\to\univ$ a type family over\/ $B$. For any dependent function
+    \[
+        f\colon\prod_{x\colon A}P(h(x)),
+    \]
+    points\/ $x,y\colon A$, and path\/ $p\colon x\eq Ay$, we have
+    \[
+        \fun{transport}^P\bigl(\fun{ap}_h(p), f(x)\bigr) \eq{} f(y).
+    \]
+\end{lem}
+
+\begin{proof}
+    By based path induction on $p\colon x\eq Ay$, it suffices to prove the claim when $y\equiv x$ and $p\equiv\fun{refl}_x$.
+    
+    Under these definitional equalities, the projected path $\fun{ap}_h(\fun{refl}_x)$ reduces computationally to $\fun{refl}_{h(x)}$. Substituting this into the \lhs becomes
+    \[
+        \fun{transport}^P\bigl(
+            \fun{refl}_{h(x)},
+            f(x)
+        \bigr),
+    \]
+    which is definitionally equal to $f(x)$, hence, to the \rhs.
+\end{proof}
+
+\begin{thm}\label{lem:domain-bounded-products-are-decidable}
+    Let\/ $P\colon\N\to\univ$ be a family of decidable types. Then, for every\/ $n\colon\N$, the product
+    \[
+        \prod_{i\colon\N}(i<n)\to P(i)
+    \]
+    is decidable.
+\end{thm}
+
+\begin{proof}
+    By Lemma~\ref{lem:decidable-bounded-types}, it suffices to establish the equivalence
+    \[
+        \Bigl(
+            \prod_{i\colon\N}(i<n)\to P(i)
+        \Bigr)
+        \simeq
+        \prod_{j\colon\fun{Fin}(n)}P(\fun{emb}_n(j)).
+    \]  
+    Let
+    \[
+        L\defeq\prod_{i\colon\N}(i<n)\to P(i)
+        \quad\text{and}\quad
+        R\defeq\prod_{j\colon\fun{Fin}(n)}P(\fun{emb}_n(j)).
+    \]
+    To define the forward function $f\colon L\to R$, take $u\colon L$ and set
+    \[
+        f(u)\defeq\lambda j.\,
+            \explain[P(\fun{emb}_n(j))]{
+            u(\explain[i\defeq{}^\uparrow]{\fun{emb}_n(j)})(\explain[i<n]{\delta_n(j)})
+            }.
+    \]
+    Conversely, to define the backward function $g\colon R\to L$, given $i\colon\N$ and $\rho\colon i<n$, we obtain an index
+    \[
+        j\defeq\fun{unbound}_n(\dep{i,\rho})
+            \colon\fun{Fin}(n).
+    \]
+    Since $\fun{bound}_n$ and $\fun{unbound}_n$ are quasi-inverses, we have a right homotopy path
+    \[
+        \eta_{\dep{i,\rho}}\colon
+            \fun{bound}_n(j)\eq{}\dep{i,\rho}.
+    \]
+    Projecting its first component yields a path
+    \[
+        \epsilon_{i,\rho}
+            \defeq\fun{ap}_{\pi_1}(\eta_{\dep{i,\rho}})
+            \colon
+                \fun{emb}_n(\fun{unbound}_n(\dep{i,\rho}))
+                \eq\N i.
+    \]
+    Applying transport along $\epsilon_{i,\rho}$, we define $g(v)$ for $v\colon R$ by
+    \[
+        g(v)\defeq\lambda i.\,\lambda\rho.\,
+            \fun{transport}^P\bigl(
+                \epsilon_{i,\rho},
+                v(j)
+            \bigr).
+    \]
+    \needspace{2\baselineskip}
+    To verify that $f$ and $g$ form an equivalence, we analyze both compositions:
+    \begin{enumerate}[-]
+        \item For any dependent function $v\colon R$ and index $j\colon\fun{Fin}(n)$, let $\vartheta_j\colon\fun{unbound}_n(\fun{bound}_n(j))\eq{}j$ denote the left homotopy of the equivalence. Pushing this path through the embedding function yields 
+        \[
+            \fun{ap}_{\fun{emb}_n}(\vartheta_j)\colon
+                \fun{emb}_n(
+                    \fun{unbound}_n(\fun{bound}_n(j))
+                )
+                \eq\N\fun{emb}_n(j).
+        \]
+        Notice that this path and $\epsilon_{\fun{emb}_n(j),\delta_n(j)}$ share the exact same endpoints in $\N$. Since $\N$ is a set, we have an equality of paths:
+        \begin{equation}\label{eq:epsilon=ap}
+            \epsilon_{\fun{emb}_n(j),\delta_n(j)}
+            \eq{}
+            \fun{ap}_{\fun{emb}_n}(\vartheta_j).
+        \end{equation}
+        Then,
+        \begin{align*}
+            f(g(v))(j)
+                &\equiv g(v)(\fun{emb}_n(j))(\delta_n(j))\\
+                &\equiv\fun{transport}^P\bigl(
+                    \epsilon_{\fun{emb}_n(j),\delta_n(j)},
+                    v(\fun{unbound}_n(\fun{bound}_n(j)))
+                \bigr)\\
+                &\eq{}\fun{transport}^P\bigl(
+                    \fun{ap}_{\fun{emb}_n}(\vartheta_j),
+                    v(\fun{unbound}_n(\fun{bound}_n(j)))
+                \bigr)
+                    &&\text{; \eqref{eq:epsilon=ap}}\\
+                &\eq{}v(j),
+        \end{align*}
+        where the final equality follows directly from Lemma~\ref{lem:transport-ap} applied to the dependent function $v$ along the path $\vartheta_j$.
+        
+        \item For any dependent function $u\colon L$, natural number $i\colon\N$, and proof $\rho\colon i<n$, letting $j\defeq\fun{unbound}_n(\dep{i,\rho})$, we obtain
+        \begin{align*}
+            g(f(u))(i)(\rho)
+                &\equiv\fun{transport}^P\bigl(
+                    \epsilon_{i,\rho},
+                    f(u)(j)
+                \bigr)\\
+                &\equiv\fun{transport}^P\bigl(
+                    \epsilon_{i,\rho},
+                    u(\fun{emb}_n(j))(\delta_n(j))
+                \bigr)\\
+                &\eq{}u(i)(\rho),
+        \end{align*}
+        where the last equality follows directly from Lemma~\ref{lem:transport-ap} applied to the dependent function $u$ along the path $\eta_{\dep{i,\rho}}$.
+    \end{enumerate}
+\end{proof}
+
 \section{Arithmetization}
 
 \begin{defn}[Formula Sequences]
     A \textsl{formula sequence} is formalized as the $\Sigma$-type
     \[
         \fun{Seq}(\fun{Form})
-            \defeq\sum_{k\colon\N}\fun{Fin}(k)\to\fun{Form}.
+            \defeq\sum_{k\colon\N}\fun{Seq}(\fun{Form},k).
     \]
-    Inhabitants of this type are dependent pairs $\dep{k,f}$, where the function~$f$ assigns a formula to each index $i<k$. The informal notation we adopted represents $f$ by
+    According to Definition~\ref{defn:finite-seq}, inhabitants of this type are dependent pairs $\dep{k,f}$, where $f\colon\fun{Fin}(k)\to\fun{Form}$ assigns a formula to each index $i<k$. The informal notation we adopted represents $f$ by
     \[
         \formseq{\varphi_0,\varphi_1,\dots,\varphi_{k-1}},
     \]
     with $\varphi_i\equiv f(i)$ for $i\colon\fun{Fin}(k)$.
 \end{defn}
 
-To bridge the inductive type family $\fun{Der}$ with the sequential representation used for \textit{arithmetization} we need the following
-    
+To bridge the inductive type family $\fun{Der}$ with the sequential representation used for \textit{arithmetization}, we define the following sequence operations:
+
 \begin{defn}[Concatenation]
-    Given two sequences
+    Given two formula sequences
     \[
         \varsigma_1\equiv\dep{k_1,f_1}
         \quad\text{and}\quad
         \varsigma_2\equiv\dep{k_2,f_2},
     \]
-    their \textsl{concatenation}
+    their \textsl{concatenation} is given by
     \[
-        \varsigma_1\ct \varsigma_2
+        \varsigma_1\ct\varsigma_2
+            \defeq\dep{k_1+k_2,f_1\ct f_2}.
     \]
-    is the dependent pair $\dep{k_1+k_2,f}$, where the indexing function
-    \[
-        f\colon\fun{Fin}(k_1+k_2)\to\fun{Form}
-    \]
-    is constructed by horizontal composition from:
-    \[
-        \begin{tikzcd}[column sep=1.0cm]
-                &\fun{Fin}(k_1)
-                    \arrow[rd,"f_1"]
-                    \arrow[d,"\fun{inl}"']\\
-            \fun{Fin}(k_1+k_2)
-                    \arrow[r,"{e_{k_1,k_2}}"]
-                &\fun{Fin}(k_1)+\fun{Fin}(k_2)
-                    \arrow[r,"h",pos=0.3]
-                &\fun{Form}\\
-                &\fun{Fin}(k_2)
-                    \arrow[ru,"f_2"']
-                    \arrow[u,"\fun{inr}"]
-        \end{tikzcd}
-    \]
-    where $h$ is recursively defined by
-    \[
-        h\circ\fun{inl}\defeq f_1
-        \quad\text{and}\quad
-        h\circ\fun{inr}\defeq f_2.
-    \]
-    Thus, 
-    \[
-        f\defeq h\circ e_{k_1,k_2}.
-    \]
-
-    Given $\varphi\colon\fun{Form}$, the \textsl{singleton sequence} is defined as
-    \[
-        \formseq{\varphi}\defeq\dep{
-            1,
-            \lambda x\colon\fun{Fin}(1).\,\varphi
-        }.
-    \]
-    This allows us to append $\varphi$ to a sequence $\varsigma$ by setting
+    Furthermore, we can \textsl{append} a formula $\varphi\colon\fun{Form}$ to a sequence $\varsigma\equiv\dep{k,f}$ by setting
     \[
         \varsigma\ct\varphi
-            \defeq \varsigma\ct\formseq{\varphi}.
+            \defeq\dep{\fun{succ}(k),f\rwct\varphi}.
     \]
 \end{defn}
 
@@ -497,46 +924,89 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         This sequence represents a candidate derivation containing exactly one formula.
         
         \item[Modus Ponens.]
-        Let us construct a derivation proving $\neg(s(0) \doteq 0)$. This requires the first Peano axiom, a logical axiom for universal instantiation, and an application of Modus Ponens. We first construct the premises:
+        Let us construct a derivation proving $\neg(s(0)\doteq 0)$. This involves the three kinds of derivations:
         \begin{align*}
-            d_A &\defeq \fun{ax}_{\fun{PA1}} \colon \fun{Der}\bigl(\forall x\,\neg(s(x) \doteq 0)\bigr) \\
-            d_B &\defeq \fun{ax}_{\fun{L4}}\bigl(\neg(s(x) \doteq 0), x, 0\bigr) \colon \fun{Der}\bigl(\forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0)\bigr).
+            d_1&\defeq
+                \fun{ax}_{\fun{PA1}}\colon
+                    \fun{Der}\bigl(
+                        \forall x\,\neg(s(x)\doteq0)
+                    \bigr)\\
+            d_2&\defeq
+                \fun{ax}_{\fun{L4}}\bigl(
+                    \neg(s(x)\doteq 0),x,0
+                \bigr)\colon
+                    \fun{Der}\bigl(
+                        \forall x\,
+                            \neg(s(x)\doteq0)
+                            \imp
+                            \neg(s(0)\doteq0)
+                    \bigr)\\
+            d_3&\defeq
+                \fun{mp}_{\forall x\,\neg(s(x)\doteq0),
+                    \neg(s(0)\doteq0)}(d_1,d_2).
         \end{align*}
-        We now apply the Modus Ponens constructor to form the final derivation:
-        \[
-            d_3 \defeq \fun{mp}_{\forall x\,\neg(s(x) \doteq 0), \neg(s(0) \doteq 0)}(d_A, d_B).
-        \]
         The associated abstract syntactic tree can be visualized as
         \[
             \begin{tikzpicture}[
                 level distance=1.5cm,
                 sibling distance=3.5cm,
-                edge from parent/.style={draw, -stealth}
+                edge from parent/.style={draw,-stealth}
                 ]
-                \node {$\fun{mp}_{\forall x\,\neg(s(x)\doteq 0),\,\neg(s(0)\doteq 0)}$}
-                    child {
-                        node {$\fun{ax}_{\fun{PA1}}$}
-                        edge from parent node[above left, xshift=0.2cm] {$\scriptstyle d_A$}
+                \node{
+                    $\fun{mp}_{
+                    \forall x\,\neg(s(x)\doteq 0),
+                    \neg(s(0)\doteq 0)
+                    }$
+                }
+                    child{
+                        node{$\fun{ax}_{\fun{PA1}}$}
+                        edge from parent node[
+                            above left, 
+                            xshift=0.2cm
+                        ]{$\scriptstyle d_1$}
                     }
-                    child {
-                        node {$\fun{ax}_{\fun{L4}}\bigl(\neg(s(x)\doteq 0),x,0\bigr)$}
-                        edge from parent node[above right, xshift=-0.25cm] {$\scriptstyle d_B$}
+                    child{
+                        node{$
+                            \fun{ax}_{\fun{L4}}
+                                \bigl(
+                                    \neg(s(x)\doteq 0),
+                                    x,
+                                    0
+                                \bigr)
+                        $}
+                        edge from parent node[
+                            above right,
+                            xshift=-0.25cm
+                        ]{$\scriptstyle d_2$}
                     };
             \end{tikzpicture}
         \]
         Applying the flattening function decomposes the tree:
         \begin{align*}
-            \fun{flatten}\bigl(\neg(s(0) \doteq 0), d_3\bigr)
+            \fun{flatten}\bigl(
+                \neg(s(0)\doteq0),
+                d_3
+            \bigr)
                 &\equiv
-                    \fun{flatten}\bigl(\forall x\,\neg(s(x) \doteq 0), d_A\bigr)
-                    \\&\quad
-                    \ct\fun{flatten}\bigl(\forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0), d_B\bigr)
-                    \\&\quad
+                    \fun{flatten}\bigl(
+                        \forall x\,\neg(s(x)\doteq0),d_1
+                    \bigr)\\
+                &\quad
+                    \ct\fun{flatten}\bigl(
+                        \forall x\,\neg(s(x)\doteq0)
+                            \imp
+                            \neg(s(0)\doteq 0),
+                        d_2
+                    \bigr)\\
+                &\quad
                     \ct\neg(s(0)\doteq0).
         \end{align*}
         Since both
         \[
-            \fun{flatten}\bigl(\forall x\,\neg(s(x)\doteq0),d_A\bigr)
+            \fun{flatten}\bigl(
+                \forall x\,\neg(s(x)\doteq0),
+                d_1
+            \bigr)
         \]
         and
         \[
@@ -544,18 +1014,22 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \bigl(
                     \forall x\,\neg(s(x)\doteq0) 
                         \imp\neg(s(0)\doteq0),
-                    d_B
+                    d_2
                 \bigr)
         \]
-        are sequences of length 1, their concatenation is a sequence of length 2. Appending the conclusion yields a final sequence of length $1 + 1 + 1 = 3$. This is represented as the dependent pair $\dep{3, g}$, where $g\colon\fun{Fin}(3)\to\fun{Form}$ traces the exact step-by-step classical proof:
+        are sequences of length $1$, their concatenation has length~$2$. Appending the conclusion yields a sequence of length $3$. This corresponds to the dependent pair $\dep{3,g}$, where $g\colon\fun{Fin}(3)\to\fun{Form}$ produces the sequential classical proof:
         \begin{align*}
-            g(0) &\equiv \forall x\,\neg(s(x) \doteq 0) \\
-            g(1) &\equiv \forall x\,\neg(s(x) \doteq 0) \imp \neg(s(0) \doteq 0) \\
-            g(2) &\equiv \neg(s(0) \doteq 0).
+            g(0)&\equiv\forall x\,\neg(s(x)\doteq 0)\\
+            g(1)&\equiv
+                \forall x\,
+                    \neg(s(x)\doteq 0)
+                    \imp
+                    \neg(s(0)\doteq0)\\
+            g(2)&\equiv\neg(s(0)\doteq 0).
         \end{align*}
 
         \item[Universal Generalization.]
-        Suppose we take the derivation $d_1$ from the previous example and apply the universal generalization rule to a new variable~$y$. The derivation tree grows one node taller:
+        Consider the derivation $d_1$ from the first example and apply the universal generalization rule to a new variable~$y$. The derivation tree has depth~$1$:
         \[
             d_2\defeq
                 \fun{gen}_{\forall x\,(0+x\doteq x),y}(d_1) \colon
@@ -575,12 +1049,11 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                     \ct
                     \forall y\,\forall x\,(0+x\doteq x).
         \end{align*}
-        Evaluating the concatenation operator yields a sequence of length 2, represented as $\dep{2, f}$, where the indexing function $f\colon\fun{Fin}(2)\to\fun{Form}$ evaluates to:
+        Evaluating the concatenation operator yields a sequence of length 2, represented as $\dep{2,f}$, where the indexing function $f\colon\fun{Fin}(2)\to\fun{Form}$ evaluates to:
         \begin{align*}
-            f(0) &\equiv \forall x\,(0+x \doteq x) \\
-            f(1) &\equiv \forall y\,\forall x\,(0+x \doteq x).
+            f(0)&\equiv\forall x\,(0+x\doteq x)\\
+            f(1)&\equiv\forall y\,\forall x\,(0+x\doteq x).
         \end{align*}
-        
     \end{description}
 \end{xmpls}
 
@@ -603,13 +1076,13 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \fun{inl}(p)&\mapsto k\\
         \fun{inr}(\zeta)&\mapsto k+1.
     \end{align*}
-    Let $d\colon\prod_{k\colon\N}(P(k)+\neg P(k))$ be a decision function. We define the application $\mu_P(d)(n)$ by recursion on~$n\colon\N$. 
+    Let $d\colon\prod_{k\colon\N}P(k)+\neg P(k)$ be a decision function. We define the application $\mu_P(d)(n)$ by recursion on~$n\colon\N$. 
     
     For the base case $n\equiv0$, we set
     \[
         \mu_P(d)(0)\defeq g_0(d(0)).
     \]
-    For the inductive step $n \equiv m+1$, let $x\defeq\mu_P(d)(m)$. We define a second auxiliary function
+    For the inductive step $n\equiv m+1$, let $x\defeq\mu_P(d)(m)$. We define a second auxiliary function
     \begin{align*}
         h_{x,m}\colon(x\le m)+(x>m)&\to\N\\
         \fun{inl}(u)&\mapsto x\\
@@ -621,18 +1094,67 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     \]
     Hence, we specify the inductive step by setting
     \[
-        \mu_P(d)(m+1)\defeq h_{x,m}(e).
+        \mu_P(d)(m+1)\defeq h_{x,m}(e)
+            \equiv h_{\mu_P(d)(m),m}(e).
     \]
     
     To verify that $\mu_P(d)(n)$ satisfies the specified properties, we proceed by induction on $n\colon\N$. 
     
-    The base case $n\equiv0$ easily follows because $\mu_P(d)(0)\equiv g_0(d(0))$. If $d(0) \equiv \fun{inl}(p)$, the function returns $0$, which is the minimum. If $d(0) \equiv \fun{inr}(\zeta)$, no such $k$ exists, and the function correctly returns $0+1=1$.
+    The base case $n\equiv0$ follows because
+    \begin{align*}
+        \mu_P(d)(0)
+            &\equiv g_0(d(0))\\
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$g_0(\fun{inl}(p))$}
+                    &\text{if }
+                        d(0)\equiv\fun{inl}(p),\\
+                \eqmakebox[casecol][l]{$
+                    g_0(\fun{inr}(\zeta))
+                $}
+                    &\text{if }d(0)\equiv\fun{inr}(\zeta),
+            \end{cases}\\
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$0$}
+                    &\text{if }P(0)\text{ holds},\\
+                \eqmakebox[casecol][l]{$1$}
+                    &\text{if }\neg P(0)\text{ holds}.
+            \end{cases}
+    \end{align*}
     
-    For the inductive step $m+1$, the inductive hypothesis states that $x\defeq\mu_P(d)(m)$ is the smallest $k\le m$ satisfying $P(k)$, or $m+1$ if no such $k$ exists.
-    
-    If $e\equiv\fun{inl}(u)$, then $x\le m$. By the inductive hypothesis, $x$ is the smallest $k\le m$ satisfying $P(k)$. Since $x\le m < m+1$, the term $x$ is also the smallest $k\le m+1$ satisfying $P(k)$. The function correctly returns $h_{x,m}(\fun{inl}(u))\equiv x$.
-    
-    If $e\equiv\fun{inr}(v)$, then $x>m$. By the inductive hypothesis, this implies $x\equiv m+1$, meaning no $k\le m$ satisfies $P(k)$. Thus, $\mu_P(d)(m+1)\equiv g_{m+1}(d(m+1))$. If $P(m+1)$ holds, since no strictly smaller $k$ satisfies the predicate, $m+1$ is the minimum and the function returns it. If $\neg P(m+1)$ holds, no $k\le m+1$ satisfies the predicate, and the function returns $(m+1)+1=m+2$.
+    For the inductive step $n\equiv m+1$, set $x\defeq\mu_P(d)(m)$, then
+    \begin{align*}
+        \mu_P(d)(m+1)
+            &\equiv h_{x,m}(e)\\
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$h_{x,m}(\fun{inl}(u))$}
+                    &\text{if }e\equiv\fun{inl}(u),\\
+                \eqmakebox[casecol][l]{$h_{x,m}(\fun{inr}(v))$}
+                    &\text{if }e\equiv\fun{inr}(v),
+            \end{cases}\\
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$x$}
+                    &\text{if }x\le m,\\
+                \eqmakebox[casecol][l]{$g_{m+1}(d(m+1))$}
+                    &\text{if }x>m.
+            \end{cases}
+    \end{align*}
+    In the first case, a minimal index $x\le m$ has already been found, so it remains the minimum for $m+1$. In the second case, $x\equiv m+1$, so we evaluate $g_{m+1}(d(m+1))$:
+    \begin{align*}
+        g_{m+1}(d(m+1))
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$m+1$}
+                    &\text{if }d(m+1)\equiv\fun{inl}(p),\\
+                \eqmakebox[casecol][l]{$m+2$}
+                    &\text{if }d(m+1)\equiv\fun{inr}(\zeta),
+            \end{cases}\\
+            &\equiv\begin{cases}
+                \eqmakebox[casecol][l]{$m+1$}
+                    &\text{if }P(m+1)\text{ holds},\\
+                \eqmakebox[casecol][l]{$m+2$}
+                    &\text{if }\neg P(m+1)\text{ holds}.
+            \end{cases}
+    \end{align*}
+    This establishes the required properties for $m+1$, completing the proof.
 
     Here is a flow diagram illustrating the function:
     \medskip
@@ -656,6 +1178,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     \]
 \end{proof}
 
+\needspace{2\baselineskip}
 \begin{defns}\ 
     \begin{description}[font=\normalfont\scshape]
         \item[Prime Sequence:]
@@ -678,123 +1201,128 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \]
         Let $d_x\colon\prod_{k\colon\N}P_{>x}(k)+\neg P_{>x}(k)$ be the decision function for this family.
         
-        The sequence $p_i\colon\N\to\N$ is defined by structural recursion on the index $i\colon\N$. For the base case $i \equiv 0$, we set:
+        The sequence $\fun{pr}\colon\N\to\N$ is defined by structural recursion on the index $i\colon\N$. For the base case $i\equiv0$, we set:
         \[
-            p_0 \defeq 2.
+            \fun{pr}(0)\defeq2.
         \]
-        For the inductive step $i\equiv m+1$, assuming $p_m$ has been constructed, we use bounded minimalization and set:
+        For the inductive step $i\equiv m+1$, assuming $\fun{pr}(m)$ has been constructed, we use bounded minimalization and set:
         \[
-            p_{m+1}\defeq\mu_{P_{>p_m}}(d_{p_m})(2p_m).
+            \fun{pr}(m+1)\defeq\mu_{P_{>\fun{pr}(m)}}
+                (d_{\fun{pr}(m)})(2\fun{pr}(m)).
         \]
         With the notation established in Lemma~\ref{lem:muk<=n P(k)}, this is written as:
         \[
-            p_{m+1} \defeq \mu k \le 2p_m \; \bigl(\fun{isPrime}(k) \times (k > p_m)\bigr).
+            \fun{pr}(m+1)\defeq\mu k\le2\fun{pr}(m)\;
+                \bigl(
+                    \fun{isPrime}(k)\times(k>\fun{pr}(m))
+                \bigr).
         \]
         
-        \item[Sequence Length:]
-        The function $\fun{len}\colon\N\to\N$ returns the length of the sequence encoded by $n$. We define it as the smallest index $k\le n$ such that $p_k$ does not divide $n$. Using the bounded minimalization operator, we write:
+        \item[Sequence Dimension:]
+        Let $\fun{supp}(n)$ denote the set of prime numbers dividing~$n$. We wish to define a function $\fun{dim}\colon\N\to\N$ that computes the cardinality of $\fun{supp}(n)$. Because we intend to apply this function exclusively to Gödel numbers---whose support forms a finite initial segment of the sequence of primes---we can evaluate it as the smallest index $k\le n$ such that $\fun{pr}(k)$ does not divide $n$. Using the bounded minimalization operator, this is formally expressed as:
         \[
-            \fun{len}(n)\defeq\mu k\le n\;(p_k\nmid n).
+            \fun{dim}(n)\defeq\mu k\le n\;(\fun{pr}(k)\nmid n).
         \]
-        To demonstrate that $\fun{len}$ is well-defined, we construct it as an inhabitant of the function type $\N\to\N$ by invoking Lemma~\ref{lem:muk<=n P(k)}.
-    
-        Fix a natural number $n\colon\N$. We define the type family $P_n\colon\N\to\univ$ by
+        To prove that $\fun{dim}$ is well-defined, it suffices to observe that divisibility in~$\N$ is a decidable relation. Consequently, its negation---which forms a family of mere propositions---is also decidable, satisfying the requirements of the bounded minimalization operator.
+        
+        \item[Gödel Sequence Number] Let $\varsigma\equiv\formseq{\varphi_0,\dots,\varphi_{k-1}}$ be a sequence of length $k$. The \textsl{Gödel sequence number} of $\varsigma$ is defined by induction on $k$ as the natural number
         \[
-            P_n(k)\defeq p_k\nmid n.
-        \]
-        Divisibility over the natural numbers is a decidable mere proposition. Because the negation of any decidable mere proposition is also a decidable mere proposition, $P_n(k)$ is a decidable family of mere propositions.
-    
-        Let
-        \[
-            d_n\colon\prod_{k\colon\N}
-                P_n(k)+\neg P_n(k)
-        \]
-        denote the decision function for this family. Then,
-        \[
-            \mu_{P_n}(d_n)(n) \colon \N
-        \]
-        and we can define
-        \begin{align*}
-            \fun{len}\colon\N&\to\N\\
-            n&\mapsto\mu_{P_n}(d_n)(n).
-        \end{align*}
-        This establishes that $\fun{len}$ is an inhabitant of $\N\to\N$. Writing this application in the notation established in Lemma \ref{lem:muk<=n P(k)} yields the definition:
-        \[
-            \fun{len}(n)\defeq
-                \mu k\le n\;(p_k\nmid n).
+             \fun{gsn}(\varsigma)\defeq
+                \fun{pr}(0)^{\fun{gn}(\varphi_0)}
+                \cdots
+                \fun{pr}(k-1)^{\fun{gn}(\varphi_{k-1})}.
         \]
 
-        \item[The Proof Predicate:] The \textsl{proof predicate} is a type family taking a non-dependent pair of natural numbers, where the first represents the G\"odel number of a candidate derivation and the second represents the G\"odel number of a sentence:
+        \item[Element Extraction] The \textsl{sequence extraction} function
         \[
-            \fun{Proof}\colon\N\times\N\to\univ.
+            \fun{nth}\colon\N\times\N\to\N
         \]
-        \needspace{3\baselineskip}
-        To formalize this type family constructively, we rely on the existence of primitive recursive functions for sequence manipulation. We assume
-        \begin{itemize}
-            \item a length function $\fun{len}\colon\N\to\N$ and
-            
-            \item an extraction function $\fun{nth}\colon\N\times\N\to\N$ returning the G\"odel number of the sequence element at index $i$. 
-        \end{itemize}
-        Furthermore, we assume bounded, decidable predicates for the rules of the system:
-        \begin{itemize}
-            \item $\fun{isAx}(x)$ indicates if $x$ encodes a logical or non-logical axiom,
-            
-            \item $\fun{isMP}(x,y,z)$ indicates if $z$ follows from $x$ and $y$ via Modus Ponens, and
-            
-            \item $\fun{isGen}(x,z)$ indicates if $z$ follows from $x$ via Universal Generalization.
-        \end{itemize}
-        The type family $\fun{Proof}\colon\N\times\N\to\univ$ is defined as the cartesian product of the termination condition (the sequence concludes with the sentence $m$) and the step-by-step sequence validation. For any $n,m\colon\N$, we define:
-        \begin{align*}
-            \fun{Proof}(n,m)\defeq\;&(0<\fun{len}(n))\\
-                &\times
-                    \bigl(
-                        \fun{nth}(
-                            n,
-                            \fun{pred}(\fun{len}(n))
-                        )
-                        \eq{\N}
-                        m
-                    \bigr)\\
-                &\times\prod_{i\colon\N}
-                    (i<\fun{len}(n))\to\fun{ValidStep}(n,i).
-        \end{align*}
-        Here, $\fun{ValidStep}(n,i)$ is the local validation predicate asserting that the $i$-th step is either an axiom or the valid result of an inference rule applied to strictly prior steps in the sequence:
+        aims at returning the Gödel number of the element at index $i$ from a Gödel sequence number $n$.
+
+        The exponent of $\fun{pr}(i)$ in the prime factorization of $n$ is the smallest natural number $k \le n$ for which $\fun{pr}(i)^{k+1}$ does not divide $n$. Thus, we formally define:
         \[
-            \fun{ValidStep}(n,i)\defeq\lVert\fun{vs}(n,i)\rVert,
+            \fun{nth}(n,i)\defeq\mu k\le n\;
+                \bigl(\fun{pr}(i)^{k+1}\nmid n\bigr).
         \]
-        with
-        \begin{align*}
-            \fun{vs}(n,i)\defeq\;
-                &\fun{isAx}(\fun{nth}(n,i))\\
-                &+\sum_{j\colon\N}\;\sum_{k\colon\N}
-                    (j<i)
-                    \times(k<i)
-                    \times\fun{isMP}(
-                        \fun{nth}(n,j),
-                        \fun{nth}(n,k),
-                        \fun{nth}(n,i)
-                    )\\
-                &+\sum_{j\colon\N}(j<i)
-                    \times\fun{isGen}(
-                        \fun{nth}(n,j),
-                        \fun{nth}(n,i)
-                    )
-        \end{align*}
-        The propositional truncation guarantees that the entire expression remains a mere proposition, as a single step could theoretically be justified in multiple ways.
+        If the prime $\fun{pr}(i)$ does not appear in the prime factorization of $n$, then $\fun{pr}(i)^{0+1}\nmid n$ and so $\mu$ computes to~$0$.
     \end{description}
 \end{defns}
+
+\subsection{The Proof Predicate}
+
+\begin{defn}
+    The \textsl{proof predicate} is the type family
+    \[
+        \fun{Proof}\colon\N\times\N\to\univ
+    \]
+    defined, for $n,m\colon\N$, as:
+    \begin{align*}
+        \fun{Proof}(n,m)\defeq\;&(0<\fun{dim}(n))\\
+            &\times
+                \bigl(
+                    \fun{nth}(
+                        n,
+                        \fun{pred}(\fun{dim}(n))
+                    )
+                    \eq{\N}
+                    m
+                \bigr)\\
+            &\times\prod_{i\colon\N}
+                (i<\fun{dim}(n))\to\fun{ValidStep}(n,i).
+    \end{align*}
+    Here, $\fun{ValidStep}(n,i)$ is the local validation predicate asserting that the $i$-th step is either an axiom or the valid result of an inference rule applied to strictly prior steps in the sequence:
+    \[
+        \fun{ValidStep}(n,i)\defeq\lVert\fun{vs}(n,i)\rVert,
+    \]
+    with
+    \begin{align*}
+        \fun{vs}(n,i)\defeq\;
+            &\fun{isAx}(\fun{nth}(n,i))\\
+            &+\sum_{j\colon\N}\;\sum_{k\colon\N}
+                (j<i)
+                \times(k<i)
+                \times\fun{isMP}(
+                    \fun{nth}(n,j),
+                    \fun{nth}(n,k),
+                    \fun{nth}(n,i)
+                )\\
+            &+\sum_{j\colon\N}(j<i)
+                \times\fun{isGen}(
+                    \fun{nth}(n,j),
+                    \fun{nth}(n,i)
+                )
+    \end{align*}
+    The propositional truncation guarantees that the entire expression remains a mere proposition, as a single step could theoretically be justified in multiple ways.
+\end{defn}
+
+\begin{rem}
+    The type $\fun{vs}(n,i)$ needs to be truncated because is not a mere proposition. A dependent sum $\sum_{x\colon A}B(x)$ requires at most one witness $x$ satisfying $B(x)$ to be a mere proposition . Similarly, a coproduct $A+B$ is a mere proposition only if $A$ and $B$ are mutually exclusive mere propositions.
+    
+    In a flattened proof sequence, none of these conditions is guaranteed:
+    \begin{enumerate}[-]
+        \item The required premises for Modus Ponens might appear at several different indices, leading to multiple distinct index pairs $(j,k)$ that inhabit the dependent sum.
+        
+        \item A single formula might be justified in multiple ways simultaneously. For instance, an axiom being also derived via Modus Ponens.
+    \end{enumerate}
+    Because $\fun{vs}(n,i)$ records the specific indices and rules used, it acts as a type of all valid justification paths rather than a mere truth value. To express the simple property that the step at index $i$ is valid, regardless of how it is justified, we must erase this witness information by applying propositional truncation, yielding the mere proposition $\fun{ValidStep}(n,i)$.
+\end{rem}
 
 \begin{thm}
     For every\/ $n,m\colon\N$, the type\/ $\fun{Proof}(n,m)$ is a mere proposition.
 \end{thm}
 
+\begin{proof}
+    This follows because equality and inequality in $\N$ are mere propositions, and because mere propositions are closed under both cartesian products and dependent function types.
+\end{proof}
+
 \begin{thm}
-    The proof relation is decidable over all non-dependent pairs. We express this by inhabiting the type:\/
+    The proof relation is decidable over all non-dependent pairs. We express this by inhabiting the type:
     \[
         \prod_{n,m\colon\N}
         \fun{Proof}(n,m)+(\fun{Proof}(n,m)\to\fun0).
     \]
 \end{thm}
+
 
 \begin{defn}
     The \textsl{provability type} for a sentence with G\"odel number $m$ is defined as the dependent sum over the proof predicate:

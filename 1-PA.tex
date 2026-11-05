@@ -86,7 +86,6 @@ For terms, let $P\colon\fun{Term}\to\univ$ be a type family. The dependent elimi
     \item $p_+\colon\prod_{t_1,t_2\colon\fun{Term}}P(t_1)\times P(t_2)\to P(t_1+t_2)$
     \item $p_\cdot\colon\prod_{t_1,t_2\colon\fun{Term}}P(t_1)\times P(t_2)\to P(t_1\cdot t_2)$
 \end{itemize}
-
 Similarly, for formulas, given a type family $Q\colon\fun{Form}\to\univ$, the dependent eliminator for $\fun{Form}$ requires us to supply:
 \begin{itemize}
     \item $q_{\doteq}\colon\prod_{t_1,t_2\colon\fun{Term}}Q(t_1\doteq t_2)$
@@ -94,7 +93,9 @@ Similarly, for formulas, given a type family $Q\colon\fun{Form}\to\univ$, the de
     \item $q_{\imp}\colon\prod_{\varphi_1,\varphi_2\colon\fun{Form}}Q(\varphi_1)\times Q(\varphi_2)\to Q(\varphi_1\imp\varphi_2)$
     \item $q_{\forall}\colon\prod_{y\colon\fun{Var}}\prod_{\varphi\colon\fun{Form}}Q(\varphi)\to Q(\forall y\,\varphi)$
 \end{itemize}
-Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colon\fun{Term}}P(t)$ and $f_Q\colon\prod_{\varphi\colon\fun{Form}}Q(\varphi)$.
+Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colon\fun{Term}}P(t)$ and $g_Q\colon\prod_{\varphi\colon\fun{Form}}Q(\varphi)$.
+
+Structural recursion is the specialization of induction when the motive is a constant type family. Given types $A,B\colon\univ$ and $P(t)\equiv A$ and $Q(\varphi)\equiv B$ for all terms and formulas, the dependent products simplify to the ordinary function types $f_A\colon\fun{Term}\to A$ and $g_B\colon\fun{Form}\to B$. Under this non-dependent setting, the induction principle reduces to the  recursor. This allows us to define computational operations by providing a rule for each constructor based on the recursively computed values of its sub-components. Examples include evaluating a closed term, substituting variables, or extracting the free variables of a formula.
 
 \begin{thm}[Injectivity of Constructors]\label{thm:constructor-injectivity}
     The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are injective. For instance, for any terms\/ $t,u,t_1,t_2,u_1,u_2\colon\fun{Term}$ and formulas\/ $\varphi_1,\varphi_2,\psi_1,\psi_2\colon\fun{Form}$, the following implications hold:
@@ -134,7 +135,8 @@ Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colo
     \end{enumerate}
 \end{proof}
 
-\begin{thm}[Disjointness of Constructors]\label{thm:constructor-disjointness}
+\begin{thm}[Disjointness of Constructors]
+    \label{thm:constructor-disjointness}
     The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are pairwise disjoint. Consequently, paths between terms or formulas built from different constructors cannot exist. For instance, for any variable\/ $x\colon\fun{Var}$ and term\/ $t\colon\fun{Term}$:
     \begin{enumerate}[a),font=\upshape]
         \item $\neg(0\eq{\fun{Term}}s(t))$
@@ -143,9 +145,9 @@ Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colo
     Analogous inequalities hold for all pairs of distinct constructors in\/ $\fun{Term}$ and\/ $\fun{Form}$.
 \end{thm}
 
-\begin{proof}\ 
+\begin{proof} Structural recursion allows us to define the following type families
     \begin{enumerate}[a)]
-        \item Define the type family $D\colon\fun{Term}\to\univ$ by structural recursion:
+        \item The type family $D\colon\fun{Term}\to\univ$ by structural recursion:
         \begin{align*}
             D(0) &\defeq \fun{1} \\
             D(\tau) &\defeq \fun{0} \quad \text{for all other constructors.}
@@ -156,7 +158,7 @@ Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colo
             \lambda q.\,\fun{transport}^D(p,\fstar).
         \end{align*}
         
-        \item Define a similar family $D\colon\fun{Term}\to\univ$:
+        \item A similar family $D\colon\fun{Term}\to\univ$:
         \begin{align*}
             D(\fun{var}(y))&\defeq\fun{1}
                 \quad\text{for all }y\colon\fun{Var}\\
@@ -218,11 +220,13 @@ Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colo
 \end{proof}
 
 \begin{thm}\label{thm:syntax-are-sets}
-    The inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are sets.
+    The inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are decidable sets and their identity types are decidable.
 \end{thm}
 
 \begin{proof}
-    By Hedberg's Theorem \citep{caniglia2025hott}, it suffices to show that identity types in $\fun{Term}$ and $\fun{Form}$ are decidable.
+    Both types are trivially decidable because they are inhabited.
+    
+    By Hedberg's Theorem \citep{caniglia2025hott}, to complete the proof, it suffices to show that identity types in $\fun{Term}$ and $\fun{Form}$ are decidable.
 
     To show that the identity of terms $t\eq{\fun{Term}}u$ is decidable, we proceed by double structural induction.
     \begin{itemize}
@@ -332,7 +336,7 @@ We begin with a set-theoretic approach to build intuition.
 \begin{defn}[Free Variables as Predicates]\label{defn:FV}
     Using the notation of \citep{caniglia2025hott}, the \textsl{free variable maps} $\fun{Term}\to\fun{Pred}(\fun{Var})$ and $\fun{Form}\to\fun{Pred}(\fun{Var})$ assign to each term and formula a predicate indicating whether a given variable has any free occurrence in it. 
 
-    Both maps are denoted by $\fun{FV}$ and defined by structural induction. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
+    Both maps are denoted by $\fun{FV}$ and defined by structural recursion. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
     \begin{itemize}
         \item $\fun{FV}(x)(y) \defeq y\eq{\fun{Var}}x$ for any $x\colon\fun{Var}$.
         \item $\fun{FV}(0)(y)\defeq\fun0$.
