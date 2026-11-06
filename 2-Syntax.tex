@@ -236,7 +236,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     \]
 \end{rem}
 
-\begin{cor}[Decidable Inference Rules]
+\begin{cor}\label{cor:decidable-rules}
     There exist decidable families of mere propositions
     \[
         \fun{isAx}\colon\N\to\univ,\quad
@@ -714,7 +714,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     which is definitionally equal to $f(x)$, hence, to the \rhs.
 \end{proof}
 
-\begin{thm}\label{lem:domain-bounded-products-are-decidable}
+\begin{thm}\label{thm:domain-bounded-products-are-decidable}
     Let\/ $P\colon\N\to\univ$ be a family of decidable types. Then, for every\/ $n\colon\N$, the product
     \[
         \prod_{i\colon\N}(i<n)\to P(i)
@@ -773,7 +773,12 @@ We construct the mapping in two stages: first by defining structural recursors f
     \needspace{2\baselineskip}
     To verify that $f$ and $g$ form an equivalence, we analyze both compositions:
     \begin{enumerate}[-]
-        \item For any dependent function $v\colon R$ and index $j\colon\fun{Fin}(n)$, let $\vartheta_j\colon\fun{unbound}_n(\fun{bound}_n(j))\eq{}j$ denote the left homotopy of the equivalence. Pushing this path through the embedding function yields 
+        \item For any dependent function $v\colon R$ and index $j\colon\fun{Fin}(n)$, let
+        \[
+            \vartheta_j\colon
+                \fun{unbound}_n(\fun{bound}_n(j))\eq{}j
+        \]
+        denote the left homotopy of the equivalence. Pushing this path through the embedding function yields 
         \[
             \fun{ap}_{\fun{emb}_n}(\vartheta_j)\colon
                 \fun{emb}_n(
@@ -821,6 +826,57 @@ We construct the mapping in two stages: first by defining structural recursors f
     \end{enumerate}
 \end{proof}
 
+\begin{thm}\label{thm:domain-bounded-sums-are-decidable}
+    Let\/ $P\colon\N\to\univ$ be a family of decidable types. For every\/ $k\colon\N$, the bounded dependent sum
+    \[
+        \sum_{i\colon\N}(i<k)\times P(i)
+    \]
+    is decidable.
+\end{thm}
+
+\begin{proof}
+    As with the bounded product, it suffices to establish an equivalence between the bounded sum and the dependent sum over the finite type $\fun{Fin}(k)$:
+    \[
+        \Bigl(
+            \sum_{i\colon\N}(i<k)\times P(i)
+        \Bigr)
+        \simeq
+        \sum_{j\colon\fun{Fin}(k)}P(\fun{emb}_k(j)).
+    \]
+    For every $i\colon\N$, we have
+    \[
+        (i<k)\times P(i)
+            \simeq\sum_{\epsilon\colon i<k}P(i),
+    \]
+    since the Cartesian product $A\times B$ is equivalent to the dependent sum $\sum_{x\colon A}B$ when the type $B$ does not depend on $A$.
+    
+    The associativity of nested $\Sigma$-types then yields
+    \[
+        \Bigl(
+            \sum_{i\colon\N}(i<k)\times P(i)
+        \Bigr)
+        \simeq
+        \Bigl(
+            \sum_{i\colon\N}\sum_{\epsilon\colon i<k}P(i)
+        \Bigr)
+        \simeq
+        \sum_{w\colon\sum_{i\colon\N}i<k}P(\pi_1(w)).
+    \]
+    Theorem~\ref{thm:fin-equiv-bound} provides the equivalence
+    \begin{align*}
+        \fun{bound}_k\colon\fun{Fin}(k)
+            &\to\sum_{i\colon\N}i<k\\
+        j&\mapsto\dep{\fun{emb}_k(j),\delta_k(j)}.
+    \end{align*}
+    Combining this with the previous equivalence, we obtain
+    \[
+        \sum_{w\colon\sum_{i\colon\N}i<k}P(\pi_1(w))
+        \simeq
+        \sum_{j\colon\fun{Fin}(k)}
+            P(\pi_1(\fun{bound}_k(j))).
+    \]
+    This establishes the required equivalence, since $\pi_1(\fun{bound}_k(j))\equiv\fun{emb}_k(j)$, from which the decidability of the bounded sum follows.
+\end{proof}
 \section{Arithmetization}
 
 \begin{defn}[Formula Sequences]
@@ -868,7 +924,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         
         \item[Binary Branches] The Modus Ponens rule $\fun{mp}$ takes two derivations as arguments. Applying it yields a branching node with two outgoing edges pointing to its premises.
     \end{description}
-    The $\fun{flatten}$ function operates as a post-order (Depth First Search) traversal algorithm. This way of traversing the syntax tree ensure, for instance, that when a Modus Ponens is reached, both of its premises have already been flattened into the sequence.
+    The following definition defines a way of traversing the AST that ensures, for instance, that when a Modus Ponens is reached, both of its premises have already been reached. It operates as a post-order (Depth First Search) traversal algorithm.
 \end{rem}
 
 \begin{defn}[Derivation Flattening]
@@ -1107,11 +1163,11 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$g_0(\fun{inl}(p))$}
                     &\text{if }
-                        d(0)\equiv\fun{inl}(p),\\
+                        d(0)\eq{}\fun{inl}(p),\\
                 \eqmakebox[casecol][l]{$
                     g_0(\fun{inr}(\zeta))
                 $}
-                    &\text{if }d(0)\equiv\fun{inr}(\zeta),
+                    &\text{if }d(0)\eq{}\fun{inr}(\zeta),
             \end{cases}\\
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$0$}
@@ -1127,9 +1183,9 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
             &\equiv h_{x,m}(e)\\
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$h_{x,m}(\fun{inl}(u))$}
-                    &\text{if }e\equiv\fun{inl}(u),\\
+                    &\text{if }e\eq{}\fun{inl}(u),\\
                 \eqmakebox[casecol][l]{$h_{x,m}(\fun{inr}(v))$}
-                    &\text{if }e\equiv\fun{inr}(v),
+                    &\text{if }e\eq{}\fun{inr}(v),
             \end{cases}\\
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$x$}
@@ -1143,9 +1199,9 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         g_{m+1}(d(m+1))
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$m+1$}
-                    &\text{if }d(m+1)\equiv\fun{inl}(p),\\
+                    &\text{if }d(m+1)\eq{}\fun{inl}(p),\\
                 \eqmakebox[casecol][l]{$m+2$}
-                    &\text{if }d(m+1)\equiv\fun{inr}(\zeta),
+                    &\text{if }d(m+1)\eq{}\fun{inr}(\zeta),
             \end{cases}\\
             &\equiv\begin{cases}
                 \eqmakebox[casecol][l]{$m+1$}
@@ -1188,10 +1244,12 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \defeq
                     (n\ge2)
                     \times
-                    \prod_{k\le n}
-                        k\mid n\to(k\eq \N1)+(k\eq \N n).
+                    \prod_{k\colon\N}
+                        (k\le n)
+                        \to(k\mid n)
+                        \to(k\eq\N 1)+(k\eq\N n).
         \]
-        As shown in \citep[Chapter~3]{caniglia2025hott} the bounded $\Pi$-type is decidable because each of the types composing the expression are decidable and the product base is $k\le n$. Because the branches of the coproduct are mutually exclusive for $n\ge2$, we deduce that $\fun{isPrime}$ is, moreover, a family of mere propositions. 
+        By Theorem~\ref{thm:domain-bounded-products-are-decidable}, this $\Pi$-type is decidable because each of the types composing the expression are decidable. Since the branches of the coproduct are mutually exclusive for $n\ge2$, we deduce that $\fun{isPrime}$ is, moreover, a family of mere propositions. 
     
         To construct the sequence of all primes, we rely on Bertrand's Postulate, which guarantees that for any integer $x\ge1$, there exists a prime $k$ such that $x<k\le2x$. 
         
@@ -1199,13 +1257,16 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \[
             P_{>x}(k)\defeq\fun{isPrime}(k)\times(k>x).
         \]
-        Let $d_x\colon\prod_{k\colon\N}P_{>x}(k)+\neg P_{>x}(k)$ be the decision function for this family.
-        
-        The sequence $\fun{pr}\colon\N\to\N$ is defined by structural recursion on the index $i\colon\N$. For the base case $i\equiv0$, we set:
+        Since this family is decidable, we can consider a decision function
+        \[
+            d_x\colon
+                \prod_{k\colon\N}P_{>x}(k)+\neg P_{>x}(k).
+        \]
+        The sequence of prime numbers $\fun{pr}\colon\N\to\N$ is defined by recursion on the index $i\colon\N$. For the base case $i\equiv0$, we set:
         \[
             \fun{pr}(0)\defeq2.
         \]
-        For the inductive step $i\equiv m+1$, assuming $\fun{pr}(m)$ has been constructed, we use bounded minimalization and set:
+        For the inductive step $i\equiv m+1$, assuming that $\fun{pr}(m)$ has been constructed, we use bounded minimalization and set:
         \[
             \fun{pr}(m+1)\defeq\mu_{P_{>\fun{pr}(m)}}
                 (d_{\fun{pr}(m)})(2\fun{pr}(m)).
@@ -1219,13 +1280,13 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \]
         
         \item[Sequence Dimension:]
-        Let $\fun{supp}(n)$ denote the set of prime numbers dividing~$n$. We wish to define a function $\fun{dim}\colon\N\to\N$ that computes the cardinality of $\fun{supp}(n)$. Because we intend to apply this function exclusively to Gödel numbers---whose support forms a finite initial segment of the sequence of primes---we can evaluate it as the smallest index $k\le n$ such that $\fun{pr}(k)$ does not divide $n$. Using the bounded minimalization operator, this is formally expressed as:
+        Let $\fun{supp}(n)$ denote the set of prime numbers dividing~$n$. We wish to define a function $\fun{dim}\colon\N\to\N$ that computes the cardinality of $\fun{supp}(n)$. Because we intend to apply this function exclusively to Gödel numbers---whose support forms a finite initial segment of the sequence of primes---we can evaluate it as the smallest index $k\le n$ such that $\fun{pr}(k)$ does not divide $n$. Using the bounded minimalization operator, this is formally expressed as:\footnote{We use $\fun{dim}$ in analogy with the dimension of the vector of exponents in the prime factorization of~$n$.}
         \[
             \fun{dim}(n)\defeq\mu k\le n\;(\fun{pr}(k)\nmid n).
         \]
         To prove that $\fun{dim}$ is well-defined, it suffices to observe that divisibility in~$\N$ is a decidable relation. Consequently, its negation---which forms a family of mere propositions---is also decidable, satisfying the requirements of the bounded minimalization operator.
         
-        \item[Gödel Sequence Number] Let $\varsigma\equiv\formseq{\varphi_0,\dots,\varphi_{k-1}}$ be a sequence of length $k$. The \textsl{Gödel sequence number} of $\varsigma$ is defined by induction on $k$ as the natural number
+        \item[Gödel Sequence Number] Let $\varsigma\equiv\formseq{\varphi_0,\dots,\varphi_{k-1}}$ be a sequence of length~$k$. The \textsl{Gödel sequence number} of $\varsigma$ is defined by induction on $k$ as the natural number
         \[
              \fun{gsn}(\varsigma)\defeq
                 \fun{pr}(0)^{\fun{gn}(\varphi_0)}
@@ -1233,15 +1294,15 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \fun{pr}(k-1)^{\fun{gn}(\varphi_{k-1})}.
         \]
 
-        \item[Element Extraction] The \textsl{sequence extraction} function
+        \item[Exponent Extraction] The \textsl{exponent extraction} function
         \[
-            \fun{nth}\colon\N\times\N\to\N
+            \fun{exp}\colon\N\times\N\to\N
         \]
         aims at returning the Gödel number of the element at index $i$ from a Gödel sequence number $n$.
 
         The exponent of $\fun{pr}(i)$ in the prime factorization of $n$ is the smallest natural number $k \le n$ for which $\fun{pr}(i)^{k+1}$ does not divide $n$. Thus, we formally define:
         \[
-            \fun{nth}(n,i)\defeq\mu k\le n\;
+            \fun{exp}(n,i)\defeq\mu k\le n\;
                 \bigl(\fun{pr}(i)^{k+1}\nmid n\bigr).
         \]
         If the prime $\fun{pr}(i)$ does not appear in the prime factorization of $n$, then $\fun{pr}(i)^{0+1}\nmid n$ and so $\mu$ computes to~$0$.
@@ -1260,7 +1321,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \fun{Proof}(n,m)\defeq\;&(0<\fun{dim}(n))\\
             &\times
                 \bigl(
-                    \fun{nth}(
+                    \fun{exp}(
                         n,
                         \fun{pred}(\fun{dim}(n))
                     )
@@ -1277,19 +1338,19 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     with
     \begin{align*}
         \fun{vs}(n,i)\defeq\;
-            &\fun{isAx}(\fun{nth}(n,i))\\
+            &\fun{isAx}(\fun{exp}(n,i))\\
             &+\sum_{j\colon\N}\;\sum_{k\colon\N}
                 (j<i)
                 \times(k<i)
                 \times\fun{isMP}(
-                    \fun{nth}(n,j),
-                    \fun{nth}(n,k),
-                    \fun{nth}(n,i)
+                    \fun{exp}(n,j),
+                    \fun{exp}(n,k),
+                    \fun{exp}(n,i)
                 )\\
             &+\sum_{j\colon\N}(j<i)
                 \times\fun{isGen}(
-                    \fun{nth}(n,j),
-                    \fun{nth}(n,i)
+                    \fun{exp}(n,j),
+                    \fun{exp}(n,i)
                 )
     \end{align*}
     The propositional truncation guarantees that the entire expression remains a mere proposition, as a single step could theoretically be justified in multiple ways.
@@ -1316,16 +1377,19 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
 \end{proof}
 
 \begin{thm}
-    The proof relation is decidable over all non-dependent pairs. We express this by inhabiting the type:
+    The\/ $\fun{Proof}$ relation is decidable over all non-dependent pairs. We express this by inhabiting the type:
     \[
         \prod_{n,m\colon\N}
-        \fun{Proof}(n,m)+(\fun{Proof}(n,m)\to\fun0).
+        \fun{Proof}(n,m)+\neg\fun{Proof}(n,m).
     \]
 \end{thm}
 
+\begin{proof}
+    Corollary~\ref{cor:decidable-rules} and Theorem~\ref{thm:domain-bounded-sums-are-decidable} imply that $\fun{vs}(n,i)$ is a coproduct of decidable types, hence decidable itself. Thus, $\fun{ValidStep(n,i)}$ is decidable as well. Therefore, the conclusion follows from Theorem~\ref{thm:domain-bounded-products-are-decidable}.
+\end{proof}
 
 \begin{defn}
-    The \textsl{provability type} for a sentence with G\"odel number $m$ is defined as the dependent sum over the proof predicate:
+    The \textsl{provability type} for a sentence with G\"odel number~$m$ is defined as the dependent sum over the proof predicate:
     \[
         \fun{Provable}(m)\defeq\sum_{n\colon\N}\fun{Proof}(n,m).
     \]
@@ -1333,5 +1397,5 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     \[
         \dep{n,p}\colon\sum_{n\colon\N}\fun{Proof}(n,m),
     \]
-    where $n$ is the G\"odel number of the derivation and $p$ is the computational evidence that $n$ genuinely proves $m$.
+    where $n$ is the G\"odel number of the derivation and $p$ is the computational evidence that~$n$ proves~$m$.
 \end{defn}

@@ -2,25 +2,25 @@
 
 \section{Introduction}
 
-A formal system is a deductive environment where mathematical truth is limited to strict syntactic derivation. It provides a finite alphabet, a grammar for well-formed sentences, a set of axioms, and inference rules that generate new sentences from existing ones. 
+A formal system is a deductive environment where mathematical truth is restricted to strict syntactic derivation. It provides a finite alphabet, a grammar for well-formed sentences, a set of axioms, and inference rules to generate new sentences from existing ones.
 
-In Homotopy Type Theory, the most general framework for a deductive environment is a type of statements paired with a dependent family of types representing their provability.
+In Homotopy Type Theory, the most general framework for a deductive environment pairs a type of statements with a dependent family of types representing their provability.
 
 \begin{defn}
-    A \textsl{formal system} consists of a type of well-formed \textsl{sentences} and a type family of valid \textsl{derivations} for those sentences. More precisely:
+    A \textsl{formal system} $\mathcal{F}\colon\fun{System}$ consists of a type of well-formed \textsl{sentences} and a type family of valid \textsl{derivations} for those sentences:
     \[
         \fun{System}\defeq\sum_{S\colon\univ}S\to\univ.
     \]
-    Given a formal system\/ $\mathcal{F}\colon\fun{System}$, the type of valid \textsl{statements} is given by the first projection\/ $\pi_1(\mathcal{F})\colon\univ$. The \textsl{derivation family} is given by the second projection\/ $\pi_2(\mathcal{F})\colon\pi_1(\mathcal F)\to\univ$. 
+    The type of valid \textsl{statements} is given by the first projection $\pi_1(\mathcal{F})\colon\univ$. The \textsl{derivation family} is given by the second projection $\pi_2(\mathcal{F})\colon\pi_1(\mathcal F)\to\univ$. 
 \end{defn}
 
-This generic type-theoretic definition does not inherently enforce any algorithmic structure. To model the strictly mechanical systems used in logic (such as Peano Arithmetic), we must instantiate this general architecture with purely syntactic inductive types. 
+This generic type-theoretic definition does not inherently enforce algorithmic structure. To model strictly mechanical systems used in logic (such as Peano Arithmetic), we must instantiate this general architecture with purely syntactic inductive types. 
 
-By doing so, the statement type $S$ becomes a discrete collection of strings in a given alphabet, and the derivation family $\pi_2(\mathcal{F})$ is built from constructors that represent a finite number of deterministic applications of inference rules. This restriction disregards semantic intuition and guarantees the decidability of proof verification.
+The statement type $S$ becomes a discrete collection of strings in a given alphabet, and the derivation family $\pi_2(\mathcal{F})$ is built from constructors representing a finite number of deterministic applications of inference rules. This restriction disregards semantic intuition and guarantees the decidability of proof verification.
 
 \section{Peano Arithmetic}
 \begin{defn}[Syntax]
-    We will fix the countably infinite type of variables $\fun{Var}\defeq\N$ with canonical elements $x,y,z,\dots\colon\fun{Var}$.
+    Fix the countably infinite type of variables $\fun{Var}\defeq\N$ with canonical elements $x,y,z,\dots\colon\fun{Var}$.
     \begin{enumerate}[a),font=\upshape]
         \item The type of arithmetic \textsl{terms}, denoted $\fun{Term}\colon\univ$, is defined inductively by the following constructors:
         \begin{itemize}
@@ -65,20 +65,20 @@ By doing so, the statement type $S$ becomes a discrete collection of strings in 
 \end{defn}
 
 \begin{rem}
-    The semantic distinction between terms and formulas is that the latter evaluate to truth values. They act as logical propositions.
+    Semantically, formulas evaluate to truth values and act as logical propositions.
 \end{rem}
 
 \begin{rem}\label{rem:Var-equality-facts}
-    As proven in \citep{caniglia2025hott} for the type $\N$, given any two variables $x,y\colon\fun{Var}$, the identity type $x\eq{\fun{Var}}y$ is both a mere proposition and decidable. Hereafter, we will use these properties implicitly.
+    As proven in \citep{caniglia2025hott} for the type $\N$, the identity type $x\eq{\fun{Var}}y$ of variables $x,y\colon\fun{Var}$ is both a mere proposition and decidable. These properties are used implicitly hereafter.
 \end{rem}
 
 \subsection{Structural Induction as Dependent Elimination}
 
-By defining the syntax of Peano Arithmetic via the inductive types $\fun{Term}$ and $\fun{Form}$, the type theory automatically equips them with their respective dependent eliminators (or induction principles).
+Defining the syntax of Peano Arithmetic via the inductive types $\fun{Term}$ and $\fun{Form}$ automatically equips them with their respective dependent eliminators (or induction principles).
 
-When we define a function or prove a property ``by structural induction,'' we are formally invoking these eliminators. 
+Defining a function or proving a property ``by structural induction'' formally invokes these eliminators.
 
-For terms, let $P\colon\fun{Term}\to\univ$ be a type family. The dependent eliminator for $\fun{Term}$ states that to construct an inhabitant of $\prod_{t\colon\fun{Term}}P(t)$, it is necessary and sufficient to provide a proof for each constructor, assuming the property holds for its sub-components. Formally, we must supply the following dependent functions:
+For terms, let $P\colon\fun{Term}\to\univ$ be a type family. To construct an inhabitant of $\prod_{t\colon\fun{Term}}P(t)$, the dependent eliminator requires providing a proof for each constructor, assuming that the property holds for its sub-components. Formally, we must supply the following dependent functions:
 \begin{itemize}
     \item $p_{\fun{var}}\colon\prod_{y\colon\fun{Var}}P(\fun{var}(y))$
     \item $p_0\colon P(0)$
@@ -95,10 +95,11 @@ Similarly, for formulas, given a type family $Q\colon\fun{Form}\to\univ$, the de
 \end{itemize}
 Supplying these inhabitants directly yields the sections $f_P\colon\prod_{t\colon\fun{Term}}P(t)$ and $g_Q\colon\prod_{\varphi\colon\fun{Form}}Q(\varphi)$.
 
-Structural recursion is the specialization of induction when the motive is a constant type family. Given types $A,B\colon\univ$ and $P(t)\equiv A$ and $Q(\varphi)\equiv B$ for all terms and formulas, the dependent products simplify to the ordinary function types $f_A\colon\fun{Term}\to A$ and $g_B\colon\fun{Form}\to B$. Under this non-dependent setting, the induction principle reduces to the  recursor. This allows us to define computational operations by providing a rule for each constructor based on the recursively computed values of its sub-components. Examples include evaluating a closed term, substituting variables, or extracting the free variables of a formula.
+Structural recursion is the specialization of induction when the motive is a constant type family. Given types $A,B\colon\univ$ and $P(t)\equiv A$ and $Q(\varphi)\equiv B$ for all terms and formulas, the dependent products simplify to the ordinary function types $f_A\colon\fun{Term}\to A$ and $g_B\colon\fun{Form}\to B$. Under this non-dependent setting, the induction principle reduces to the recursor. This allows defining computational operations by providing a rule for each constructor based on the recursively computed values of its sub-components. Examples include evaluating a closed term, substituting variables, or extracting the free variables of a formula.
 
-\begin{thm}[Injectivity of Constructors]\label{thm:constructor-injectivity}
-    The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are injective. For instance, for any terms\/ $t,u,t_1,t_2,u_1,u_2\colon\fun{Term}$ and formulas\/ $\varphi_1,\varphi_2,\psi_1,\psi_2\colon\fun{Form}$, the following implications hold:
+\begin{thm}[Injectivity of Constructors]
+    \label{thm:constructor-injectivity}
+    The constructors of the freely generated inductive types\/ $\fun{Term}$ and\/ $\fun{Form}$ are injective. For\/ $t,u,t_1,t_2,u_1,u_2\colon\fun{Term}$ and\/ $\varphi_1,\varphi_2,\psi_1,\psi_2\colon\fun{Form}$, the following implications hold:
     \begin{enumerate}[a),font=\upshape]
         \item If\/ $s(t)\eq{\fun{Term}}s(u)$, then\/ $t\eq{\fun{Term}}u$.
         
@@ -131,7 +132,7 @@ Structural recursion is the specialization of induction when the motive is a con
         \end{align*}
         Given a path $q\colon t_1+t_2\eq{\fun{Term}}u_1+u_2$, $\fun{ap}_{\fun{left\_add}}(q)$ evaluates to $t_1\eq{\fun{Term}}u_1$, and $\fun{ap}_{\fun{right\_add}}(q)$ evaluates to $t_2\eq{\fun{Term}}u_2$. Pairing these paths constructs an inhabitant of the cartesian product $(t_1\eq{\fun{Term}}u_1)\times(t_2\eq{\fun{Term}}u_2)$.
         
-        \item As in the previous two cases, we can define a projection function that returns the desired sub-component for the specific constructor and the default value~$0$ for terms or $\fun{var}(0)\doteq\fun{var}(0)$ for formulas, for all others. Applying $\fun{ap}$ along the assumed path then extracts the propositional equality of the sub-components.
+        \item As before, define a projection returning the desired sub-component for the specific constructor, and a default value ($0$ for terms or $\fun{var}(0)\doteq\fun{var}(0)$ for formulas) otherwise. Applying $\fun{ap}$ along the assumed path extracts the propositional equality of the sub-components.
     \end{enumerate}
 \end{proof}
 
@@ -145,12 +146,15 @@ Structural recursion is the specialization of induction when the motive is a con
     Analogous inequalities hold for all pairs of distinct constructors in\/ $\fun{Term}$ and\/ $\fun{Form}$.
 \end{thm}
 
-\begin{proof} Structural recursion allows us to define the following type families
-    \begin{enumerate}[a)]
-        \item The type family $D\colon\fun{Term}\to\univ$ by structural recursion:
+\begin{proof} 
+    Structural recursion allows defining the following type families:
+    \begin{enumerate}[a),font=\upshape]
+        \item The type family:
         \begin{align*}
-            D(0) &\defeq \fun{1} \\
-            D(\tau) &\defeq \fun{0} \quad \text{for all other constructors.}
+            D\colon\fun{Term}&\to\univ\\
+            0&\mapsto\fun1\\
+            \tau&\mapsto\fun0\quad
+                \text{for all other constructors.}
         \end{align*}
         Suppose we have a proof path $p\colon 0\eq{\fun{Term}}s(t)$. This induces a function $\fun{transport}^D(p)\colon\fun{1}\to\fun{0}$. Thus, we can define the constant map
         \begin{align*}
@@ -158,19 +162,21 @@ Structural recursion is the specialization of induction when the motive is a con
             \lambda q.\,\fun{transport}^D(p,\fstar).
         \end{align*}
         
-        \item A similar family $D\colon\fun{Term}\to\univ$:
+        \item A similar family
         \begin{align*}
-            D(\fun{var}(y))&\defeq\fun{1}
+            D\colon\fun{Term}&\to\univ\\
+            \fun{var}(y)&\mapsto\fun1
                 \quad\text{for all }y\colon\fun{Var}\\
-            D(\tau)&\defeq\fun{0}
+            \tau&\mapsto\fun0
                 \quad\text{for all other constructors.}
         \end{align*}
         Assuming a path $p\colon\fun{var}(x)\eq{\fun{Term}}0$, proceed as before using $\fun{transport}^D(p)$ to construct a constant inhabitant of $\neg(\fun{var}(x)\eq{\fun{Term}}0)$. 
     \end{enumerate}
 \end{proof}
 
-\begin{lem}[Action on Paths for Binary Functions]\label{lem:binap}
-    Let\/ $f\colon A\times B\to C$ be a binary function. If\/ $x_1,x_2\colon A$ and\/ $y_1,y_2\colon B$, given\/ $p\colon x_1\eq{A}x_2$ and\/ $q\colon y_1\eq{B}y_2$, there is an induced path
+\begin{lem}[Action on Paths for Binary Functions]
+    \label{lem:binap}
+    Let\/ $f\colon A\times B\to C$ be a binary function. Given\/ $x_1,x_2\colon A$ and\/ $y_1,y_2\colon B$ with paths\/ $p\colon x_1\eq{A}x_2$ and\/ $q\colon y_1\eq{B}y_2$, there is an induced path
     \[
         \fun{binap}_f(p,q)\colon f(x_1,y_1)\eq{C}f(x_2,y_2).
     \]
@@ -194,8 +200,9 @@ Structural recursion is the specialization of induction when the motive is a con
     \]
 \end{proof}
 
-\begin{lem}[Congruence of Constructors]\label{lem:constructor-congruence}
-    The constructors for terms and formulas respect propositional equality. For instance, given terms\/ $t_1,t_2,u\colon\fun{Term}$, if\/ $t_1\eq{\fun{Term}}t_2$, then the following identities hold:
+\begin{lem}[Congruence of Constructors]
+    \label{lem:constructor-congruence}
+    The constructors for terms and formulas respect propositional equality. Given\/ $t_1,t_2,u\colon\fun{Term}$, if\/ $t_1\eq{\fun{Term}}t_2$, then the following identities hold:
     \begin{enumerate}[a),font=\upshape]
         \item $s(t_1)\eq{\fun{Term}}s(t_2)$
         
@@ -207,9 +214,7 @@ Structural recursion is the specialization of induction when the motive is a con
 \end{lem}
 
 \begin{proof}
-    We can simply apply the action on paths to construct the required identities.
-    
-    For example, fixing the right operand $u$, the application of the equality constructor defines a function
+    The required identities are constructed by applying the action on paths. Fixing the right operand $u$, the application of the equality constructor defines a function
     \begin{align*}
         f_u\colon\fun{Term}&\to\fun{Form}\\
         \tau&\mapsto\tau\doteq u.
@@ -255,7 +260,7 @@ Structural recursion is the specialization of induction when the motive is a con
     \]
     We proceed by double structural induction on $\varphi$ and $\psi$.
     \begin{itemize}
-        \item Suppose that $\varphi\equiv t_1\doteq t_2$ and $\psi\equiv u_1\doteq u_2$. Relying on the decidability of equality for terms, we have to analyize two cases. If both equalities hold, the congruence of constructors yields $\varphi\eq{\fun{Form}}\psi$. Otherwise, we may suppose that $\neg(t_1\eq{\fun{Term}}u_1)$. By the injectivity of the $\doteq$ constructor, there is a projection $(\varphi\eq{\fun{Form}}\psi)\to(t_1\eq{\fun{Term}}u_1)$. Thus, $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from $\neg(t_1\eq{\fun{Term}}u_1)$.
+        \item Suppose that $\varphi\equiv t_1\doteq t_2$ and $\psi\equiv u_1\doteq u_2$. Relying on the decidability of equality for terms, there are two cases. If both equalities hold, the congruence of constructors yields $\varphi\eq{\fun{Form}}\psi$. Otherwise, we may suppose $\neg(t_1\eq{\fun{Term}}u_1)$. By the injectivity of the $\doteq$ constructor, there is a projection $(\varphi\eq{\fun{Form}}\psi)\to(t_1\eq{\fun{Term}}u_1)$. Thus, $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from $\neg(t_1\eq{\fun{Term}}u_1)$.
         
         \item Mismatched constructors (e.g., $\neg\varphi'$ vs $\psi_1\to\psi_2$) are trivially distinct by the disjointness of constructors.
         
@@ -271,7 +276,7 @@ Structural recursion is the specialization of induction when the motive is a con
 We begin with a set-theoretic approach to build intuition.
 
 \begin{defn}[Free variables]\label{defn:fv}
-    The \textsl{set of free variables of a term}, denoted\/ $\FV(t)$, is defined by induction on the structure of\/ $t\colon\fun{Term}$:
+    The \textsl{set of free variables of a term}, denoted $\FV(t)$, is defined by induction on the structure of $t\colon\fun{Term}$:
     \begin{itemize}
         \item If $x\colon\fun{Var}$, then $\FV(x)=\set x$.
         \item $\FV(0)=\emptyset$.
@@ -280,7 +285,7 @@ We begin with a set-theoretic approach to build intuition.
         \item $\FV(t_1\cdot t_2)=\FV(t_1)\cup\FV(t_2)$.
     \end{itemize}
     
-    The \textsl{set of free variables of a formula}, denoted\/ $\FV(\varphi)$, is defined by induction on the structure of\/ $\varphi\colon\fun{Form}$:
+    The \textsl{set of free variables of a formula}, denoted $\FV(\varphi)$, is defined by induction on the structure of $\varphi\colon\fun{Form}$:
     \begin{itemize}
         \item $\FV(t_1\doteq t_2)=\FV(t_1)\cup\FV(t_2)$.
         \item $\FV(\neg\varphi)=\FV(\varphi)$.
@@ -290,7 +295,7 @@ We begin with a set-theoretic approach to build intuition.
 \end{defn}
 
 \begin{xmpl}
-    Here are some examples illustrating how the\/ $\FV$ operation computes the set of free variables for various terms and formulas.
+    The following illustrate the computation of the~$\FV$ operation for various terms and formulas.
     \begin{align*}
     \intertext{Terms:}
         \FV(s(x)+(y\cdot0)) 
@@ -330,7 +335,7 @@ We begin with a set-theoretic approach to build intuition.
 \end{xmpl}
 
 \begin{rem}
-    Now that we have established the semantics and intuition of free variables, we proceed to formally define the same concept under the requirements of homotopy type theory.
+    Having established the semantics and intuition of free variables, we formally define the concept within homotopy type theory.
 \end{rem}
 
 \begin{defn}[Free Variables as Predicates]\label{defn:FV}
@@ -360,7 +365,7 @@ We begin with a set-theoretic approach to build intuition.
 \end{defn}
 
 \begin{prop}\label{prop:FV-is-mere-prop}
-    For every term\/ $t\colon\fun{Term}$, every formula\/ $\varphi\colon\fun{Form}$, and every variable\/ $x\colon\fun{Var}$, the evaluations\/ $\fun{FV}(t)(x)$ and\/ $\fun{FV}(\varphi)(x)$ are mere propositions. Formally, the following types are inhabited:
+    For any term\/ $t\colon\fun{Term}$, formula\/ $\varphi\colon\fun{Form}$, and variable\/ $x\colon\fun{Var}$, the evaluations\/ $\fun{FV}(t)(x)$ and\/ $\fun{FV}(\varphi)(x)$ are mere propositions. Formally, the following types are inhabited:
     \begin{align*}
         &\prod_{t\colon\fun{Term}}\;
         \prod_{x\colon\fun{Var}}
@@ -372,14 +377,14 @@ We begin with a set-theoretic approach to build intuition.
 \end{prop}
 
 \begin{proof}
-    We proceed by structural induction on terms and formulas. Since $\fun{Var}$ is a set, the identity type $x\eq{\fun{Var}}y$ is a mere proposition. Thus, the conclusion holds for the base term $\fun{var}(y)$. It trivially holds for the term $0$, and the inductive hypothesis shows that it holds for $s(t)$ as well. The cases of term addition and multiplication are trivial because they evaluate to propositionally truncated types.
+    The proof proceeds by structural induction on terms and formulas. Since $\fun{Var}$ is a set, the identity type $x\eq{\fun{Var}}y$ is a mere proposition. Thus, the conclusion holds for the base term $\fun{var}(y)$. It trivially holds for the constant $0$, and the inductive hypothesis shows that it holds for $s(t)$. The cases of term addition and multiplication are trivial because they evaluate to propositionally truncated types.
 
     For formulas, the conclusion is a direct consequence of the inductive hypotheses and the fact that mere propositions are closed under cartesian products.
     
 \end{proof}
 
 \begin{defn}[Substitution]\label{defn:substitution}
-    Let\/ $x\colon\fun{Var}$ be a variable and\/ $t\colon\fun{Term}$ a term. The \textsl{substitution of\/ $t$ for\/ $x$} in a term\/ $\tau$, denoted\/ $\tau[t/x]$, is defined by induction on the structure of\/ $\tau$:
+    Let $x\colon\fun{Var}$ and $t\colon\fun{Term}$. The \textsl{substitution of\/ $t$ for\/ $x$} in a term $\tau$, denoted $\tau[t/x]$, is defined by induction on the structure of $\tau$:
     \begin{itemize}
         \item $\fun{var}(y)[t/x]\defeq\begin{cases}
             t&\text{if }x\eq{\fun{Var}}y,\\ 
@@ -395,7 +400,7 @@ We begin with a set-theoretic approach to build intuition.
         \item $(\tau_1\cdot\tau_2)[t/x]\defeq\tau_1[t/x]\cdot\tau_2[t/x]$.
     \end{itemize}
 
-    Similarly, the \textsl{capture-avoiding substitution of\/ $t$ for\/ $x$} in a formula\/ $\varphi$, denoted\/ $\varphi[t/x]$, is defined by induction on the structure of\/ $\varphi$:
+    Similarly, the \textsl{capture-avoiding substitution of\/ $t$ for\/ $x$} in a formula $\varphi$, denoted $\varphi[t/x]$, is defined by induction on the structure of $\varphi$:
     \begin{itemize}
         \item $(\tau_1\doteq \tau_2)[t/x]\defeq \tau_1[t/x]\doteq \tau_2[t/x]$.
         
@@ -414,11 +419,11 @@ We begin with a set-theoretic approach to build intuition.
                     \text{ and }\fun{FV}(t)(y),
         \end{cases}$
     \end{itemize}
-    where\/ $z\colon\fun{Var}$ is a variable such that\/ $\neg(z\eq{\fun{Var}}x)$ and\/ $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
+    where $z\colon\fun{Var}$ is a variable such that $\neg(z\eq{\fun{Var}}x)$ and $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
 \end{defn}
 
 \begin{xmpl}
-    Here are three examples illustrating the behavior of capture-avoiding substitution in universally quantified formulas.
+    The following examples illustrate the behavior of capture-avoiding substitution in universally quantified formulas.
 
     \begin{description}[font=\normalfont\scshape]
         \item[Case 1: $x\eq{\fun{Var}}y$.]
@@ -453,7 +458,7 @@ We begin with a set-theoretic approach to build intuition.
                 (y\eq{\fun{Var}}y),
         \]
         which is inhabited by $\fun{refl}_y$. Therefore, if we were to blindly substitute $x$ with $y+s(0)$, the free variable $y$ would be captured, i.e., it would become bound. The definition tells us to proceed as follows:
-        \begin{enumerate}
+        \begin{enumerate}[i)]
             \item Pick a fresh variable $z$ not present in the expressions, i.e., so that $\neg(z\eq{\fun{Var}}x)$ and $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
             \item Rename the bound variable inside the subformula $\varphi$:
             \[
@@ -479,21 +484,29 @@ We begin with a set-theoretic approach to build intuition.
 \end{xmpl}
 
 \begin{defn}
-    Let $t\colon\fun{Term}$ be a term, $x\colon\fun{Var}$ a variable, and $\varphi\colon\fun{Form}$ a formula. We say that $t$ is \textsl{free for\/ $x$ in\/ $\varphi$} (or \textsl{substitutable for\/ $x$ in\/ $\varphi$}) if the substitution of $t$ for the free occurrences of $x$ in $\varphi$ does not result in any free variable of $t$ becoming bound. Formally, this establishes a predicate $\fun{isFreeFor}(t,x,\varphi)\colon\fun{Prop}_\univ$ by structural induction on $\varphi$:
+    Let $t\colon\fun{Term}$, $x\colon\fun{Var}$, and $\varphi\colon\fun{Form}$. We say $t$ is \textsl{free for $x$ in $\varphi$} (or \textsl{substitutable for $x$ in $\varphi$}) if substituting $t$ for the free occurrences of $x$ in $\varphi$ does not result in any free variable of $t$ becoming bound. Formally, this establishes a predicate $\fun{isFreeFor}(t,x,\varphi)\colon\fun{Prop}_\univ$ by structural induction on $\varphi$:
     \begin{align*}
         &\fun{isFreeFor}(t,x,\tau_1\doteq\tau_2)
             \defeq\fun1\\
         &\fun{isFreeFor}(t,x,\neg\psi)
             \defeq\fun{isFreeFor}(t,x,\psi)\\
         &\fun{isFreeFor}(t,x,\psi_1\imp\psi_2)
-            \defeq\fun{isFreeFor}(t,x,\psi_1)\times\fun{isFreeFor}(t,x,\psi_2)\\
+            \defeq\fun{isFreeFor}(t,x,\psi_1)
+            \times
+            \fun{isFreeFor}(t,x,\psi_2)\\
         &\fun{isFreeFor}(t,x,\forall y\,\psi)
-            \defeq\lVert(x\eq{}y)+\bigl(\neg(x\eq{}y)\times\neg\fun{FV}(t)(y)\times\fun{isFreeFor}(t,x,\psi)\bigr)\rVert.
+            \defeq\lVert(x\eq{}y)
+            +
+            \bigl(
+                \neg(x\eq{}y)\times\neg\fun{FV}(t)(y)
+                \times
+                \fun{isFreeFor}(t,x,\psi)
+            \bigr)\rVert.
     \end{align*}
 \end{defn}
 
 \begin{lem}[Substitution Preserves Equality]\label{lem:subst-equality}
-    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi,\psi\colon\fun{Form}$. The substitution operation preserves propositional equality across all its arguments. Specifically, we have:
+    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi,\psi\colon\fun{Form}$. The substitution operation preserves propositional equality across all its arguments:
     \begin{enumerate}[a),font=\upshape]
         \item If\/ $\varphi\eq{\fun{Form}}\psi$, then\/ $\varphi[t/x]\eq{\fun{Form}}\psi[t/x]$.
         \item If\/ $t\eq{\fun{Term}}u$, then\/ $\varphi[t/x]\eq{\fun{Form}}\varphi[u/x]$.
@@ -503,23 +516,23 @@ We begin with a set-theoretic approach to build intuition.
 \end{lem}
 
 \begin{proof}
-    Consider the function 
+    Define the function 
     \begin{align*}
         \fun{subst}\colon
             \fun{Form}\times\fun{Term}\times\fun{Var}
                 &\to\fun{Form}\\
             (\varphi,t,x)&\mapsto\varphi[t/x].
     \end{align*}
-    Since every function respects propositional equality via the action on paths, applying path induction to any of the three arguments induces a path in the codomain. For instance, given a proof $p\colon t\eq{\fun{Term}}u$, the functorial action of the substitution function yields the path
+    Since every function respects propositional equality via the action on paths, applying path induction to any of the three arguments induces a path in the codomain. For instance, given $p\colon t\eq{\fun{Term}}u$, the functorial action of the substitution function yields the path
     \[
         \fun{ap}_{\fun{subst}(\varphi,\dummy,x)}(p)
             \colon\varphi[t/x]\eq{\fun{Form}}\varphi[u/x].
     \]
-    The proofs for cases a) and c) follow similarly. 
+    Cases a) and c) follow similarly. 
 \end{proof}
 
 \begin{prop}\label{prop:substitution-properties}
-    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi\colon\fun{Form}$. Substitution satisfies the following fundamental properties:
+    Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi\colon\fun{Form}$. Substitution satisfies the following properties:
     \begin{enumerate}[a),font=\upshape]
         \item $\varphi[x/x]\eq{\fun{Form}}\varphi$.
         
