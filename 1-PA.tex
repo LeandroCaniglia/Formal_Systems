@@ -341,7 +341,7 @@ We begin with a set-theoretic approach to build intuition.
 \begin{defn}[Free Variables as Predicates]\label{defn:FV}
     Using the notation of \citep{caniglia2025hott}, the \textsl{free variable maps} $\fun{Term}\to\fun{Pred}(\fun{Var})$ and $\fun{Form}\to\fun{Pred}(\fun{Var})$ assign to each term and formula a predicate indicating whether a given variable has any free occurrence in it. 
 
-    Both maps are denoted by $\fun{FV}$ and defined by structural recursion. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
+    Both maps are denoted by $\fun{FV}(s(\num n)(y))$ and defined by structural recursion. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
     \begin{itemize}
         \item $\fun{FV}(x)(y) \defeq y\eq{\fun{Var}}x$ for any $x\colon\fun{Var}$.
         \item $\fun{FV}(0)(y)\defeq\fun0$.
@@ -483,7 +483,7 @@ We begin with a set-theoretic approach to build intuition.
     \end{description}
 \end{xmpl}
 
-\begin{defn}
+\begin{defn}\label{defn:free-for-in}
     Let $t\colon\fun{Term}$, $x\colon\fun{Var}$, and $\varphi\colon\fun{Form}$. We say $t$ is \textsl{free for $x$ in $\varphi$} (or \textsl{substitutable for $x$ in $\varphi$}) if substituting $t$ for the free occurrences of $x$ in $\varphi$ does not result in any free variable of $t$ becoming bound. Formally, this establishes a predicate $\fun{isFreeFor}(t,x,\varphi)\colon\fun{Prop}_\univ$ by structural induction on $\varphi$:
     \begin{align*}
         &\fun{isFreeFor}(t,x,\tau_1\doteq\tau_2)
@@ -504,6 +504,18 @@ We begin with a set-theoretic approach to build intuition.
             \bigr)\rVert.
     \end{align*}
 \end{defn}
+
+\begin{rem}
+    A term $t$ is free for a variable $x$ in a formula $\varphi$ if replacing the free occurrences of $x$ in $\varphi$ with $t$ does not cause any free variable of $t$ to become bound by a quantifier in $\varphi$.
+    
+    Consider the formula $\varphi \equiv \forall y\,\neg(x \doteq y)$, where $x$ is free and $y$ is bound. If we define the term $t \defeq s(y)$, then $y$ is free in $t$. Substituting $t$ for $x$ without restriction yields
+    \[
+        \varphi[t/x] \equiv \forall y\,\neg(s(y) \doteq y).
+    \]
+    The variable $y$, originally free in $t$, is now captured by the $\forall y$ quantifier. Consequently, the term $s(y)$ is not free for $x$ in $\varphi$.
+    
+    Conversely, the term $s(z)$ is free for $x$ in $\varphi$. The substitution evaluates to $\forall y\,\neg(s(z) \doteq y)$, which preserves the freedom of~$z$.
+\end{rem}
 
 \begin{lem}[Substitution Preserves Equality]\label{lem:subst-equality}
     Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi,\psi\colon\fun{Form}$. The substitution operation preserves propositional equality across all its arguments:

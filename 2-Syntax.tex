@@ -20,7 +20,7 @@ To construct the G\"odel numbering constructively, we rely on the Fundamental Th
 
 We construct the mapping in two stages: first by defining structural recursors for terms and formulas, and then by uniting them via the coproduct eliminator for the syntax type.
 
-\begin{defn}
+\begin{defn}\label{defn:gn}
     We define the functions
     \[
         \fun{gn}_{\fun{Term}}\colon\fun{Term}\to\N
@@ -87,6 +87,10 @@ We construct the mapping in two stages: first by defining structural recursors f
             ).
     \]
 \end{defn}
+
+\begin{ntn}
+    To simplify the notation, we suppress the explicit coproduct injections when applying the G\"odel numbering function. For any term\/ $t\colon\fun{Term}$, formula\/ $\varphi\colon\fun{Form}$, and generic syntactic object\/ $s\colon\fun{Syntax}$, we write\/ $\gn{t}$, $\gn{\varphi}$, and\/ $\gn{s}$ to denote\/ $\fun{gn}(\fun{inl}(t))$, $\fun{gn}(\fun{inr}(\varphi))$, and\/ $\fun{gn}(s)$, respectively.
+\end{ntn}
 
 \begin{thm}\label{thm:gn-is-injective}
     The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:\/
@@ -167,15 +171,16 @@ We construct the mapping in two stages: first by defining structural recursors f
             
             \item $\fun{ax}_{\fun{L3}}(\varphi,\psi)\colon\fun{Der}\bigl((\neg\psi\imp\neg\varphi)\imp(\varphi\imp\psi)\bigr)$.
             
-            \item $\fun{ax}_{\fun{L4}}(\varphi,x,t)\colon\fun{Der}\bigl((\forall x\,\varphi)\imp\varphi[t/x]\bigr)$, where $t$ is free for $x$ in $\varphi$.
+            \item $\fun{ax}_{\fun{L4}}(\varphi,x,t)\colon\fun{Der}\bigl((\forall x\,\varphi)\imp\varphi[t/x]\bigr)$, where $t$ is free for $x$ in $\varphi$.\footnote{Definition~\ref{defn:free-for-in}.}
             
-            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, where $x\notin\FV(\varphi)$.
+            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x,p)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, subject to the condition $p\colon\neg\fun{FV}(\varphi)(x)$.
             
             \item $\fun{ax}_{\fun{Eq1}}(t)\colon\fun{Der}(t\doteq t)$.
             
             \item $\fun{ax}_{\fun{Eq2}}(\varphi,z,t_1,t_2)\colon\fun{Der}\bigl(t_1\doteq t_2\imp(\varphi[t_1/z]\imp\varphi[t_2/z])\bigr)$, where $t_1$ and $t_2$ are free for $z$ in $\varphi$.
         \end{enumerate}
-        \item \textsl{Non-Logical Axioms:}
+        
+        \item\textsl{Non-Logical Axioms:}
         \begin{enumerate}[i),font=\upshape]
             \item $\fun{ax}_{\fun{PA1}}\colon\fun{Der}\bigl(\forall x\,\neg(s(x)\doteq0)\bigr)$.
             
@@ -200,18 +205,516 @@ We construct the mapping in two stages: first by defining structural recursors f
         \end{enumerate}
         \item \textsl{Rules of Inference:}
         \begin{enumerate}[i),font=\upshape]
-            \item Modus Ponens:
-            \[
-                \fun{mp}_{\varphi,\psi}\colon\fun{Der}(\varphi)\to\fun{Der}(\varphi\imp\psi)\to\fun{Der}(\psi).
-            \]
-            \item Universal Generalization:
-            \[
-                \fun{gen}_{\varphi,x}\colon\fun{Der}(\varphi)\to\fun{Der}(\forall x\,\varphi).
-            \]
+            \item Modus Ponens: $\fun{mp}_{\varphi,\psi}\colon\fun{Der}(\varphi)\to\fun{Der}(\varphi\imp\psi)\to\fun{Der}(\psi)$.
+            
+            \item Universal Generalization: $\fun{gen}_{\varphi,x}\colon\fun{Der}(\varphi)\to\fun{Der}(\forall x\,\varphi)$.
         \end{enumerate}
     \end{enumerate}
 \end{defn}
 
+\begin{lem}\label{lem:symmetry-equality}
+    For any terms $t_1,t_2\colon\fun{Term}$, the following type is inhabited:
+    \[
+        \fun{Der}(t_1\doteq t_2\imp t_2\doteq t_1).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let the motive formula for equality replacement be $\varphi\equiv z\doteq t_1$. Substituting $t_1$ and $t_2$ for $z$ yields:
+    \begin{align*}
+        \varphi[t_1/z]&\equiv t_1\doteq t_1\\
+        \varphi[t_2/z]&\equiv t_2\doteq t_1.
+    \end{align*}
+    To simplify the notation, set
+    \begin{align*}
+        A\defeq t_1\doteq t_2,\quad
+        B\defeq t_1\doteq t_1,\quad
+        C\defeq t_2\doteq t_1.
+    \end{align*}
+    Our goal is to construct an inhabitant of $\fun{Der}(A\imp C)$. 
+    
+    Instantiating $\fun{ax}_{\fun{Eq2}}(\varphi,z,t_1,t_2)$ provides our first derivation tree:
+    \[
+        d_1\defeq\fun{ax}_{\fun{Eq2}}(\varphi,z,t_1,t_2)
+            \colon
+            \fun{Der}\bigl(
+                \explain[t_1\doteq t_2]A\imp(
+                    \explain[\varphi{[t_1/z]}]B
+                    \imp
+                    \explain[\varphi{[t_2/z]}]C
+                )
+            \bigr).
+    \]
+    By the reflexivity axiom $\fun{ax}_{\fun{Eq1}}$, we have an independent proof of $B$:
+    \[
+    d_2 \defeq \fun{ax}_{\fun{Eq1}}(t_1) \colon \fun{Der}(B).
+    \]
+    To apply $\fun{ax}_{\fun{L2}}$, we must first introduce $A$ as an antecedent to $B$. We instantiate the logical axiom $\fun{ax}_{\fun{L1}}$ with $B$ and $A$:
+    \[
+        d_3\defeq\fun{ax}_{\fun{L1}}(B,A)\colon 
+            \fun{Der}\bigl(
+                B\imp(A\imp B)
+            \bigr).
+    \]
+    Applying Modus Ponens to $d_2$ and $d_3$ weakens $B$ with the antecedent $A$:
+    \[
+        d_4\defeq\fun{mp}_{B,A\imp B}(d_2,d_3)\colon
+            \fun{Der}(A\imp B).
+    \]
+    Next, we instantiate the implication distribution axiom $\fun{ax}_{\fun{L2}}$ with formulas $A$, $B$, and $C$:
+    \[
+        d_5\defeq\fun{ax}_{\fun{L2}}(A,B,C)
+            \colon 
+                \fun{Der}\bigl(
+                    (A\imp(B\imp C))
+                    \imp
+                    ((A\imp B)\imp(A\imp C))
+                \bigr).
+    \]
+    Applying Modus Ponens to our initial equality yields:
+    \[
+        d_6\defeq\fun{mp}_{
+            A\imp(B\imp C),(A\imp B)\imp(A\imp C)}(
+                d_1,
+                d_5
+            )\colon
+                \fun{Der}\bigl(
+                    (A\imp B)\imp(A\imp C)
+                \bigr).
+    \]
+    Finally, applying Modus Ponens one last time to $d_4$ and $d_6$ produces the desired derivation:
+    \[
+        d_7\defeq\fun{mp}_{A\imp B,A\imp C}(d_4,d_6)
+            \colon\fun{Der}(A\imp C).
+    \]
+\end{proof}
+
+\begin{rem}
+    To reduce the verbosity, future derivations will employ a compact derivation style. For example, using this notation the proof of the previous lemma becomes:
+    {\small
+    \begin{align*}
+        d_1&\colon\fun{Der}\bigl(
+            A\imp(B\imp C)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{Eq2}}\\
+        d_2&\colon\fun{Der}(B)
+            &&;\ \fun{ax}_{\fun{Eq1}}\\
+        d_3&\colon\fun{Der}\bigl(
+            B\imp(A\imp B)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        d_4&\colon\fun{Der}(
+            A\imp B
+        )
+            &&;\ \fun{mp}(d_2,d_3)\\
+        d_5&\colon\fun{Der}\bigl(
+            (A\imp(B\imp C))
+            \imp
+            ((A\imp B)\imp(A\imp C))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        d_6&\colon\fun{Der}\bigl(
+            (A\imp B)\imp(A\imp C)
+        \bigr)
+            &&;\ \fun{mp}(d_1,d_5)\\
+        d_7&\colon\fun{Der}(
+            A\imp C
+        )
+            &&;\ \fun{mp}(d_4,d_6).
+    \end{align*}}
+\end{rem}
+
+\begin{lem}[Prefixing]\label{lem:prefixing}
+    For any formulas\/ $\varphi,\psi,\chi\colon\fun{Form}$, there is an inhabitant
+    \[
+        \fun{pref}(\varphi,\psi,\chi)\colon\fun{Der}\Bigl(
+            (\psi\imp \chi)\imp\bigl(
+                (\varphi\imp\psi)\imp(\varphi\imp\chi)
+            \bigr)
+        \Bigr).
+    \]
+\end{lem}
+
+\begin{proof}
+    To simplify the notation, we introduce the abbreviations
+    \begin{align*}
+        A&\defeq\psi\imp \chi,\\
+        B&\defeq\varphi\imp(\psi\imp\chi),\\
+        C&\defeq(\varphi\imp \psi)\imp(\varphi\imp\chi).
+    \end{align*} 
+    
+    The derivation proceeds as follows:
+    {\small
+    \begin{align*}
+        s_1&\colon\fun{Der}(B\imp C)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        s_2&\colon\fun{Der}\bigl(
+            (B\imp C)\imp(A\imp(B\imp C))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        s_3&\colon\fun{Der}\bigl(A\imp(B\imp C)\bigr)
+            &&;\ \fun{mp}(s_1,s_2)\\
+        s_4&\colon\fun{Der}\bigl(
+            (A\imp(B\imp C))
+            \imp\bigl((A\imp B)\imp(A\imp C)\bigr)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        s_5&\colon\fun{Der}\bigl(
+                (A\imp B)\imp(A\imp C)
+            \bigr)
+            &&;\ \fun{mp}(s_3,s_4)\\
+        s_6&\colon\fun{Der}(A\imp B)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        \fun{pref}&\colon\fun{Der}(A\imp C)
+            &&;\ \fun{mp}(s_5,s_6).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}[Suffixing]\label{lem:suffixing}
+    For any formulas\/ $\varphi, \psi, \chi \colon \fun{Form}$, the suffixing rule is derivable. Formally, there is an inhabitant
+    \[
+        \fun{suff}(\varphi,\psi,\chi)\colon\fun{Der}\bigl(
+            (\varphi\imp\psi)\imp(
+                (\psi\imp\chi)
+                \imp
+                (\varphi\imp\chi)
+            )
+        \bigr).
+    \]
+    \end{lem}
+    
+\begin{proof}
+        To simplify the notation, we introduce the abbreviations
+        \begin{align*}
+            A&\defeq\psi\imp\chi,\\
+            B&\defeq\varphi\imp\psi,\\
+            C&\defeq\varphi\imp\chi.
+        \end{align*}
+    The derivation proceeds as follows:
+    {\small
+    \begin{align*}
+        s_1&\colon\fun{Der}\bigl(A\imp(B\imp C)\bigr)
+            &&;\ \fun{pref}\\
+        s_2&\colon\fun{Der}\bigl(
+            (A\imp(B\imp C))
+            \imp
+            ((A\imp B)\imp(A\imp C))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        s_3&\colon\fun{Der}\bigl(
+            (A\imp B)\imp(A\imp C)
+        \bigr)
+            &&;\ \fun{mp}(s_1,s_2)\\
+        s_4&\colon\fun{Der}\bigl(B\imp(A\imp B)\bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        s_5&\colon\fun{Der}\bigl(
+            ((A\imp B)\imp(A\imp C))
+            \imp\\
+            &\qquad\qquad((B\imp(A\imp B))\imp(B\imp(A\imp C)))
+        \bigr)
+            &&;\ \fun{pref}\\
+        s_6&\colon\fun{Der}\bigl(
+            (B\imp(A\imp B))\imp(B\imp(A\imp C))
+        \bigr)
+            &&;\ \fun{mp}(s_3, s_5)\\
+        \fun{suff}&\colon\fun{Der}\bigl(
+            B\imp(A\imp C)
+        \bigr)
+            &&;\ \fun{mp}(s_4,s_6).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}[Identity]\label{lem:identity}
+    For any formula $X\colon\fun{Form}$, there is an inhabitant
+    \[
+        \fun{id}(X)\colon\fun{Der}(X\imp X).
+    \]
+\end{lem}
+
+\begin{proof}
+    {\small
+    \begin{align*}
+        i_1&\colon\fun{Der}\bigl(
+            X\imp((X\imp X)\imp X)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        i_2&\colon\fun{Der}\bigl(
+            (X\imp((X\imp X)\imp X))
+            \imp\\
+            &\qquad\qquad((X\imp(X\imp X))\imp(X\imp X))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        i_3&\colon\fun{Der}\bigl(
+            (X\imp(X\imp X))\imp(X\imp X)
+        \bigr)
+            &&;\ \fun{mp}(i_1,i_2)\\
+        i_4&\colon\fun{Der}\bigl(X\imp(X\imp X)\bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        \fun{id}(X)&\colon\fun{Der}(X\imp X)
+            &&;\ \fun{mp}(i_4,i_3).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}[Explosion] For any $X,Y\colon\fun{Form}$, there is an inhabitant
+\[
+    \fun{expl}(X,Y)\colon\fun{Der}(\neg X\imp(X\imp Y)).
+\]
+\end{lem}
+
+\begin{proof}
+    {\small
+    \begin{align*}
+        e_1&\colon\fun{Der}\bigl(
+            \neg X\imp(\neg Y\imp\neg X)
+        \bigr)
+            &&; \ \fun{ax}_{\fun{L1}}\\
+        e_2&\colon\fun{Der}\bigl(
+            (\neg Y\imp\neg X)\imp(X\imp Y)\bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        e_3&\colon\fun{Der}\bigl(
+            e_2\imp(e_1\imp(\neg X\imp(X\imp Y)))
+        \bigr)
+            &&;\ \fun{pref}\\
+        e_4&\colon\fun{Der}\bigl(
+            e_1\imp(\neg X\imp(X\imp Y))
+        \bigr)
+            &&;\ \fun{mp}(e_2,e_3)\\
+        \fun{expl}(X,Y)&\colon\fun{Der}\bigl(
+            \neg X\imp(X\imp Y)
+        \bigr)
+            &&;\ \fun{mp}(e_1,e_4).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}[Double Negation]\label{lem:double-negation}
+    For any formula\/ $\varphi\colon\fun{Form}$, there are inhabitants 
+    \begin{align*}
+        \fun{dne}(\varphi)&\colon
+            \fun{Der}(\neg\neg\varphi \imp \varphi)
+    \intertext{and}
+        \fun{dni}(\varphi)&\colon
+            \fun{Der}(\varphi \imp \neg\neg\varphi).
+    \end{align*}
+\end{lem}
+
+\begin{proof} We first construct $\fun{dne}(\varphi)\colon\fun{Der}(\neg\neg\varphi\imp\varphi)$:
+    {\small
+    \begin{align*}
+        d_1&\colon\fun{Der}\bigl(
+            \neg\neg\varphi
+            \imp
+            (\neg\varphi\imp\neg\neg\neg\varphi)
+        \bigr)
+            &&;\ \fun{expl}\\
+        d_2&\colon\fun{Der}\bigl(
+            (\neg\varphi\imp\neg\neg\neg\varphi)
+            \imp
+            (\neg\neg\varphi\imp\varphi)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        d_3&\colon\fun{Der}\bigl(
+            d_2
+            \imp(
+                d_1\imp(
+                    \neg\neg\varphi
+                    \imp
+                    (\neg\neg\varphi\imp\varphi)
+                )
+            )
+        \bigr)
+            &&;\ \fun{pref}\\
+        d_4&\colon\fun{Der}\bigl(
+            d_1
+            \imp(
+                \neg\neg\varphi
+                \imp
+                (\neg\neg\varphi\imp \varphi)
+            )
+        \bigr)
+            &&;\ \fun{mp}(d_2,d_3)\\
+        d_5&\colon\fun{Der}\bigl(
+            \neg\neg\varphi
+            \imp
+            (\neg\neg\varphi\imp\varphi)
+        \bigr)
+            &&;\ \fun{mp}(d_1,d_4)\\
+        d_6&\colon\fun{Der}\bigl(
+            (
+                \neg\neg\varphi \imp (\neg\neg\varphi \imp \varphi)
+            )
+            \imp\\
+            &\qquad\qquad
+            (
+                (\neg\neg\varphi\imp\neg\neg\varphi)
+                \imp
+                (\neg\neg\varphi\imp\varphi)
+            )
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        d_7&\colon\fun{Der}\bigl(
+            (\neg\neg\varphi\imp \neg\neg\varphi)
+            \imp
+            (\neg\neg\varphi\imp\varphi)
+        \bigr)
+            &&;\ \fun{mp}(d_5,d_6)\\
+        \fun{dne}(\varphi)&\colon\fun{Der}(
+            \neg\neg\varphi\imp\varphi
+        )
+            &&;\ \fun{mp}(
+                \fun{id}(\neg\neg\varphi),
+                d_7
+            ).
+    \intertext{And now $\fun{dni}(\varphi)\colon\fun{Der}(\varphi\imp\neg\neg\varphi)$}:
+        n_1&\colon\fun{Der}(
+            \neg\neg\neg\varphi
+            \imp
+            \neg\varphi
+        )
+            &&;\ \fun{dne}(\neg\varphi)\\
+        n_2&\colon\fun{Der}\bigl(
+            (\neg\neg\neg\varphi\imp\neg\varphi)
+            \imp
+            (\varphi\imp\neg\neg\varphi)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        \fun{dni}(\varphi)&\colon\fun{Der}(
+            \varphi\imp\neg\neg\varphi
+        )
+            &&;\ \fun{mp}(n_1,n_2).
+    \end{align*}}
+\end{proof}
+
+
+\begin{lem}[Contrapositive Rule]\label{lem:contrapositive}
+    For any formulas\/ $\varphi,\psi\colon\fun{Form}$, the following type is inhabited:
+    \[
+        \fun{Der}\bigl(
+            (\varphi\imp\psi)
+            \imp
+            (\neg\psi\imp\neg\varphi)
+        \bigr).
+    \]
+\end{lem}
+
+\begin{proof}
+    To simplify the layout, we introduce the following abbreviations:
+    \begin{align*}
+        A&\defeq\varphi\imp\psi,\\
+        B&\defeq\varphi\imp\neg\neg\psi,\\
+        C&\defeq\neg\neg\varphi\imp\neg\neg\psi,\\
+        D&\defeq\neg\psi\imp\neg\varphi.
+    \end{align*}
+    The derivation proceeds as follows:
+    {\small
+    \begin{align*}
+        s_1&\colon\fun{Der}(
+            \psi\imp\neg\neg\psi
+        )
+            &&;\ \fun{dni}\\
+        s_2&\colon\fun{Der}\bigl(
+            (\psi\imp\neg\neg\psi)
+            \imp
+            (A\imp B)
+        \bigr)
+            &&;\ \fun{pref}\\
+        s_3&\colon\fun{Der}(
+            A\imp B
+        )
+            &&;\ \fun{mp}(s_1,s_2)\\
+        s_4&\colon\fun{Der}(
+            \neg\neg\varphi\imp\varphi
+        )
+            &&;\ \fun{dne}\\
+        s_5&\colon\fun{Der}\bigl(
+            (\neg\neg\varphi\imp\varphi)
+            \imp
+            (B\imp C)
+        \bigr)
+            &&;\ \fun{suff}\\
+        s_6&\colon\fun{Der}(
+            B\imp C
+        )
+            &&;\ \fun{mp}(s_4,s_5)\\
+        s_7&\colon\fun{Der}\bigl(
+            (B\imp C)
+            \imp(
+                (A\imp B)\imp(A\imp C)
+            )
+        \bigr)
+            &&;\ \fun{pref}\\
+        s_8&\colon\fun{Der}\bigl(
+            (A\imp B)
+            \imp
+            (A\imp C)
+        \bigr)
+            &&;\ \fun{mp}(s_6,s_7)\\
+        s_9&\colon\fun{Der}(
+            A\imp C
+        )
+            &&;\ \fun{mp}(s_3,s_8)\\
+        s_{10}&\colon\fun{Der}(
+            C\imp D
+        )
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        s_{11}&\colon\fun{Der}\bigl(
+            (C\imp D)
+            \imp(
+                (A\imp C)\imp(A\imp D)
+            )
+        \bigr)
+            &&;\ \fun{pref}\\
+        s_{12}&\colon\fun{Der}\bigl(
+            (A\imp C)
+            \imp
+            (A\imp D)
+        \bigr)
+            &&;\ \fun{mp}(s_{10},s_{11})\\
+        s_{13}&\colon\fun{Der}(
+            A\imp D
+        )
+            &&;\ \fun{mp}(s_9,s_{12}).
+    \end{align*}}
+    
+    Expanding $A$ and $D$ in the final step yields the target type.
+\end{proof}
+
+\begin{lem}[Double Universal Instantiation]
+    \label{lem:double-instantiation}
+    For any formula\/ $\varphi\colon\fun{Form}$, distinct variables\/ $x,y\colon\fun{Var}$, and terms\/ $t_1,t_2\colon\fun{Term}$, assuming that\/ $t_1$ is free for\/ $x$ in\/ $\forall y\,\varphi$ and\/ $t_2$ is free for\/ $y$ in\/ $\varphi[t_1/x]$, double universal instantiation is admissible as a metatheoretic rule. Formally, there is a function:
+    \[
+        \fun{inst}_2\colon\fun{Der}(\forall x\,\forall y\,\varphi)\to\fun{Der}(\varphi[t_1/x][t_2/y]).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let $d\colon\fun{Der}(\forall x\,\forall y\,\varphi)$ be an arbitrary derivation.
+    
+    The hypothesis that $t_1$ is free for $x$ in $\forall y\,\varphi$ inherently guarantees that $y$ is not free in $t_1$ (assuming $x$ occurs free in $\varphi$). This ensures that the substitution distributes as $(\forall y\,\varphi)[t_1/x]\equiv\forall y\,(\varphi[t_1/x])$ and validates the first instantiation. The hypothesis that $t_2$ is free for $y$ in $\varphi[t_1/x]$ validates the second instantiation.
+    
+    The derivation sequence proceeds as follows:
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(
+            (\forall x\,\forall y\,\varphi)
+            \imp
+            \forall y\,(\varphi[t_1/x])
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L4}}\\
+        d_1&\colon\fun{Der}\bigl(
+            \forall y\,(\varphi[t_1/x])
+        \bigr)
+            &&;\ \fun{mp}(d,a_1)\\
+        a_2&\colon\fun{Der}\bigl(
+            (\forall y\,(\varphi[t_1/x]))
+            \imp
+            \varphi[t_1/x][t_2/y]
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L4}}\\
+        \fun{inst}_2(d,t_1,t_2)&\colon\fun{Der}\bigl(
+            \varphi[t_1/x][t_2/y]
+        \bigr)
+            &&;\ \fun{mp}(d_1,a_2).
+    \end{align*}
+\end{proof}
 
 \begin{rem}
     The presentation of Peano Arithmetic (and formal systems in general) consists of two levels. Open formulas and sentences. The former allow for intermediate proof steps. The latter state mathematical truths: the theorems of the theory.
@@ -236,7 +739,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     \]
 \end{rem}
 
-\begin{cor}\label{cor:decidable-rules}
+\begin{prop}\label{prop:decidable-rules}
     There exist decidable families of mere propositions
     \[
         \fun{isAx}\colon\N\to\univ,\quad
@@ -256,7 +759,7 @@ We construct the mapping in two stages: first by defining structural recursors f
         \item $\fun{isMP}(x,y,z)$ indicates whether $z$ follows from $x$ and $y$ via Modus Ponens, and
         \item $\fun{isGen}(x,z)$ indicates whether $z$ follows from $x$ via Universal Generalization.
     \end{itemize}
-\end{cor}
+\end{prop}
 
 \begin{proof}
     By Theorem~\ref{thm:gn-is-injective}, the function $\fun{gn}$ is injective. Since Theorem~\ref{thm:syntax-are-sets} implies that $\fun{Syntax}$ is a decidable set, we deduce that $\fun{gn}$ is an embedding \citep[Chapter~4]{caniglia2025hott}. Consequently, the fibers of $\fun{gn}$ are mere propositions, meaning each natural number encodes at most one unique syntactic tree.
@@ -1311,7 +1814,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
 
 \subsection{The Proof Predicate}
 
-\begin{defn}
+\begin{defn}\label{dfn:Proof}
     The \textsl{proof predicate} is the type family
     \[
         \fun{Proof}\colon\N\times\N\to\univ
@@ -1385,7 +1888,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
 \end{thm}
 
 \begin{proof}
-    Corollary~\ref{cor:decidable-rules} and Theorem~\ref{thm:domain-bounded-sums-are-decidable} imply that $\fun{vs}(n,i)$ is a coproduct of decidable types, hence decidable itself. Thus, $\fun{ValidStep(n,i)}$ is decidable as well. Therefore, the conclusion follows from Theorem~\ref{thm:domain-bounded-products-are-decidable}.
+    Proposition~\ref{prop:decidable-rules} and Theorem~\ref{thm:domain-bounded-sums-are-decidable} imply that $\fun{vs}(n,i)$ is a coproduct of decidable types, hence decidable itself. Thus, $\fun{ValidStep(n,i)}$ is decidable as well. Therefore, the conclusion follows from Theorem~\ref{thm:domain-bounded-products-are-decidable}.
 \end{proof}
 
 \begin{defn}
@@ -1399,3 +1902,181 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     \]
     where $n$ is the G\"odel number of the derivation and $p$ is the computational evidence that~$n$ proves~$m$.
 \end{defn}
+
+
+\section{Arithmetization of Substitution}
+
+By Theorem~\ref{thm:gn-has-decidable-fibers}, there is a decision function
+\[
+    d_{\fun{gn}}\colon\prod_{n\colon\N}
+        \fun{fib}_{\fun{gn}}(n)
+        +
+        \neg\fun{fib}_{\fun{gn}}(n)
+\]
+that enables the following
+
+\begin{defn}
+    We define the \textsl{partial inverse} of Gödel numbering by
+    \begin{align*}
+        \fun{parse}\colon\N&\to\fun{Syntax}+\fun1\\
+        n&\mapsto\begin{cases}
+            \fun{inl}(s)
+                &\text{if }d_{\fun{gn}}(n)\eq{}\fun{inl}(\dep{s, p}),\\
+            \fun{inr}(\fstar)
+                &\text{if }d_{\fun{gn}}(n)\eq{}\fun{inr}(\zeta).
+        \end{cases}
+    \end{align*}
+\end{defn}
+
+\begin{xmpls}\ 
+    \begin{enumerate}[a)]
+        \item Consider the evaluation of $\fun{parse}(2^3\cdot3^4)$. According to Definition~\ref{defn:gn}, this corresponds to $s(t)$, where $\fun{gn}_{\fun{Term}}(t)$ is $4$. Since $4=2^2$ corresponds to $\fun{gn}_{\fun{Term}}(0)$, we have $t\equiv0$. Given that $s(0)$ is a term, it is injected into the left side of the coproduct $\fun{Syntax}\defeq\fun{Term}+\fun{Form}$. Therefore, the function successfully returns:
+        \[
+            \fun{parse}(2^3\cdot3^4)
+                \equiv\fun{inl}(\fun{inl}(s(0))).
+        \]    
+    
+        \item Consider the evaluation of $\fun{parse}(2^1\cdot5^1)$. The exponent of $2$ is $1$, which expects the pattern $2^1\cdot3^x$ for the variable constructor $\fun{var}(x)$. However, the factorization contains no factor of $3$, violating the rules of the G\"odel numbering. Thereofre, the function yields the unit type:
+        \[
+            \fun{parse}(2^1\cdot5^1)\equiv\fun{inr}(\fstar).
+        \]
+    \end{enumerate}
+\end{xmpls}
+
+\begin{rem}
+     By Proposition~\ref{prop:decidable-rules}, the function $\fun{gn}$ is an embedding, which implies that its fibers are mere propositions. Consequently, recovering a formula~$\varphi$ from its G\"odel number $\gn{\varphi}$ evaluates as follows:
+    \begin{enumerate}[1.,font=\small]
+        \item The decision $d_{\fun{gn}}$ extracts a witness $\dep{s,p}\colon\fun{fib}_{\fun{gn}}(\gn{\varphi})$, where $s\colon\fun{Syntax}$ and $p\colon\gn{s}\eq{\N}\gn{\varphi}$.
+    
+        \item Because the fiber is a mere proposition, we obtain $\dep{s,p}\eq{}\dep{\fun{inr}(\varphi),\fun{refl}_{\gn{\varphi}}}$.
+    
+        \item Applying $\fun{ap}_{\pi_1}$ to this equality yields $s\eq{\fun{Syntax}}\fun{inr}(\varphi)$, and the parsing function unambiguously recovers the original syntactic tree, meaning that
+        \begin{equation}\label{eq:parse-gn-form}
+            \fun{parse}(\gn{\varphi})
+                \eq{\fun{Syntax}}
+                    \fun{inl}(\fun{inr}(\varphi))
+        \end{equation}
+        Similarly, if $t\colon\fun{Term}$, we have
+            \begin{equation}\label{eq:parse-gn-term}
+                \fun{parse}(\gn{t})
+                    \eq{\fun{Syntax}}
+                        \fun{inl}(\fun{inl}(t))
+            \end{equation}
+    \end{enumerate}    
+\end{rem}
+
+\begin{defns}
+    Using the $\fun{parse}$ function, we introduce the \textsl{formula extraction} map by
+    \begin{align*}
+        \fun{ex}_{\fun{Form}}\colon\N
+            &\to\fun{Form}+\fun1 \\
+        n&\mapsto \begin{cases}
+            \fun{inl}(\varphi)
+                &\text{if }
+                \fun{parse}(n)
+                    \eq{}
+                    \fun{inl}(\fun{inr}(\varphi)),\\
+            \fun{inr}(\fstar)
+                &\text{otherwise}.
+        \end{cases}
+    \end{align*}
+    The \textsl{term extraction} function is defined following the same logic:
+    \begin{align*}
+        \fun{ex}_{\fun{Term}}\colon\N
+            &\to\fun{Term}+\fun1\\
+        n&\mapsto\begin{cases}
+        \fun{inl}(t)
+            &\text{if }
+                \fun{parse}(n)
+                \eq{}
+                \fun{inl}(\fun{inl}(t)),\\
+        \fun{inr}(\fstar)
+            &\text{otherwise}.
+        \end{cases}
+    \end{align*}
+    For \textsl{variable extraction} we first define a helper function:
+    \begin{align*}
+        v\colon\fun{Term}&\to\fun{Var}+\fun1\\
+        \fun{var}(x)&\mapsto\fun{inl}(x)\\
+        \tau&\mapsto\fun{inr}(\fstar)
+            \quad\text{for all other constructors},
+    \end{align*}
+    and then compose this with the term extractor:
+    \begin{align*}
+        \fun{ex}_{\fun{Var}}\colon\N
+            &\to\fun{Var}+\fun1\\
+        n&\mapsto \fun{rec}_{\fun{Term}+\fun1}
+            \bigl(
+                \fun{Var}+\fun1, 
+                v, 
+                \lambda \fstar.\,\fun{inr}(\fstar)
+            \bigr)
+        (\fun{ex}_{\fun{Term}}(n)).
+    \end{align*}
+
+    We add three auxiliary matching functions into $\fun M\defeq(\fun{Form}\times\fun{Var}\times\fun{Term})+\fun1$ as follows
+    \begin{align*}
+        \fun m_3&\colon\fun{Form}\times\fun{Var}\times\N
+            \to\fun M\\
+        \fun m_3(\varphi,x,n_t)&\defeq
+            \fun{rec}_{\fun{Term}+\fun1}\bigl(
+                \fun M,
+                \lambda t.\,\fun{inl}(\varphi,x,t),
+                \lambda\fstar.\,\fun{inr}(\fstar)
+            \bigr)(\fun{ex}_{\fun{Term}}(n_t))\\[3mm]
+        \fun m_2&\colon\fun{Form}\times\N\times\N
+            \to\fun M\\
+        \fun m_2(\varphi,n_x,n_t)&\defeq
+            \fun{rec}_{\fun{Var}+\fun1}\bigl(
+                \fun M,
+                \lambda x.\,\fun{m}_3(\varphi,x,n_t),
+                \lambda\fstar.\,\fun{inr}(\fstar)
+            \bigr)(\fun{ex}_{\fun{Var}}(n_x))\\[3mm]
+        \fun{match}&\colon\N\times\N\times\N
+            \to\fun M\\
+        \fun{match}(n_\varphi,n_x,n_t)&\defeq
+            \fun{rec}_{\fun{Form}+\fun1}\bigl(
+                \fun M,
+            \lambda\varphi.\,\fun{m}_2(\varphi,n_x,n_t),
+            \lambda\fstar.\,\fun{inr}(\fstar)
+        \bigr)(\fun{ex}_{\fun{Form}}(n_\varphi)).
+    \end{align*}
+    Finally, the \textsl{arithmetized substitution} function is then defined by
+    \begin{align*}
+        \fun{subst}_{\N}\colon\N\times\N\times\N
+            &\to\N\\
+        (n_\varphi,n_x,n_t)
+            &\mapsto\fun{rec}_{\fun M}
+            \bigl(
+                \N, 
+                \lambda(\varphi,x,t).\,\gn{\varphi[t/x]}, 
+                \lambda\fstar.\,0
+            \bigr)(\fun{match}(n_\varphi,n_x,n_t)).
+    \end{align*}
+\end{defns}
+
+\begin{lem}\label{lem:subst-gn-soundness}
+    For any formula\/ $\varphi\colon\fun{Form}$, variable\/ $x\colon\fun{Var}$, and term\/ $t\colon\fun{Term}$, the arithmetized substitution function correctly tracks syntactic substitution. Formally, there is an inhabited path:
+    \[
+        \fun{subst}_{\N}(
+            \gn{\varphi},
+            \gn{\fun{var}(x)},
+            \gn{t}
+        )
+        \eq\N\gn{\varphi[t/x]}.
+    \]
+\end{lem}
+
+\begin{proof}
+    By the construction of $\fun{parse}$ and the fact that $\fun{gn}$ is an embedding, evaluating $\fun{parse}$ on G\"odel numbers reduces to the syntactic objects that generated them. Specifically:
+    \begin{align*}
+        \fun m_3(\varphi,x,\gn{t})
+            &\eq{\fun M}\fun{inl}(\varphi,x,t)\\
+        \fun m_2(\varphi,\gn{\fun{var}(x)},\gn{t})
+            &\eq{\fun M}\fun{inl}(\varphi,x,t)\\
+        \fun{match}(\gn{\varphi},\gn{\fun{var}(x)},\gn{t})
+            &\eq{\fun M}\fun{inl}(\varphi,x,t)\\
+        \fun{subst}_\N(\gn{\varphi},\gn{\fun{var}(x)},\gn{t})
+            &\eq\N\gn{\varphi[t/x]}.
+    \end{align*}
+\end{proof}

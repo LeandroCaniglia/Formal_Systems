@@ -1,0 +1,313 @@
+\chapter{Representability and Internalization}
+
+\section{Numeral Encoding}
+
+To internalize metatheoretic statements into the formal system of Peano Arithmetic, we must first be able to refer to external natural numbers within the syntax. This is achieved by mapping each metatheoretic natural number to a canonical closed term.
+
+\begin{defn}\label{defn:numerals}
+    The \textsl{numeral encoding} is a function $\fun{num}\colon\N\to\fun{Term}$, typically denoted by an overline $n\mapsto\num{n}$, defined by structural recursion on $\N$:
+    \begin{align*}
+        \fun{num}(0)&\defeq 0\\
+        \fun{num}(\fun{succ}(n))&\defeq s(\fun{num}(n)).
+    \end{align*}
+    Thus, $\num n$ is a syntax tree consisting of $n$ applications of the successor constructor~$s$ to the constant constructor~$0$.
+\end{defn}
+
+\begin{prop}\label{prop:num-gives-closed-terms}
+ For every natural number\/ $n\colon\N$, the numeral\/ $\num{n}$ is a closed term.
+\end{prop}
+
+\begin{proof}
+    We proceed by induction on $n\colon\N$. For the base case $n\equiv0$, the numeral is $\num{0}\equiv 0\colon\fun{Term}$. By Definition~\ref{defn:FV}, $\fun{FV}(0)(y)\defeq\fun0$, which implies that $\neg\fun{FV}(0)(y)$ is inhabited for any variable $y\colon\fun{Var}$.
+    
+    For any $y\colon\fun{Var}$, we have the following definitional equalities:
+    \begin{align*}
+        \fun{FV}(\num{\fun{succ}(n)})(y)
+            &\equiv\fun{FV}(s(\num{n}))(y)\\
+            &\equiv\fun{FV}(\num{n})(y).
+    \end{align*}
+    Then
+    \[
+        \fun{isClosed}(\num{\fun{succ}(n)})
+            \equiv\fun{isClosed}(\num n),
+    \]
+    which is inhabited by the inductive hypothesis.
+\end{proof}
+
+\begin{lem}\label{lem:num-is-embedding}
+ The numeral encoding function is an embedding. Consequently, for any\/ $n,m\colon\N$, we have an equivalence:
+ \[
+ (\num{n}\eq{\fun{Term}}\num{m}) \simeq (n\eq{\N}m).
+ \]
+\end{lem}
+
+\begin{proof}
+    We proceed by double induction on $n,m\colon\N$.
+    
+    When $n\equiv0$ and $m\equiv0$, we have the constant map $x\mapsto\fun{refl}_0$. Since $\N$ is also a set, it suffices to construct a map $(\num{n}\eq{\fun{Term}}\num{m})\to(n\eq{\N}m)$. By Theorem~\ref{thm:syntax-are-sets}, $\fun{Term}$ is a set. Since $\N$ is also a set, the map is an equivalence.
+    
+    When $n\equiv0$ and $m\equiv\fun{succ}(m')$, the domain equality type becomes
+    \[
+        0\eq{\fun{Term}}s(\num{m'}).
+    \]
+    By Theorem~\ref{thm:constructor-disjointness} this type is inhabited. Since $0\eq\N\fun{succ}(m')$ is also inhabited, both types are equivalent.
+
+    The symmetric case follows similarly.
+    
+    When $n\equiv\fun{succ}(n')$ and $m\equiv\fun{succ}(m')$, Theorem~\ref{thm:constructor-injectivity} yields a map
+    \[
+        g\colon(s(\num{n'})\eq{\fun{Term}}s(\num{m'}))
+            \to(\num{n'}\eq{\fun{Term}}\num{m'}).
+    \]
+    Composing $g$ with the map given by the inductive hypothesis, we obtain a map
+    \[
+        (s(\num{n'})\eq{\fun{Term}}s(\num{m'}))
+            \to(n'\eq\N m').
+    \]
+    Following this with $\fun{ap}_{\fun{succ}}$ constructs a map with target $\fun{succ}(n')\eq{\N}\fun{succ}(m')$. This map is an equivalence because both equality types are sets.
+    %
+    
+\end{proof}
+
+\section{Representability}
+
+A \textsl{metatheoretic relation} is a mathematical property defined within the framework of Homotopy Type Theory, rather than internally in the formal syntax of Peano Arithmetic.
+ 
+For a given $k\colon\N$, a metatheoretic relation of \textsl{arity} $k$ on $\N$ is a function
+\[
+    R\colon\N^k\to\fun{Prop}_\univ.
+\]
+It evaluates actual, external natural numbers and returns a truth value in the metatheory. The proof predicate $\fun{Proof}(n,m)$ introduced in Definition~\ref{dfn:Proof} is an example of such a relation.
+
+By contrast, an \textsl{object-level relation} is purely syntactic. It is represented by a well-formed formula $\varphi\colon\fun{Form}$ containing free variables. Representability bridges these two distinct kinds of relations.
+
+\begin{defn} 
+    A metatheoretic relation $R\colon\N^k\to\fun{Prop}_\univ$ is \textsl{representable} in Peano Arithmetic if there exists a formula $\varphi\colon\fun{Form}$ with $k$ distinct free variables $x_1,\dots,x_k\colon\fun{Var}$ such that the following dependent types are inhabited:
+    \begin{align*}
+        &\prod_{n_1,\dots,n_k\colon\N}R(n_1,\dots,n_k) 
+        \to 
+        \fun{Der}\bigl(
+            \varphi[\num n_1/x_1]\cdots[\num n_k/x_k]
+        \bigr)\\
+        &\prod_{n_1,\dots,n_k\colon\N}
+            \neg R(n_1,\dots,n_k) 
+            \to 
+            \fun{Der}\bigl(
+                \neg\varphi[\num n_1/x_1]
+                    \cdots[\num n_k/x_k]
+        \bigr)
+    \end{align*}
+
+\end{defn}
+
+\begin{prop}
+    The metatheoretic relation
+    \begin{align*}
+        E\colon\N\times\N&\to\fun{Prop}_\univ\\
+        (n,m)&\mapsto n\eq\N m
+    \end{align*}
+    is representable in Peano Arithmetic by the atomic formula
+    \[
+        \varphi \equiv x_1 \doteq x_2.
+    \]    
+\end{prop}
+
+\begin{proof}
+    To verify this, we must check both conditions of representability for any natural numbers $n,m\colon\N$:
+    \begin{enumerate}[a),font=\upshape]
+        \item Suppose $E(n,m)$ holds, meaning $n \eq{\N} m$. Then, the sequence of substitutions evaluates as follows:
+        \begin{align*}
+            \varphi[\num{n}/x_1][\num{m}/x_2]
+                &\equiv(x_1\doteq x_2)[\num{n}/x_1]
+                    [\num{m}/x_2]\\
+            &\equiv(x_1[\num{n}/x_1]\doteq x_2[\num{n}/x_1])
+                [\num{m}/x_2]\\
+            &\equiv(\num{n}\doteq x_2)[\num{m}/x_2]\\
+            &\equiv\num{n}[\num{m}/x_2]
+                \doteq x_2[\num{m}/x_2]\\
+            &\equiv\num{n}\doteq\num{m},
+        \end{align*}
+        where $\num{n}[\num{m}/x_2]\equiv\num{n}$ follows from Proposition~\ref{prop:substitution-properties} because closed numerals contain no free variables. 
+
+        Because we assumed $n \eq{\N} m$, Lemma~\ref{lem:num-is-embedding} implies $\num{n}\eq{\fun{Term}}\num{m}$. By the congruence of constructors (Lemma~\ref{lem:constructor-congruence}), this induces a propositional equality between the resulting formulas:
+        \[
+            p\colon(\num{n}\doteq\num{n})
+            \eq{\fun{Form}}(\num{n}\doteq\num{m}).
+        \]
+        The \lhs poven by the axiom of equality:
+        \[
+            \fun{ax}_{\fun{Eq1}}(\num{n})\colon
+                \fun{Der}(\num{n}\doteq\num{n}).
+        \]
+        Since $\fun{Der}\colon\fun{Form}\to\univ$ is a type family, we obtain the desired derivation by transport:
+        \[
+            \fun{transport}^{\fun{Der}}\bigl(
+                p,
+                \fun{ax}_{\fun{Eq1}}(\num{n})
+            \bigr)
+            \colon\fun{Der}(\num{n}\doteq\num{m}).
+        \]
+        
+        \item Suppose $\neg E(n,m)$ holds, meaning $\neg(n\eq \N m)$. As above, the substitution evaluates definitionally to $\neg(\num n\doteq\num m)$. To construct an inhabitant of $\fun{Der}(\neg(\num{n}\doteq\num{m}))$, we proceed by double induction on $n,m\colon\N$.
+        \begin{itemize}
+            \item Case $n\equiv0$ and $m\equiv0$. The premise $\neg(0\eq{\N}0)$ applied to $\fun{refl}_0$ yields an inhabitant of $\fun0$, which $\fun{rec}_{\fun0}(\fun{Der}(\neg(0\doteq0)))$ maps to the desired inhabitant.
+            
+            \item Case $n\equiv\fun{succ}(n')$ and $m\equiv0$. We must construct a derivation of $\neg(s(\num{n'})\doteq0)$. We have the non-logical axiom
+            \[
+                \fun{ax}_{\fun{PA1}}\colon\fun{Der}(
+                    \forall x\,\neg(s(x)\doteq 0)
+                ).
+            \]
+            We construct the derivation as follows:
+            \begin{align*}
+                d_1&\colon\fun{Der}\bigl(
+                    (\forall x\,\neg(s(x)\doteq0))
+                    \imp
+                    \neg(s(\num{n'})\doteq0)
+                \bigr)
+                    &&;\ \fun{ax}_{\fun{L4}}\\
+                d_2&\colon\fun{Der}\bigl(
+                    \neg(s(\num{n'})\doteq0)
+                \bigr)
+                    &&;\ \fun{mp}(\fun{ax}_{\fun{PA1}},d_1).
+            \end{align*}
+            
+            \item Case $n\equiv0$ and $m\equiv\fun{succ}(m')$. We must construct a derivation of $\neg(0\doteq s(\num{m'}))$. Following the exact steps of the previous case, we construct the derivation as follows:
+            \begin{align*}
+                d_1&\colon\fun{Der}\bigl(
+                    \neg(s(\num{m'})\doteq0)
+                \bigr)
+                    &&;\ \text{Prev.~case}\\
+                d_2&\colon\fun{Der}\bigl(
+                    0\doteq s(\num{m'})
+                    \imp
+                    s(\num{m'})\doteq0
+                \bigr)
+                    &&;\ \text{Lem.~\ref{lem:symmetry-equality}}\\
+                d_3&\colon\fun{Der}\bigl(
+                    (
+                        0\doteq s(\num{m'})
+                        \imp
+                        s(\num{m'})\doteq0
+                    )
+                    \imp\\
+                    &\qquad\qquad(
+                        \neg(s(\num{m'})\doteq0)
+                        \imp
+                        \neg(0\doteq s(\num{m'}))
+                    )
+                \bigr)
+                    &&;\ \text{Lem.~\ref{lem:contrapositive}}\\
+                d_4&\colon\fun{Der}\bigl(
+                    \neg(s(\num{m'})\doteq0)
+                    \imp
+                    \neg(0\doteq s(\num{m'}))
+                \bigr)
+                    &&;\ \fun{mp}(d_2,d_3)\\
+                d_5&\colon\fun{Der}\bigl(
+                    \neg(0\doteq s(\num{m'}))
+                \bigr)
+                    &&;\ \fun{mp}(d_1,d_4).
+            \end{align*}
+            
+            \item Case $n\equiv\fun{succ}(n')$ and $m\equiv\fun{succ}(m')$. The assumption 
+            \[
+                \neg(\fun{succ}(n')\eq\N\fun{succ}(m'))
+            \]
+            logically implies $\neg(n'\eq{\N} m')$. By the inductive hypothesis, we have an inhabited derivation:
+            \[
+                d_{\fun{IH}}\colon\fun{Der}\bigl(
+                    \neg(\num{n'}\doteq\num{m'})
+                \bigr).
+            \]
+            To inhabit $\fun{Der}(\neg(s(\num{n'})\doteq s(\num{m'})))$, we construct the derivation as follows:
+            \begin{align*}
+                d_1&\colon\fun{Der}\bigl(
+                    \forall x\,\forall y\,(s(x)\doteq s(y)\imp x\doteq y)
+                \bigr)
+                    &&;\ \fun{ax}_{\fun{PA2}}\\
+                d_2&\colon\fun{Der}\bigl(
+                    s(\num{n'})\doteq s(\num{m'})
+                    \imp
+                    \num{n'}\doteq\num{m'}
+                \bigr)
+                    &&;\ \text{Lem.~\ref{lem:double-instantiation}}\\
+                d_3&\colon\fun{Der}\bigl(
+                    (
+                        s(\num{n'})\doteq s(\num{m'})
+                        \imp
+                        \num{n'}\doteq\num{m'}
+                    )
+                    \imp\\
+                    &\qquad\qquad(
+                        \neg(\num{n'}\doteq\num{m'})
+                        \imp
+                        \neg(s(\num{n'})\doteq s(\num{m'}))
+                    )
+                \bigr)
+                    &&;\ \text{Lem.~\ref{lem:contrapositive}}\\
+                d_4&\colon\fun{Der}\bigl(
+                    \neg(\num{n'}\doteq\num{m'})
+                    \imp
+                    \neg(s(\num{n'})\doteq s(\num{m'}))
+                \bigr)
+                    &&;\ \fun{mp}(d_2,d_3)\\
+                d_5&\colon\fun{Der}\bigl(
+                    \neg(s(\num{n'})\doteq s(\num{m'}))
+                \bigr)
+                    &&;\ \fun{mp}(d_{\fun{IH}},d_4).
+            \end{align*}
+        \end{itemize}
+    \end{enumerate}
+\end{proof}
+        
+\begin{defn}
+    A metatheoretic function $f\colon\N^k\to\N$ is \textsl{representable} in Peano Arithmetic if there exists a formula $\varphi\colon\fun{Form}$ with $k+1$ distinct free variables $x_1,\dots,x_k,y\colon\fun{Var}$ such that the following dependent types are inhabited:
+        \begin{align*}
+            &\prod_{n_1,\dots,n_k\colon\N}
+                \fun{Der}\bigl(
+                    \varphi[\num n_1/x_1]
+                    \cdots[\num n_k/x_k]
+                    [\num{f(n_1,\dots,n_k)}/y]
+                \bigr)\\
+            &\prod_{n_1,\dots,n_k\colon\N}
+                \fun{Der}\bigl(
+                    \forall y\,(
+                        \varphi[\num n_1/x_1]
+                            \cdots[\num n_k/x_k]
+                            \imp (y\doteq\num{f(n_1,\dots,n_k)})
+                    )
+                \bigr)
+        \end{align*}
+    
+\end{defn}
+
+\subsection{Primitive Recursive Functions}
+
+To rigorously establish that metatheoretic decidable relations such as the proof predicate can be internalized, we formalize the class of primitive recursive functions as an inductive family of types $\fun{PR}(k)$ indexed by their arity $k\colon\N$. Elements of this type code for functions $\N^k\to\N$.
+
+\begin{defn}[Primitive Recursion]
+ The family $\fun{PR}\colon\N\to\univ$ is defined inductively by the following constructors:
+ \begin{itemize}
+ \item \textsl{Zero}: $\fun{zero}\colon\fun{PR}(0)$.
+ \item \textsl{Successor}: $\fun{succ}\colon\fun{PR}(1)$.
+ \item \textsl{Projections}: For any $k\colon\N$ and $i\colon\fun{Fin}(k)$, $\fun{proj}_i^k\colon\fun{PR}(k)$.
+ \item \textsl{Composition}: For any $k, m\colon\N$, given $g\colon\fun{PR}(m)$ and a finite sequence of functions $h\colon\fun{Seq}(\fun{PR}(k), m)$, the composition is $\fun{comp}_{k,m}(g, h)\colon\fun{PR}(k)$.
+ \item \textsl{Primitive Recursion}: For any $k\colon\N$, given $g\colon\fun{PR}(k)$ and $h\colon\fun{PR}(k+2)$, the recursion operator yields $\fun{prec}_k(g, h)\colon\fun{PR}(k+1)$.
+ \end{itemize}
+\end{defn}
+
+\begin{rem}
+ Each constructor in $\fun{PR}(k)$ determines a metatheoretic evaluation map $\fun{eval}_k\colon\fun{PR}(k)\to(\N^k\to\N)$ by structural recursion. Proving that all primitive recursive functions are representable in Peano Arithmetic requires demonstrating that for every $k\colon\N$ and $f\colon\fun{PR}(k)$, the function $\fun{eval}_k(f)$ satisfies the representability criteria.
+\end{rem}
+
+\subsection{Internalizing the Proof Predicate}
+
+The culmination of syntactic representability allows the metatheory to reflect its own proof structures inward. 
+
+\begin{thm}[Representability of the Proof Predicate]
+ Because the evaluation maps of all primitive recursive functions are representable, and because the proof predicate\/ $\fun{Proof}(n,m)$ is constructed via bounded minimalization and primitive recursion, there exists a specific formula\/ $\fun{Prf}\colon\fun{Form}$ with two free variables\/ $x,y\colon\fun{Var}$ that represents it. Thus, for any natural numbers\/ $n,m\colon\N$, the following implication holds:
+ \[
+ \fun{Proof}(n,m) \to \fun{Der}(\fun{Prf}[\num{n}/x][\num{m}/y]).
+ \]
+\end{thm}

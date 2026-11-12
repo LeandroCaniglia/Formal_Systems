@@ -190,7 +190,7 @@
 \setcounter{num}{1}
 \newcommand{\incnum}{\setcounter{num}{\value{num}+1}}
 \newcommand{\resetnum}{\setcounter{num}{1}}
-\newcommand{\num}{\arabic{num}\incnum}
+%\newcommand{\num}{\arabic{num}\incnum}
 \newcommand{\numlabel}[1]{\newcounter{#1}\setcounter{#1}{\value{num}}}
 %\newcommand{\qed}{\hfill$\quad\square$}
 \newcommand{\lqed}{\textcolor[gray]{0.5}{\small$\blacksquare$}}
@@ -623,3 +623,5 @@
 \newcommand{\FV}{\text{\scshape fv}}
 
 \newcommand{\formseq}[1]{{\lceil#1\rceil}}
+
+\newcommand{\num}[1]{{\overline{#1}}}
