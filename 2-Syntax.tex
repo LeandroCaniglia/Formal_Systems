@@ -173,7 +173,7 @@ We construct the mapping in two stages: first by defining structural recursors f
             
             \item $\fun{ax}_{\fun{L4}}(\varphi,x,t)\colon\fun{Der}\bigl((\forall x\,\varphi)\imp\varphi[t/x]\bigr)$, where $t$ is free for $x$ in $\varphi$.\footnote{Definition~\ref{defn:free-for-in}.}
             
-            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x,p)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, subject to the condition $p\colon\neg\fun{FV}(\varphi)(x)$.
+            \item $\fun{ax}_{\fun{L5}}(\varphi,\psi,x,\zeta)\colon\fun{Der}\bigl((\forall x\,(\varphi\imp\psi))\imp(\varphi\imp\forall x\,\psi)\bigr)$, subject to the condition $\zeta\colon\neg\fun{FV}(\varphi)(x)$.
             
             \item $\fun{ax}_{\fun{Eq1}}(t)\colon\fun{Der}(t\doteq t)$.
             
@@ -324,6 +324,140 @@ We construct the mapping in two stages: first by defining structural recursors f
     \end{align*}}
 \end{rem}
 
+\begin{lem}[Transitivity of Equality]
+    \label{lem:transitivity-equality}
+    For any terms\/ $t_1,t_2,t_3\colon\fun{Term}$, there is a function:
+    \[
+        \fun{trans}\colon
+            \fun{Der}(t_1\doteq t_2)
+            \to
+            \fun{Der}(t_2\doteq t_3)
+            \to
+            \fun{Der}(t_1\doteq t_3).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let $d_1\colon\fun{Der}(t_1\doteq t_2)$ and $d_2\colon\fun{Der}(t_2\doteq t_3)$ be arbitrary derivations.
+    
+    For any formula $\varphi$, variable $x$, and terms $\tau_1,\tau_2$, we have
+    \[
+        \fun{ax}_{\fun{Eq2}}(\varphi,x,\tau_1,\tau_2)
+            \colon
+            \fun{Der}\bigl(
+                \tau_1\doteq\tau_2
+                \imp(
+                    \varphi[\tau_1/x]\imp\varphi[\tau_2/x]
+                )
+            \bigr).
+    \]
+    Consider the formula $\varphi \equiv t_1 \doteq x$. Substituting $t_2$ and $t_3$ for $x$,
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(
+            t_2 \doteq t_3 \imp (t_1 \doteq t_2 \imp t_1 \doteq t_3)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{Eq2}}(t_1 \doteq x, x, t_2, t_3)\\
+        d_3&\colon\fun{Der}\bigl(
+            t_1 \doteq t_2 \imp t_1 \doteq t_3
+        \bigr)
+            &&;\ \fun{mp}(a_1, d_2)\\
+        \fun{trans}(d_1, d_2)&\colon\fun{Der}\bigl(
+            t_1 \doteq t_3
+        \bigr)
+            &&;\ \fun{mp}(d_3, d_1).
+    \end{align*}
+\end{proof}
+
+\begin{lem}[Syllogism]
+    \label{lem:hyp-syllogism}
+    For any formulas\/ $\varphi, \psi, \chi \colon \fun{Form}$, there is a metatheoretic macro:
+    \[
+        \fun{trans}_{\imp} \colon \fun{Der}(\varphi \imp \psi) \to \fun{Der}(\psi \imp \chi) \to \fun{Der}(\varphi \imp \chi).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let $d_1\colon\fun{Der}(\varphi\imp\psi)$ and $d_2\colon\fun{Der}(\psi\imp\chi)$ be given. Then,
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(
+            (\psi\imp\chi)\imp(\varphi\imp(\psi\imp\chi))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        d_3&\colon\fun{Der}\bigl(
+            \varphi \imp (\psi \imp \chi)
+        \bigr)
+            &&;\ \fun{mp}(a_1, d_2)\\
+        a_2&\colon\fun{Der}\bigl(
+            (\varphi\imp(\psi\imp \chi)) 
+            \imp 
+            ((\varphi\imp\psi)\imp(\varphi\imp\chi))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        d_4&\colon\fun{Der}\bigl(
+            (\varphi \imp \psi) \imp (\varphi \imp \chi)
+        \bigr)
+            &&;\ \fun{mp}(a_2, d_3)\\
+        d_5&\colon\fun{Der}\bigl(
+            \varphi \imp \chi
+        \bigr)
+            &&;\ \fun{mp}(d_4, d_1).
+    \end{align*}
+\end{proof}
+
+\begin{lem}[Antecedent Swap]
+    \label{lem:swap}
+    For any formulas\/ $\alpha,\beta,\gamma \colon\fun{Form}$, there is a metatheoretic macro:
+    \[
+        \fun{swap}\colon
+            \fun{Der}\bigl(
+                \alpha\imp(\beta\imp\gamma)
+            \bigr)
+            \to
+            \fun{Der}\bigl(
+                \beta\imp(\alpha\imp\gamma)
+            \bigr).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let $d\colon \fun{Der}(\alpha\imp(\beta\imp\gamma))$ be given. Then,
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(
+            (\alpha\imp(\beta\imp\gamma))
+            \imp
+            ((\alpha\imp\beta)\imp(\alpha\imp\gamma))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        d_1&\colon\fun{Der}\bigl(
+            (\alpha\imp\beta)\imp(\alpha\imp\gamma)
+        \bigr)
+            &&;\ \fun{mp}(a_1,d)\\
+        a_2&\colon\fun{Der}\bigl(
+            \beta\imp(\alpha\imp\beta)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        p_1&\colon\fun{Der}\bigl(
+            ((\alpha\imp\beta)\imp(\alpha\imp\gamma))\imp\\
+            &\qquad\qquad(
+                (\beta\imp(\alpha\imp\beta))
+                \imp
+                (\beta\imp(\alpha\imp\gamma))
+            )
+        \bigr)
+            &&;\ \fun{pref}\\
+        d_2&\colon\fun{Der}\bigl(
+            (\beta\imp(\alpha\imp\beta))
+            \imp
+            (\beta\imp(\alpha\imp\gamma))
+        \bigr)
+            &&;\ \fun{mp}(p_1,d_1)\\
+        \fun{swap}&\colon\fun{Der}\bigl(
+            \beta\imp(\alpha\imp\gamma)
+        \bigr)
+            &&;\ \fun{mp}(d_2,a_2).
+    \end{align*}
+\end{proof}
+
 \begin{lem}[Prefixing]\label{lem:prefixing}
     For any formulas\/ $\varphi,\psi,\chi\colon\fun{Form}$, there is an inhabitant
     \[
@@ -338,36 +472,19 @@ We construct the mapping in two stages: first by defining structural recursors f
 \begin{proof}
     To simplify the notation, we introduce the abbreviations
     \begin{align*}
-        A&\defeq\psi\imp \chi,\\
-        B&\defeq\varphi\imp(\psi\imp\chi),\\
-        C&\defeq(\varphi\imp \psi)\imp(\varphi\imp\chi).
+        A\defeq\psi\imp\chi,\quad
+        B\defeq\varphi\imp(\psi\imp\chi),\quad
+        C\defeq(\varphi\imp\psi)\imp(\varphi\imp\chi).
     \end{align*} 
-    
-    The derivation proceeds as follows:
-    {\small
+    Then,
     \begin{align*}
-        s_1&\colon\fun{Der}(B\imp C)
-            &&;\ \fun{ax}_{\fun{L2}}\\
-        s_2&\colon\fun{Der}\bigl(
-            (B\imp C)\imp(A\imp(B\imp C))
-        \bigr)
+        d_1&\colon\fun{Der}(A\imp B)
             &&;\ \fun{ax}_{\fun{L1}}\\
-        s_3&\colon\fun{Der}\bigl(A\imp(B\imp C)\bigr)
-            &&;\ \fun{mp}(s_1,s_2)\\
-        s_4&\colon\fun{Der}\bigl(
-            (A\imp(B\imp C))
-            \imp\bigl((A\imp B)\imp(A\imp C)\bigr)
-        \bigr)
+        d_2&\colon\fun{Der}(B\imp C)
             &&;\ \fun{ax}_{\fun{L2}}\\
-        s_5&\colon\fun{Der}\bigl(
-                (A\imp B)\imp(A\imp C)
-            \bigr)
-            &&;\ \fun{mp}(s_3,s_4)\\
-        s_6&\colon\fun{Der}(A\imp B)
-            &&;\ \fun{ax}_{\fun{L1}}\\
         \fun{pref}&\colon\fun{Der}(A\imp C)
-            &&;\ \fun{mp}(s_5,s_6).
-    \end{align*}}
+            &&;\ \fun{trans}_{\imp}.
+    \end{align*}
 \end{proof}
 
 \begin{lem}[Suffixing]\label{lem:suffixing}
@@ -384,44 +501,21 @@ We construct the mapping in two stages: first by defining structural recursors f
     \end{lem}
     
 \begin{proof}
-        To simplify the notation, we introduce the abbreviations
-        \begin{align*}
-            A&\defeq\psi\imp\chi,\\
-            B&\defeq\varphi\imp\psi,\\
-            C&\defeq\varphi\imp\chi.
-        \end{align*}
-    The derivation proceeds as follows:
-    {\small
+    To simplify the notation, we introduce the abbreviations
     \begin{align*}
-        s_1&\colon\fun{Der}\bigl(A\imp(B\imp C)\bigr)
+        A\defeq\psi\imp\chi,\quad
+        B\defeq\varphi\imp\psi,\quad
+        C\defeq\varphi\imp\chi.
+    \end{align*}
+    Then,
+    \begin{align*}
+        p_1&\colon\fun{Der}\bigl(A\imp(B\imp C)\bigr)
             &&;\ \fun{pref}\\
-        s_2&\colon\fun{Der}\bigl(
-            (A\imp(B\imp C))
-            \imp
-            ((A\imp B)\imp(A\imp C))
-        \bigr)
-            &&;\ \fun{ax}_{\fun{L2}}\\
-        s_3&\colon\fun{Der}\bigl(
-            (A\imp B)\imp(A\imp C)
-        \bigr)
-            &&;\ \fun{mp}(s_1,s_2)\\
-        s_4&\colon\fun{Der}\bigl(B\imp(A\imp B)\bigr)
-            &&;\ \fun{ax}_{\fun{L1}}\\
-        s_5&\colon\fun{Der}\bigl(
-            ((A\imp B)\imp(A\imp C))
-            \imp\\
-            &\qquad\qquad((B\imp(A\imp B))\imp(B\imp(A\imp C)))
-        \bigr)
-            &&;\ \fun{pref}\\
-        s_6&\colon\fun{Der}\bigl(
-            (B\imp(A\imp B))\imp(B\imp(A\imp C))
-        \bigr)
-            &&;\ \fun{mp}(s_3, s_5)\\
         \fun{suff}&\colon\fun{Der}\bigl(
             B\imp(A\imp C)
         \bigr)
-            &&;\ \fun{mp}(s_4,s_6).
-    \end{align*}}
+            &&;\ \fun{swap}.
+    \end{align*}
 \end{proof}
 
 \begin{lem}[Identity]\label{lem:identity}
@@ -432,155 +526,156 @@ We construct the mapping in two stages: first by defining structural recursors f
 \end{lem}
 
 \begin{proof}
-    {\small
     \begin{align*}
-        i_1&\colon\fun{Der}\bigl(
-            X\imp((X\imp X)\imp X)
+        s&\colon\fun{Der}\bigl(
+            \explain[\alpha]{X}
+            \imp(
+                (\explain[\beta]{X\imp(X\imp X)})
+                \imp\explain[\gamma]{X}
+            )
         \bigr)
             &&;\ \fun{ax}_{\fun{L1}}\\
-        i_2&\colon\fun{Der}\bigl(
-            (X\imp((X\imp X)\imp X))
-            \imp\\
-            &\qquad\qquad((X\imp(X\imp X))\imp(X\imp X))
+        s_1&\colon\fun{Der}\bigl(
+            (\explain[\beta]{X\imp(X\imp X)})
+            \imp(
+                \explain[\alpha]{X}
+                \imp\explain[\gamma]{X}
+            )
         \bigr)
-            &&;\ \fun{ax}_{\fun{L2}}\\
-        i_3&\colon\fun{Der}\bigl(
-            (X\imp(X\imp X))\imp(X\imp X)
-        \bigr)
-            &&;\ \fun{mp}(i_1,i_2)\\
-        i_4&\colon\fun{Der}\bigl(X\imp(X\imp X)\bigr)
+            &&;\ \fun{swap}\\
+        a_1&\colon\fun{Der}\bigl(X\imp(X\imp X)\bigr)
             &&;\ \fun{ax}_{\fun{L1}}\\
         \fun{id}(X)&\colon\fun{Der}(X\imp X)
-            &&;\ \fun{mp}(i_4,i_3).
-    \end{align*}}
+            &&;\ \fun{mp}(s_1,a_1).
+    \end{align*}
 \end{proof}
 
-\begin{lem}[Explosion] For any $X,Y\colon\fun{Form}$, there is an inhabitant
-\[
-    \fun{expl}(X,Y)\colon\fun{Der}(\neg X\imp(X\imp Y)).
-\]
+\begin{lem}[Explosion]
+    \label{lem:explosion}
+    For any\/ $X,Y\colon\fun{Form}$, there is an inhabitant
+    \[
+        \fun{expl}(X,Y)\colon\fun{Der}(\neg X\imp(X\imp Y)).
+    \]
 \end{lem}
 
 \begin{proof}
-    {\small
     \begin{align*}
         e_1&\colon\fun{Der}\bigl(
             \neg X\imp(\neg Y\imp\neg X)
         \bigr)
-            &&; \ \fun{ax}_{\fun{L1}}\\
+            &&;\ \fun{ax}_{\fun{L1}}\\
         e_2&\colon\fun{Der}\bigl(
-            (\neg Y\imp\neg X)\imp(X\imp Y)\bigr)
+            (\neg Y\imp\neg X)\imp(X\imp Y)
+        \bigr)
             &&;\ \fun{ax}_{\fun{L3}}\\
-        e_3&\colon\fun{Der}\bigl(
-            e_2\imp(e_1\imp(\neg X\imp(X\imp Y)))
-        \bigr)
-            &&;\ \fun{pref}\\
-        e_4&\colon\fun{Der}\bigl(
-            e_1\imp(\neg X\imp(X\imp Y))
-        \bigr)
-            &&;\ \fun{mp}(e_2,e_3)\\
         \fun{expl}(X,Y)&\colon\fun{Der}\bigl(
             \neg X\imp(X\imp Y)
         \bigr)
-            &&;\ \fun{mp}(e_1,e_4).
-    \end{align*}}
+            &&;\ \fun{trans}_{\imp}(e_1,e_2).
+    \end{align*}
 \end{proof}
 
-\begin{lem}[Double Negation]\label{lem:double-negation}
+\begin{lem}[Disjunction Introduction 1]
+    \label{lem:intro-or-1}
+    For any formulas $\varphi, \psi \colon \fun{Form}$, there is a map:
+    \[
+        \fun{intro}_{\lor 1}\colon
+            \fun{Der}(\varphi)
+            \to
+            \fun{Der}(\varphi\lor\psi).
+    \]
+    Similarly for $\fun{intro}_{\lor2}$.
+\end{lem}
+
+\begin{proof}
+    Let $d\colon\fun{Der}(\varphi)$ be given. Then,
+    \begin{align*}
+        e&\colon\fun{Der}\big(
+            \neg\varphi\imp(\varphi\imp\psi)
+        \big)
+            &&;\ \text{Lem.~\ref{lem:explosion}}\\
+        s&\colon\fun{Der}\big(
+            \varphi\imp(\neg\varphi\imp\psi)
+        \big)
+            &&;\ \text{Lem.~\ref{lem:swap}}\\
+        d_1&\colon\fun{Der}(\neg\varphi\imp\psi)
+            &&;\ \fun{mp}(s,d),
+    \end{align*}
+    which completes the proof because $\neg\varphi\imp\psi\equiv\varphi\lor\psi$.
+\end{proof}
+
+\begin{lem}[Double Negation]
+    \label{lem:double-negation}
     For any formula\/ $\varphi\colon\fun{Form}$, there are inhabitants 
     \begin{align*}
-        \fun{dne}(\varphi)&\colon
-            \fun{Der}(\neg\neg\varphi \imp \varphi)
-    \intertext{and}
-        \fun{dni}(\varphi)&\colon
-            \fun{Der}(\varphi \imp \neg\neg\varphi).
+        \fun{dne}(\varphi\colon
+            \fun{Der}(\neg\neg\varphi\imp\varphi)
+    \quad\text{and}\quad
+        \fun{dni}(\varphi)\colon
+            \fun{Der}(\varphi\imp\neg\neg\varphi).
     \end{align*}
 \end{lem}
 
-\begin{proof} We first construct $\fun{dne}(\varphi)\colon\fun{Der}(\neg\neg\varphi\imp\varphi)$:
+\begin{proof} We fist derive $\fun{dne}(\varphi)$, then $\fun{dni}(\varphi)$:
     {\small
     \begin{align*}
-        d_1&\colon\fun{Der}\bigl(
+        e_1&\colon\fun{Der}\bigl(
             \neg\neg\varphi
             \imp
             (\neg\varphi\imp\neg\neg\neg\varphi)
         \bigr)
             &&;\ \fun{expl}\\
-        d_2&\colon\fun{Der}\bigl(
+        a_1&\colon\fun{Der}\bigl(
             (\neg\varphi\imp\neg\neg\neg\varphi)
             \imp
             (\neg\neg\varphi\imp\varphi)
         \bigr)
             &&;\ \fun{ax}_{\fun{L3}}\\
-        d_3&\colon\fun{Der}\bigl(
-            d_2
-            \imp(
-                d_1\imp(
-                    \neg\neg\varphi
-                    \imp
-                    (\neg\neg\varphi\imp\varphi)
-                )
-            )
-        \bigr)
-            &&;\ \fun{pref}\\
-        d_4&\colon\fun{Der}\bigl(
-            d_1
-            \imp(
-                \neg\neg\varphi
-                \imp
-                (\neg\neg\varphi\imp \varphi)
-            )
-        \bigr)
-            &&;\ \fun{mp}(d_2,d_3)\\
-        d_5&\colon\fun{Der}\bigl(
+        d_1&\colon\fun{Der}\bigl(
             \neg\neg\varphi
             \imp
             (\neg\neg\varphi\imp\varphi)
         \bigr)
-            &&;\ \fun{mp}(d_1,d_4)\\
-        d_6&\colon\fun{Der}\bigl(
+            &&;\ \fun{trans}_{\imp}\\
+        a_2&\colon\fun{Der}\bigl(
             (
-                \neg\neg\varphi \imp (\neg\neg\varphi \imp \varphi)
+                \neg\neg\varphi
+                \imp(\neg\neg\varphi\imp\varphi)
             )
             \imp\\
-            &\qquad\qquad
-            (
+            &\qquad\qquad(
                 (\neg\neg\varphi\imp\neg\neg\varphi)
                 \imp
                 (\neg\neg\varphi\imp\varphi)
             )
         \bigr)
             &&;\ \fun{ax}_{\fun{L2}}\\
-        d_7&\colon\fun{Der}\bigl(
-            (\neg\neg\varphi\imp \neg\neg\varphi)
+        d_2&\colon\fun{Der}\bigl(
+            (\neg\neg\varphi\imp\neg\neg\varphi)
             \imp
             (\neg\neg\varphi\imp\varphi)
         \bigr)
-            &&;\ \fun{mp}(d_5,d_6)\\
+            &&;\ \fun{mp}(a_2,d_1)\\
+        e_2&\colon\fun{Der}(
+            \neg\neg\varphi\imp\neg\neg\varphi
+        )
+            &&;\ \id(\neg\neg\varphi)\\
         \fun{dne}(\varphi)&\colon\fun{Der}(
             \neg\neg\varphi\imp\varphi
         )
-            &&;\ \fun{mp}(
-                \fun{id}(\neg\neg\varphi),
-                d_7
-            ).
-    \intertext{And now $\fun{dni}(\varphi)\colon\fun{Der}(\varphi\imp\neg\neg\varphi)$}:
+            &&;\ \fun{mp}(d_2,e_2).\\[4mm]
         n_1&\colon\fun{Der}(
-            \neg\neg\neg\varphi
-            \imp
-            \neg\varphi
+            \neg\neg\neg\varphi\imp\neg\varphi
         )
             &&;\ \fun{dne}(\neg\varphi)\\
         n_2&\colon\fun{Der}\bigl(
-            (\neg\neg\neg\varphi\imp\neg\varphi)
-            \imp
-            (\varphi\imp\neg\neg\varphi)
+            (\neg\neg\neg\varphi\imp\neg\varphi)\imp(\varphi\imp\neg\neg\varphi)
         \bigr)
-            &&;\ \fun{ax}_{\fun{L3}}\\
+            &&;\ \fun{ax}_{\fun{L3}}(\neg\neg\varphi,\varphi)\\
         \fun{dni}(\varphi)&\colon\fun{Der}(
             \varphi\imp\neg\neg\varphi
         )
-            &&;\ \fun{mp}(n_1,n_2).
+            &&;\ \fun{mp}(n_2,n_1).
     \end{align*}}
 \end{proof}
 
@@ -599,10 +694,10 @@ We construct the mapping in two stages: first by defining structural recursors f
 \begin{proof}
     To simplify the layout, we introduce the following abbreviations:
     \begin{align*}
-        A&\defeq\varphi\imp\psi,\\
-        B&\defeq\varphi\imp\neg\neg\psi,\\
-        C&\defeq\neg\neg\varphi\imp\neg\neg\psi,\\
-        D&\defeq\neg\psi\imp\neg\varphi.
+        A\defeq\varphi\imp\psi,\quad
+        B\defeq\varphi\imp\neg\neg\psi,\quad
+        C\defeq\neg\neg\varphi\imp\neg\neg\psi,\quad
+        D\defeq\neg\psi\imp\neg\varphi.
     \end{align*}
     The derivation proceeds as follows:
     {\small
@@ -678,43 +773,526 @@ We construct the mapping in two stages: first by defining structural recursors f
     Expanding $A$ and $D$ in the final step yields the target type.
 \end{proof}
 
-\begin{lem}[Double Universal Instantiation]
-    \label{lem:double-instantiation}
-    For any formula\/ $\varphi\colon\fun{Form}$, distinct variables\/ $x,y\colon\fun{Var}$, and terms\/ $t_1,t_2\colon\fun{Term}$, assuming that\/ $t_1$ is free for\/ $x$ in\/ $\forall y\,\varphi$ and\/ $t_2$ is free for\/ $y$ in\/ $\varphi[t_1/x]$, double universal instantiation is admissible as a metatheoretic rule. Formally, there is a function:
+\begin{lem}[Existential Introduction]
+    \label{lem:intro-exists}
+    For any formula\/ $\varphi\colon\fun{Form}$, variable\/ $x\colon\fun{Var}$, and term\/ $t\colon\fun{Term}$ free for\/ $x$ in\/ $\varphi$, there is a map:
     \[
-        \fun{inst}_2\colon\fun{Der}(\forall x\,\forall y\,\varphi)\to\fun{Der}(\varphi[t_1/x][t_2/y]).
+        \fun{intro}_\exists\colon
+            \fun{Der}(\varphi[t/x])
+            \to
+            \fun{Der}(\exists x\,\varphi).
     \]
 \end{lem}
 
 \begin{proof}
-    Let $d\colon\fun{Der}(\forall x\,\forall y\,\varphi)$ be an arbitrary derivation.
+    Recall that $\exists x\,\varphi$ is a syntactic abbreviation for $\neg\forall x\,\neg\varphi$.
     
-    The hypothesis that $t_1$ is free for $x$ in $\forall y\,\varphi$ inherently guarantees that $y$ is not free in $t_1$ (assuming $x$ occurs free in $\varphi$). This ensures that the substitution distributes as $(\forall y\,\varphi)[t_1/x]\equiv\forall y\,(\varphi[t_1/x])$ and validates the first instantiation. The hypothesis that $t_2$ is free for $y$ in $\varphi[t_1/x]$ validates the second instantiation.
-    
-    The derivation sequence proceeds as follows:
+    Let $d\colon\fun{Der}(\varphi[t/x])$ be given. Since $t$ is free for $x$ in $\neg\varphi$, it is also free for $x$ in $\neg\varphi$. Hence, we have
     \begin{align*}
         a_1&\colon\fun{Der}\bigl(
-            (\forall x\,\forall y\,\varphi)
-            \imp
-            \forall y\,(\varphi[t_1/x])
+            \forall x\,\neg\varphi\imp(\neg\varphi)[t/x]
         \bigr)
-            &&;\ \fun{ax}_{\fun{L4}}\\
+            &&;\ \fun{ax}_{\fun{L4}}.
+    \end{align*}
+    Because $(\neg\varphi)[t/x]\equiv\neg(\varphi[t/x])$,
+    \[
+        a_1\colon\fun{Der}(
+            \forall x\,\neg\varphi\imp\neg(\varphi[t/x])
+        ).
+    \]
+    Then,
+    {\small
+    \begin{align*}
+        a_2&\colon\fun{Der}(
+            \neg\neg(\varphi[t/x])
+            \imp
+            \exists x\,\varphi
+        )
+            &&;\ \text{Lem.~\ref{lem:contrapositive}}\\
         d_1&\colon\fun{Der}\bigl(
-            \forall y\,(\varphi[t_1/x])
+            \varphi[t/x]\imp\neg\neg(\varphi[t/x])
         \bigr)
-            &&;\ \fun{mp}(d,a_1)\\
-        a_2&\colon\fun{Der}\bigl(
-            (\forall y\,(\varphi[t_1/x]))
+            &&;\ \text{Lem.~\ref{lem:double-negation}}\\
+        d_2&\colon\fun{Der}\bigl(
+            \varphi[t/x] \imp \neg\exists x\,\varphi
+        \bigr)
+            &&;\ \\
+        d_3&\colon\fun{Der}\bigl(
+            \neg\forall x\,\neg\varphi
+        \bigr)
+            &&;\ \fun{mp}(d_2,d).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}\label{lem:predecesor}
+    Every natural number is either zero or a successor. Formally, there is an unconditional derivation of the formula
+    \[
+        \forall z\,(z\doteq0)\lor\exists w\,(z\doteq s(w)).
+    \]
+\end{lem}
+
+\begin{proof}
+    We proceed by induction on $z$ using $\fun{ax}_{\fun{Ind}}$. Let
+    \[
+        \varphi(z)\equiv
+            (z\doteq0)\lor\exists w\,(z\doteq s(w)).
+    \]
+    We must construct unconditional derivations for the base case $\varphi(0)$ and the inductive step $\forall z\,(\varphi(z)\imp\varphi(s(z)))$.
+
+    \textsc{Base Case:} For $z\equiv0$, the formula $\varphi(0)$ evaluates to $(0\doteq0)\lor\exists w\,(0\doteq s(w))$. By the reflexivity of equality, we have an unconditional derivation of the left disjunct:
+    {\small
+    \begin{align*}
+        \fun{ax_{\fun{Eq}1}}(0)&\colon\fun{Der}(0\doteq0)\\
+        d_0&\colon\fun{Der}\bigl(
+            (0\doteq0)\lor\exists w\,(0\doteq s(w))
+        \bigr)
+            &&;\ \fun{intro}_{\lor1}.
+    \end{align*}}
+
+    \textsc{Inductive Step:} We must derive $\varphi(z) \imp \varphi(s(z))$. The formula $\varphi(s(z))$ evaluates to $s(z) \doteq 0 \lor \exists w\,(s(z) \doteq s(w))$. We can unconditionally derive the right disjunct by reflexivity and existential introduction (using $z$ as the witness for~$w$):
+    {\small
+    \begin{align*}
+        r_s&\colon\fun{Der}(s(z)\doteq s(z))
+            &&;\ \fun{ax}_{\fun{Eq1}(s(z))}\\
+        e_s&\colon\fun{Der}\bigl(
+            \exists w\,(s(z)\doteq s(w))
+        \bigr)
+            &&;\ \fun{intro}_\exists(r_s,z)\\
+        o_s&\colon\fun{Der}\bigl(s(z) \doteq 0 \lor \exists w\,(s(z) \doteq s(w))\bigr)
+            &&;\ \fun{intro}_{\lor 2}.
+    \end{align*}}
+    
+    Because $o_s$ is an unconditional derivation of $\varphi(s(z))$, it trivially implies the conditional step using the logical axiom $\fun{ax}_{\fun{L1}}$:
+    {\small
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(\varphi(s(z)) \imp (\varphi(z) \imp \varphi(s(z)))\bigr)
+            &&;\ \fun{ax}_{\fun{L1}}(\varphi(s(z)), \varphi(z))\\
+        i_s&\colon\fun{Der}\bigl(\varphi(z) \imp \varphi(s(z))\bigr)
+            &&;\ \fun{mp}(a_1, o_s)\\
+        d_s&\colon\fun{Der}\bigl(\forall z\,(\varphi(z) \imp \varphi(s(z)))\bigr)
+            &&;\ \fun{gen}(i_s, z).
+    \end{align*}}
+
+    \textsc{Conclusion:} By applying the formal induction axiom to the base case $d_0$ and the inductive step $d_s$, we obtain the final derivation:
+    \[
+        d\colon\fun{Der}(\forall z\,\varphi(z)) \quad;\ \fun{ax}_{\fun{Ind}}(\varphi, d_0, d_s).
+    \]
+\end{proof}
+
+\begin{lem}[Universal Instantiation]
+    \label{lem:universal-instantiation}
+    For any formula\/ $\varphi\colon\fun{Form}$, variables\/ $x,y\colon\fun{Var}$, and terms\/ $t,t_1,t_2\colon\fun{Term}$, the following instantiation rules are admissible in the metatheory:
+    \begin{enumerate}[a),font=\upshape]
+        \item Assuming that\/ $t$ is free for\/ $x$ in\/ $\varphi$, there is a function:
+        \[
+            \fun{inst}_1\colon\fun{Der}(\forall x\,\varphi)\to\fun{Der}(\varphi[t/x]).
+        \]
+        
+        \item Assuming that\/ $t_1$ is free for\/ $x$ in\/ $\forall y\,\varphi$ and\/ $t_2$ is free for\/ $y$ in\/ $\varphi[t_1/x]$, there is a function:
+        \[
+            \fun{inst}_2\colon\fun{Der}(\forall x\,\forall y\,\varphi)\to\fun{Der}(\varphi[t_1/x][t_2/y]).
+        \]
+    \end{enumerate}
+\end{lem}
+
+\begin{proof}\ 
+    \begin{enumerate}[a)]
+        \item Let $d\colon\fun{Der}(\forall x\,\varphi)$ be a derivation. Then,
+        \begin{align*}
+            a_1&\colon\fun{Der}\bigl(
+                (\forall x\,\varphi)
+                \imp
+                \varphi[t/x]
+            \bigr)
+                &&;\ \fun{ax}_{\fun{L4}}\\
+            \fun{inst}_1(d,t)&\colon\fun{Der}\bigl(
+                \varphi[t/x]
+            \bigr)
+                &&;\ \fun{mp}(d,a_1).
+        \end{align*}
+        
+        \item Let $d\colon\fun{Der}(\forall x\,\forall y\,\varphi)$. Setting $\psi\defeq\forall y\,\varphi$, we obtain $d\colon\fun{Der}(\forall x\,\psi)$. Since $t_1$ is free for $x$ in $\forall y\,\varphi$, $y$ is not free in $t_1$. Then,
+        \begin{align*}
+            d_1&\colon\fun{Der}(\psi[t_1/x])
+                &&;\ \fun{inst}_1(d, t_1)\\
+            d_1&\colon\fun{Der}\bigl(
+                \forall y\,(\varphi[t_1/x])
+            \bigr)
+                &&;\ \text{Def.~\ref{defn:substitution}}\\
+            \fun{inst}_2(d,t_1,t_2)&\colon\fun{Der}\bigl(
+                \varphi[t_1/x][t_2/y]
+            \bigr)
+                &&;\ \fun{inst}_1(d_1, t_2).
+        \end{align*}
+        The second step above is valid because $(\forall y\,\varphi)[t_1/x]\equiv\forall y\,(\varphi[t_1/x])$.
+        
+        The hypothesis that $t_2$ is free for $y$ in $\varphi[t_1/x]$ validates the third step.
+
+    \end{enumerate}
+
+\end{proof}
+
+\begin{lem}[Existential Elimination]
+    \label{lem:existential-elimination}
+    For any formulas\/ $\varphi,\chi\colon\fun{Form}$ and variable\/ $x\colon\fun{Var}$ such that\/ $x$ is not free in\/ $\chi$, there is a function:
+    \[
+        \fun{exists\_elim}\colon\fun{Der}(
+            \varphi\imp\chi
+        )
+        \to
+        \fun{Der}(\exists x\,\varphi\imp\chi).
+    \]
+\end{lem}
+
+\begin{proof}
+    Let $d\colon\fun{Der}(\varphi \imp \chi)$ be an arbitrary derivation. Recall that $\exists x\,\varphi$ is definitionally $\neg\forall x\,\neg\varphi$.
+    
+    Since $x$ is not free in $\chi$, it is not free in $\neg\chi$. The derivation sequence proceeds as follows:
+    \begin{align*}
+        d_1&\colon\fun{Der}\bigl(
+            \neg\chi \imp \neg\varphi
+        \bigr)
+            &&;\ \text{Lem.~\ref{lem:contrapositive}}\\
+        d_2&\colon\fun{Der}\bigl(
+            \forall x\,(\neg\chi\imp\neg\varphi)
+        \bigr)
+            &&;\ \fun{gen}(d_1, x)\\
+        a_1&\colon\fun{Der}\bigl(
+            \forall x\,(\neg\chi\imp\neg\varphi)
             \imp
-            \varphi[t_1/x][t_2/y]
+            (\neg\chi\imp\forall x\,\neg\varphi)
         \bigr)
-            &&;\ \fun{ax}_{\fun{L4}}\\
-        \fun{inst}_2(d,t_1,t_2)&\colon\fun{Der}\bigl(
-            \varphi[t_1/x][t_2/y]
+            &&;\ \fun{ax}_{\fun{L5}}\\
+        d_3&\colon\fun{Der}\bigl(
+            \neg\chi\imp\forall x\,\neg\varphi
         \bigr)
-            &&;\ \fun{mp}(d_1,a_2).
+            &&;\ \fun{mp}(d_2,a_1)\\
+        \fun{exists\_elim}(d)&\colon\fun{Der}\bigl(
+            \neg\forall x\,\neg\varphi\imp\chi
+        \bigr)
+            &&;\ \text{Lem.~\ref{lem:contrapositive}}.
     \end{align*}
 \end{proof}
+
+\begin{lem}[Congruence of Addition]
+    \label{lem:cong-add}
+    For any terms\/ $u,v,t\colon\fun{Term}$, there is an inhabitant
+    \[
+        \fun{cong}_+(u,v,t)\colon\fun{Der}\bigl(
+            (u\doteq v)\imp(u+t\doteq v+t)
+        \bigr).
+    \]
+\end{lem}
+
+\begin{proof}
+    Choose a variable $y\colon\fun{Var}$ occurring in neither $u$ nor $t$, and consider the atomic formula $\varphi\defeq(u+t\doteq y+t)$. Since $y$ does not occur in $u$ or $t$, we have $\varphi[u/y]\equiv(u+t\doteq u+t)$ and $\varphi[v/y]\equiv(u+t\doteq v+t)$; moreover, because $\varphi$ is quantifier-free, both $u$ and $v$ are free for $y$ in $\varphi$. Then,
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(
+            (u\doteq v)
+            \imp
+            ((u+t\doteq u+t)\imp(u+t\doteq v+t))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{Eq2}}\\
+        s_1&\colon\fun{Der}\bigl(
+            (u+t\doteq u+t)
+            \imp
+            ((u\doteq v)\imp(u+t\doteq v+t))
+        \bigr)
+            &&;\ \fun{swap}\\
+        r_1&\colon\fun{Der}(u+t\doteq u+t)
+            &&;\ \fun{ax}_{\fun{Eq1}}\\
+        \fun{cong}_+&\colon\fun{Der}\bigl(
+            (u\doteq v)\imp(u+t\doteq v+t)
+        \bigr)
+            &&;\ \fun{mp}(s_1,r_1).
+    \end{align*}
+\end{proof}
+
+\begin{lem}[Disjunction Elimination]
+    \label{lem:elim-or}
+    For any\/ $\alpha,\beta,\gamma\colon\fun{Form}$, there is a map
+    \[
+        \fun{elim}_\lor\colon
+            \fun{Der}(\alpha\lor\beta)
+            \to
+            \fun{Der}(\alpha\imp\gamma)
+            \to
+            \fun{Der}(\beta\imp\gamma)
+            \to
+            \fun{Der}(\gamma).
+    \]
+\end{lem}
+
+\begin{proof}
+    Recall that $\alpha\lor\beta\equiv\neg\alpha\imp\beta$.
+
+    Let $d\colon\fun{Der}(\alpha\lor\beta)$, $c_1\colon\fun{Der}(\alpha\imp\gamma)$, and $c_2\colon\fun{Der}(\beta\imp\gamma)$ be given. Then,
+    {\small
+    \begin{align*}
+        d_1&\colon\fun{Der}(\neg\alpha\imp\gamma)
+            &&;\ \fun{trans}_{\imp}(d,c_2)\\
+        p_1&\colon\fun{Der}(\neg\neg\alpha\imp\gamma)
+            &&;\ \fun{trans}_{\imp}\bigl(\fun{dne}(\alpha),c_1\bigr)\\
+        p_2&\colon\fun{Der}(\neg\neg\alpha\imp\neg\neg\gamma)
+            &&;\ \fun{trans}_{\imp}\bigl(p_1,\fun{dni}(\gamma)\bigr)\\
+        a_1&\colon\fun{Der}\bigl(
+            (\neg\neg\alpha\imp\neg\neg\gamma)
+            \imp
+            (\neg\gamma\imp\neg\alpha)
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        p_3&\colon\fun{Der}(\neg\gamma\imp\neg\alpha)
+            &&;\ \fun{mp}(a_1,p_2)\\
+        p_4&\colon\fun{Der}(
+            \explain[T]{\neg\gamma\imp\gamma}
+        )
+            &&;\ \fun{trans}_{\imp}(p_3,d_1)\\
+        e_1&\colon\fun{Der}\bigl(
+            \neg\gamma\imp(\gamma\imp\neg T)
+        \bigr)
+            &&;\ \fun{expl}\\
+        a_2&\colon\fun{Der}\bigl(
+            (\neg\gamma\imp(\gamma\imp\neg T))
+            \imp
+            (T\imp(\neg\gamma\imp\neg T))
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        e_2&\colon\fun{Der}\bigl(
+            T\imp(\neg\gamma\imp\neg T)
+        \bigr)
+            &&;\ \fun{mp}(a_2,e_1)\\
+        e_3&\colon\fun{Der}(\neg\gamma\imp\neg T)
+            &&;\ \fun{mp}(e_2,p_4)\\
+        a_3&\colon\fun{Der}\bigl(
+            (\neg\gamma\imp\neg T)
+            \imp
+            (T\imp\gamma)\bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        e_4&\colon\fun{Der}(T\imp\gamma)
+            &&;\ \fun{mp}(a_3,e_3)\\
+        e_5&\colon\fun{Der}(\gamma)
+            &&;\ \fun{mp}(e_4,p_4).
+    \end{align*}}
+\end{proof}
+
+\begin{lem}[Internal Equality Laws]
+    \label{lem:internal-equality}
+    For any terms\/ $u,v,w\colon\fun{Term}$, the following types are inhabited:
+    \begin{enumerate}[a),font=\upshape]
+        \item Left replacement:
+        \[
+            \fun{repl}_L(u,v,w)\colon\fun{Der}\bigl(
+                (u\doteq v)
+                \imp
+                ((u\doteq w)\imp(v\doteq w))
+            \bigr).
+        \]
+        \item Right replacement:
+        \[
+            \fun{repl}_R(u,v,w)\colon\fun{Der}\bigl(
+                (v\doteq w)
+                \imp
+                ((u\doteq v)\imp(u\doteq w))
+            \bigr).
+        \]
+        \item Internal transitivity:
+        \[
+            \fun{trans}_{\doteq}(u,v,w)\colon
+                \fun{Der}\bigl(
+                    (u\doteq v)
+                    \imp
+                    ((v\doteq w)\imp(u\doteq w))
+            \bigr).
+        \]
+    \end{enumerate}
+\end{lem}
+
+\begin{proof}\ 
+    \begin{enumerate}[a),font=\upshape]
+        \item Choose $y\colon\fun{Var}$ not occurring  in $w$. Set $\varphi\defeq y\doteq w$ and invoke $\fun{ax}_{\fun{Eq2}}$.
+
+        \item Choose $y\colon\fun{Var}$ not occurring in $u$. Set $\varphi\defeq u\doteq y$ and invoke $\fun{ax}_{\fun{Eq2}}$.
+
+        \item Apply the Antecedent Swap Lemma~\ref{lem:swap} to part~b).
+    \end{enumerate}
+\end{proof}
+
+\subsection{Hypothetical Derivations}
+
+In universal generalization
+\[
+    \fun{gen}\colon
+        \fun{Der}(\alpha)
+        \to
+        \fun{Der}(\forall x\,\alpha)
+\]
+the type $\fun{Der}(\alpha)$ represents the assertion that $\alpha$ is a theorem. An inhabitant of this type guarantees that $\alpha$ has been proven from the base axioms of Peano Arithmetic alone, relying on no unproven hypotheses. 
+
+Because $\alpha$ is unconditionally true, any free variable $x$ appearing in $\alpha$ is unconstrained. The proof of $\alpha$ makes no specific assumptions about $x$; therefore, the proof must hold for \textit{all} possible values of $x$. This semantic reality justifies universal generalization.
+
+The danger of invalid generalization arises when we are reasoning under a local hypothesis, such as \textit{assume $x\doteq0$}. If we were allowed to generalize over~$x$ here, we could derive that all numbers are zero. However, a derivation under a hypothesis does not inhabit the type $\fun{Der}(\alpha)$ because assumptions are not derived from the axioms of the formal system.
+
+The burden of tracking free variables and preventing logical collapse is shifted entirely out of the primitive rules and into the architecture of hypothetical derivations.
+
+If we were to type a \textit{deduction} map as operating on a raw function,
+\[
+    \fun{deduct}\colon(
+        \fun{Der}(\varphi)\to\fun{Der}(\chi)
+    )
+    \to
+    \fun{Der}(\varphi\imp\chi),
+\]
+we would encounter a fundamental barrier because there is no structural induction on function types: functions are opaque.
+
+To resolve this, we must define an explicit inductive type representing the syntax tree of a derivation from an assumption. The last constructor in the following definition is where the restriction is enforced.
+
+\begin{defn}
+    Given a fixed assumption $\varphi\colon\fun{Form}$, we define the \textsl{hypothetical derivation} type family
+    \[
+        \fun{HypDer}(\varphi,\dummy)\colon
+            \fun{Form}\to\univ
+    \]
+    inductively as follows:
+    \begin{itemize}
+        \item \textsc{Axiom Inclusions:} Any unconditional derivation can be injected into a hypothetical one.
+        \[
+            \fun{hyp\_ax}\colon
+                \prod_{\psi\colon\fun{Form}}
+                    \fun{Der}(\psi)
+                    \to
+                    \fun{HypDer}(\varphi,\psi)
+        \]
+        \item \textsc{Assumption:} The assumption trivially derives itself.
+        \[
+            \fun{hyp\_assum}\colon
+                \fun{HypDer}(\varphi,\varphi)
+        \]
+        \item \textsc{Modus Ponens:} The standard rule of detachment.
+        \[
+            \fun{hyp\_mp}\colon
+                \prod_{\alpha,\psi\colon\fun{Form}}
+                    \fun{HypDer}(\varphi,\alpha\imp\psi)
+                    \to
+                    \fun{HypDer}(\varphi,\alpha)
+                    \to
+                    \fun{HypDer}(\varphi,\psi)
+        \]
+        \item \textsc{Universal Generalization:} Generalization is permitted if, and only if, the generalized variable is not free in the assumption.
+        \[
+            \fun{hyp\_gen}\colon
+                \prod_{\alpha\colon\fun{Form}}\;
+                \prod_{x\colon\fun{Var}}
+                    \fun{HypDer}(\varphi,\alpha)
+                    \to
+                    \neg\fun{FV}(\varphi)(x)
+                    \to
+                    \fun{HypDer}(
+                        \varphi,
+                        \forall x\,\alpha
+                    ).
+        \]
+    \end{itemize}
+\end{defn}
+
+\begin{thm}[Deduction Theorem]
+    \label{thm:deduction-theorem}
+    For any formulas\/ $\varphi, \chi\colon\fun{Form}$, there is a map
+    \[
+        \fun{deduct}\colon\fun{HypDer}(\varphi,\chi)
+        \to
+        \fun{Der}(\varphi\imp\chi).
+    \]
+\end{thm}
+
+\begin{proof}
+    To construct the $\fun{deduct}$ map we proceed by structural induction on $h\colon\fun{HypDer}(\varphi, \chi)$. There are four cases corresponding to the constructors of $\fun{HypDer}$:
+    \begin{itemize}
+        \item $h\equiv\fun{hyp\_ax}(\psi,d)$ where $d\colon\fun{Der}(\psi)$:
+        \begin{align*}
+            a_1&\colon\fun{Der}\bigl(
+                \psi\imp(\varphi\imp\psi)
+            \bigr)
+                &&;\ \fun{ax}_{\fun{L1}}\\
+            d'&\colon\fun{Der}\bigl(\varphi\imp\psi\bigr)
+                &&;\ \fun{mp}(a_1,d).
+        \end{align*}
+    
+        \item $h\equiv\fun{hyp\_assum}$. In this case, $\chi\equiv\varphi$. By Lemma~\ref{lem:identity}, we obtain:
+        \[
+            \id(\varphi)\colon\fun{Der}varphi\imp\varphi).
+        \]
+    
+        \item $h\equiv\fun{hyp\_mp}(\alpha,\chi,h_1,h_2)$. By the inductive hypothesis, we have already obtained derivations $d_{\fun{1}}\colon\fun{Der}(\varphi\imp(\alpha\imp\chi))$ and $d_{\fun{2}}\colon\fun{Der}(\varphi\imp\alpha)$. Then,
+        \begin{align*}
+            a_1&\colon\fun{Der}\bigl(
+                (\varphi\imp(\alpha\imp\chi))
+                \imp
+                ((\varphi\imp\alpha)\imp(\varphi\imp\chi))
+            \bigr)
+                &&;\ \fun{ax}_{\fun{L2}}\\
+            d_1&\colon\fun{Der}\bigl(
+                (\varphi\imp\alpha)\imp(\varphi\imp\chi)
+            \bigr)
+                &&;\ \fun{mp}(a_1, d_{\fun{1}})\\
+            d'&\colon\fun{Der}\bigl(
+                \varphi\imp\chi
+            \bigr)
+                &&;\ \fun{mp}(d_1, d_{\fun{2}}).
+        \end{align*}
+    
+        \item $h\equiv\fun{hyp\_gen}(\alpha,x,h_1,p)$, so $\chi\equiv\forall x\,\alpha$. The constructor provides the metatheoretic proof $\zeta\colon\neg\fun{FV}(\varphi)(x)$. By the inductive hypothesis on $h_1$, we possess $d_{\fun{IH}}\colon\fun{Der}(\varphi\imp\alpha)$. Because $d_{\fun{IH}}$ is an unconditional derivation, we can apply the universal generalization rule. Then, justified by the proof $\zeta$, we invoke the quantifier distribution axiom $\fun{ax}_{\fun{L5}}$:
+        \begin{align*}
+            d_1&\colon\fun{Der}\bigl(
+                \forall x\,(\varphi\imp\alpha)
+            \bigr)
+                &&;\ \fun{gen}(d_{\fun{IH}},x)\\
+            a_1&\colon\fun{Der}\bigl(
+                \forall x\,
+                    (\varphi\imp\alpha)
+                    \imp
+                    (\varphi\imp\forall x\,\alpha)
+            \bigr)
+                &&;\ \fun{ax}_{\fun{L5}}(\varphi,\alpha,\zeta)\\
+            d'&\colon\fun{Der}\bigl(
+                \varphi\imp\forall x\,\alpha
+            \bigr)
+                &&;\ \fun{mp}(a_1,d_1).
+        \end{align*}
+    \end{itemize}
+\end{proof}
+
+\begin{cor}[Existential Witness Discharge]
+    \label{lem:existential-discharge}
+    Let $\varphi,\chi\colon\fun{Form}$ be formulas, and $x\colon \fun{Var}$. Then, there is a map
+    \[
+        \fun{discharge}_\exists\colon
+            \fun{HypDer}(\varphi,\chi)
+            \to
+            \neg\fun{FV}(\chi)(x)
+            \to
+            \fun{Der}(\exists x\,\varphi\imp\chi).
+    \]
+\end{cor}
+
+\begin{proof}
+    Let $h\colon\fun{HypDer}(\varphi,\chi)$ and $\zeta\colon\neg\fun{FV}(\chi)(x)$.
+    
+    By the Deduction Theorem~\ref{thm:deduction-theorem}, we obtain:
+    \[
+        \fun{deduct}(h)\colon\fun{Der}(\varphi\imp\chi).
+    \]
+    Because of $\zeta$, we satisfy the prerequisite to apply the Existential Elimination Lemma~\ref{lem:existential-elimination}. Hence, we have:
+    \[
+        d_2\colon\fun{Der}(\exists x\,\varphi\imp\chi).
+    \]
+    
+    The derivation $d_2$ is the required inhabitant.
+\end{proof}
+
+\begin{rem}
+    The existential witness discharge, introduces the $\exists$ quantifier in order to \textit{discharge} the witness.
+\end{rem}
+
 
 \begin{rem}
     The presentation of Peano Arithmetic (and formal systems in general) consists of two levels. Open formulas and sentences. The former allow for intermediate proof steps. The latter state mathematical truths: the theorems of the theory.
@@ -778,7 +1356,7 @@ We construct the mapping in two stages: first by defining structural recursors f
 
 
 
-\begin{defn}[Peano Arithmetic as a Formal System]
+\begin{defn}
     There are two ways in which Peano Arithmetic conforms to the definition of $\fun{System}\defeq\sum_{S\colon\univ}(S\to\univ)$:
     \begin{enumerate}[a),font=\upshape]
         \item Using well-formed formulas:
@@ -1616,7 +2194,8 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     \end{description}
 \end{xmpls}
 
-\begin{lem}[Bounded Minimalization]\label{lem:muk<=n P(k)}
+\begin{lem}[Bounded Minimalization]
+    \label{lem:muk<=n P(k)}
     For any family of mere propositions\/ $P\colon\N\to\univ$, there exists a function
     \begin{alignat*}{2}
         \mu_P\colon\Bigl(

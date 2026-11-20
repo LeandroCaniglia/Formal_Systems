@@ -69,6 +69,601 @@ To internalize metatheoretic statements into the formal system of Peano Arithmet
     
 \end{proof}
 
+\begin{lem}[Numeral Addition]
+    \label{lem:numeral-addition}
+    For any natural numbers\/ $n,m\colon\N$, the following type is inhabited:
+    \[
+        \fun{Der}(\num{n} + \num{m} \doteq \num{n+m}).
+    \]
+\end{lem}
+
+\begin{proof}
+    We proceed by induction on $n\colon\N$.
+    
+    \textsc{Base case} $n\equiv0$. We must inhabit the type $\fun{Der}(\num0+\num m\doteq \num{0+m})$. Since $0+m\equiv m$ and $\num0\equiv0$, the goal reduces to inhabiting:
+    \[
+        \fun{Der}(0+\num m\doteq\num m).
+    \]
+    Using Lemma~\ref{lem:universal-instantiation} on $\fun{ax}_{\fun{PA3}}\colon\fun{Der}(\forall x\,(0+x\doteq x))$, we obtain:
+    \[
+        \fun{inst}_1(\fun{ax}_{\fun{PA3}},\num{n})\colon
+            \fun{Der}(0+\num m\doteq\num m).
+    \]
+    
+    \textsc{Inductive step} $n\equiv\fun{succ}(n')$. By the inductive hypothesis, we have
+    \[
+        d_{\fun{IH}}\colon\fun{Der}(\num{n'}+\num m
+            \doteq\num{n'+m}).
+    \]
+    We must inhabit the type $\fun{Der}(\num{\fun{succ}(n')}+\num m\doteq\num{\fun{succ}(n')+m})$.
+    
+    By taking into account that
+    \[
+        \num{\fun{succ}(k)}\equiv s(\num{k})
+        \quad\text{and}\quad
+        \fun{succ}(n')+m\equiv\fun{succ}(n'+m),
+    \]
+    the goal becomes:
+    \[
+        \fun{Der}\bigl(
+            s(\num{n'})+\num m)\doteq s(\num{n'+m}
+        )\bigr).
+    \]
+    Applying $\fun{ax}_{\fun{PA4}}\colon\fun{Der}(\forall x\,\forall y\,(s(x)+y\doteq s(x+y)))$, and Lemmas~\ref{lem:constructor-congruence} and~\ref{lem:transitivity-equality}:
+    \begin{align*}
+        d_1&\colon\fun{Der}\bigl(
+            s(\num{n'})+\num m\doteq s(\num{n'}+\num m)
+        \bigr)
+            &&;\ \fun{inst}_2(\fun{ax}_{\fun{PA4}}, \num{n'}, \num m)\\
+        d_2&\colon\fun{Der}\bigl(
+            \num{n'}+\num m\doteq\num{n'+m}
+            \imp
+            s(\num{n'}+\num m)\doteq s(\num{n'+m})
+        \bigr)
+            &&;\ \text{Lem.~\ref{lem:constructor-congruence}}\\
+        d_3&\colon\fun{Der}\bigl(
+            s(\num{n'}+\num m)\doteq s(\num{n'+m})
+        \bigr)
+            &&;\ \fun{mp}(d_{\fun{IH}}, d_2)\\
+        d_4&\colon\fun{Der}\bigl(
+            s(\num{n'})+\num m)\doteq s(\num{n'+m})
+        \bigr)
+            &&;\ \fun{trans}(d_1,d_3).
+    \end{align*}
+\end{proof}
+
+\begin{lem}[Numeral Multiplication]
+    \label{lem:numeral-multiplication}
+    For any natural numbers\/ $n,m\colon\N$, the following type is inhabited:
+    \[
+        \fun{Der}(\num{n} \cdot \num{m} \doteq \num{n \cdot m}).
+    \]
+\end{lem}
+
+\begin{proof}
+    The proof is analogous to that of Lemma~\ref{lem:numeral-addition}, except that the inductive step relies on the derivation of numeral addition.
+\end{proof}
+
+\begin{defn}\label{defn:inequality}
+    The \textsl{inequality formula} $\varphi_{<}(x,y)$ is defined as:
+    \[
+        \varphi_{<}(x,y)\equiv\exists z\,(s(z)+x\doteq y).
+    \]
+\end{defn}
+
+\begin{thm}[Numeral Bounding]
+    \label{thm:numeral-bounding}
+    Let\/ $x\colon\fun{Var}$ be a variable. Define the formula\/ $\fun{Bound}(x,m)\colon\fun{Form}$ by recursion on\/ $m\colon\N$ by:
+    \begin{itemize}
+        \item $\fun{Bound}(x,0)\defeq\neg(0\doteq0)$,
+        \item $\fun{Bound}(x,\fun{succ}(m))\defeq\fun{Bound}(x,m)\lor(x\doteq\num m)$.
+    \end{itemize}
+    Then, for any natural number\/ $m\colon\N$, the following type is inhabited:
+    \begin{equation}\label{eq:bound}\tag{$\ast$}
+        \fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,\num m)
+            \imp
+            \fun{Bound}(x, m))
+        \bigr).
+    \end{equation}
+\end{thm}
+
+\begin{proof}
+    We proceed by induction on $m\colon\N$.
+
+    \textsc{Base case $m\equiv 0$.} In this case \eqref{eq:bound} becomes
+    \[
+        \fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,0)\imp\neg(0\doteq 0))
+        \bigr).
+    \]
+    Set $\psi\defeq s(z)+x\doteq 0$, so that $\varphi_{<}(x,0)\equiv\exists z\,\psi$. We first assemble the required unconditional derivations in $\fun{Der}$:
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(s(z)+x\doteq s(z+x)\bigr)
+            &&;\ \fun{inst}_2\\
+        a_2&\colon\fun{Der}\bigl(s(z+x)\doteq s(z)+x\bigr)
+            &&;\ \fun{sym}(a_1)\\
+        t_1&\colon\fun{Der}\bigl((s(z)+x\doteq 0)\imp(s(z+x)\doteq 0)\bigr)
+            &&;\ \fun{mp}(\fun{trans},a_2)\\
+        a_3&\colon\fun{Der}\bigl(\neg(s(z+x)\doteq 0)\bigr)
+            &&;\ \fun{inst}_1\\
+        e_1&\colon\fun{Der}\bigl((s(z+x)\doteq 0)\imp\neg(0\doteq 0)\bigr)
+            &&;\ \fun{mp}(\fun{expl},a_3).
+    \end{align*}
+    Working under the witness assumption $\psi$, we now build a hypothetical derivation of $\neg(0\doteq 0)$ in $\fun{HypDer}(\psi,\dummy)$:
+    \begin{align*}
+        h_0&\colon\fun{HypDer}(\psi,s(z)+x\doteq0)
+            &&;\ \fun{hyp\_assum}\\
+        h_1&\colon\fun{HypDer}\bigl(
+            \psi,(s(z)+x\doteq0)\imp(s(z+x)\doteq0)
+        \bigr)
+            &&;\ \fun{hyp\_ax}(t_1)\\
+        h_2&\colon\fun{HypDer}\bigl(
+            \psi,s(z+x)\doteq0
+        \bigr)
+            &&;\ \fun{hyp\_mp}(h_1,h_0)\\
+        h_3&\colon\fun{HypDer}\bigl(
+            \psi,(s(z+x)\doteq0)\imp\neg(0\doteq0)
+        \bigr)
+            &&;\ \fun{hyp\_ax}(e_1)\\
+        h_4&\colon\fun{HypDer}\bigl(
+            \psi,\neg(0\doteq0)
+        \bigr)
+            &&;\ \fun{hyp\_mp}(h_3,h_2).
+    \end{align*}
+    Given a trivial witness $\zeta\colon\neg\fun{FV}(\neg(0\doteq0))(z)$, we discharge the existential assumption back into $\fun{Der}$ and generalize over $x$:
+    \begin{align*}
+        d_1&\colon\fun{Der}\Bigl(
+            \explain[\varphi_{<}(x,0)]{
+                \exists z\,(s(z)+x\doteq 0)
+            }
+            \imp
+            \neg(0\doteq 0)
+        \Bigr)
+            &&;\ \fun{discharge}_\exists(h_4,\zeta)\\
+        d_2&\colon\fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,0)\imp\neg(0\doteq 0))
+        \bigr)
+            &&;\ \fun{gen}(d_1,x).
+    \end{align*}    
+    
+    \textsc{Inductive step $m\equiv\fun{succ}(m')$.} Assume the inductive hypothesis
+    \[
+        \fun{ih}\colon\fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,\num{m'})\imp\fun{Bound}(x,m'))
+        \bigr).
+    \]
+    Since $\num{\fun{succ}(m')}\equiv s(\num{m'})$, we must inhabit
+    \[
+        \fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,s(\num{m'}))\imp\fun{Bound}(x,\fun{succ}(m')))
+        \bigr).
+    \]
+    To keep the notation compact, set
+    \begin{align*}
+        B'&\defeq\fun{Bound}(x,m'),\\
+        B&\defeq\fun{Bound}(x,\fun{succ}(m'))\equiv B'\lor(x\doteq\num{m'}),\\
+        \psi&\defeq s(z)+x\doteq s(\num{m'}),\\
+        \gamma&\defeq(z+x\doteq\num{m'})\imp B.
+    \end{align*}
+    In particular, $\varphi_{<}(x,s(\num{m'}))\equiv\exists z\,\psi$.
+    
+    Choose the variable $w\colon\fun{Var}$ distinct from both $x$ and $z$, and fix two witnesses $\zeta_z\colon\neg\fun{FV}(B)(z)$ and $\zeta_w\colon\neg\fun{FV}(\gamma)(w)$.
+
+    Using Lemma~\ref{lem:cong-add}, we deduce
+    \begin{align*}
+        a_1&\colon\fun{Der}\bigl(s(z)+x\doteq s(z+x)\bigr)
+            &&;\ \fun{inst}_2\\
+        a_2&\colon\fun{Der}\bigl(s(z+x)\doteq s(z)+x\bigr)
+            &&;\ \fun{sym}(a_1)\\
+        t_1&\colon\fun{Der}\bigl(\psi\imp(s(z+x)\doteq s(\num{m'}))\bigr)
+            &&;\ \fun{mp}(\fun{trans},a_2)\\
+        j_1&\colon\fun{Der}\bigl((s(z+x)\doteq s(\num{m'}))\imp(z+x\doteq\num{m'})\bigr)
+            &&;\ \fun{inst}_2\\
+        r&\colon\fun{Der}\bigl(\psi\imp(z+x\doteq\num{m'})\bigr)
+            &&;\ \fun{trans}_{\imp}(t_1,j_1).
+    \end{align*}
+    Next, we derive $\gamma$ by splitting on $z$ via Lemma~\ref{lem:predecesor}.
+
+    \textbf{Case $z\doteq0$.}
+    \begin{align*}
+        k_1&\colon\fun{Der}\bigl(
+            (z\doteq 0)\imp(z+x\doteq 0+x)
+        \bigr)
+            &&;\ \fun{cong}_+\\
+        k_2&\colon\fun{Der}(0+x\doteq x)
+            &&;\ \fun{inst}_1(\fun{ax}_{\fun{PA3}})\\
+        k_3&\colon\fun{Der}\bigl(
+            (z+x\doteq 0+x)\imp(z+x\doteq x)
+        \bigr)
+            &&;\ \fun{mp}(\fun{repl}_R,k_2)\\
+        k_4&\colon\fun{Der}\bigl(
+            (z\doteq 0)\imp(z+x\doteq x)
+        \bigr)
+            &&;\ \fun{trans}_{\imp}(k_1,k_3)\\
+        k_5&\colon\fun{Der}\bigl(
+            (z\doteq 0)
+            \imp
+            ((z+x\doteq\num{m'})\imp(x\doteq\num{m'}))
+        \bigr)
+            &&;\ \fun{trans}_{\imp}(k_4,\fun{repl}_L)\\
+        i_2&\colon\fun{Der}\bigl(
+            (x\doteq\num{m'})\imp B
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        p_1&\colon\fun{Der}\bigl(
+            ((z+x\doteq\num{m'})\imp(x\doteq\num{m'}))
+            \imp
+            \gamma
+        \bigr)
+            &&;\ \fun{mp}(\fun{pref},i_2)\\
+        c_1&\colon\fun{Der}\bigl(
+            (z\doteq 0)\imp\gamma
+        \bigr)
+            &&;\ \fun{trans}_{\imp}(k_5,p_1).
+    \end{align*}
+
+    \textbf{Case} $\exists w\,(z\doteq s(w))$. 
+
+    Step 1:
+    \begin{align*}
+        e_0&\colon\fun{Der}\bigl(
+            \neg\explain[\varphi_<(x,\num{m'})]{
+                \neg\forall z\,\neg(s(z)+x\doteq\num{m'})
+            }
+            \imp
+            \forall z\,\neg(s(z)+x\doteq\num{m'})
+        \bigr)
+            &&;\ \fun{dne}\\
+        e_1&\colon\fun{Der}\bigl(
+            \forall z\,\neg(s(z)+x\doteq\num{m'})
+            \imp
+            \neg(s(w)+x\doteq\num{m'})
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L4}}\\
+        e_2&\colon\fun{Der}\bigl(
+            \neg\varphi_<(x,\num{m'})
+            \imp
+            \neg(s(w)+x\doteq\num{m'})
+        \bigr)
+            &&;\ \fun{trans}_{\imp}\\
+        e_3&\colon\fun{Der}\bigl(
+            (
+                \neg\varphi_<(x,\num{m'})
+                \imp
+                \neg(s(w)+x\doteq\num{m'})
+            )\\
+            &\quad\quad\quad\imp
+            (
+                (s(w)+x\doteq\num{m'})
+                \imp
+                \varphi_<(x,\num{m'})
+            )
+        \bigr)
+            &&;\ \fun{ax}_{\fun{L3}}\\
+        e_4&\colon\fun{Der}\bigl(
+            (s(w)+x\doteq\num{m'})\imp\varphi_<(x,\num{m'})
+        \bigr)
+            &&;\ \fun{mp}(e_2,e_3).
+    \end{align*}
+    
+    Step 2:
+    \begin{align*}
+        q_1&\colon\fun{Der}\bigl(
+            \varphi_<(x,\num{m'})\imp B'
+        \bigr)
+            &&;\ \fun{inst}_1(\fun{ih})\\
+        q_2&\colon\fun{Der}\bigl(
+            (s(w)+x\doteq\num{m'})\imp B'
+        \bigr)
+            &&;\ \fun{trans}_{\imp}(e_4,q_1)\\
+        i_0&\colon\fun{Der}\bigl(
+            \neg B'\imp(B'\imp(x\doteq\num{m'}))
+        \bigr)
+            &&;\ \fun{expl}\\
+        i_1&\colon\fun{Der}\bigl(
+            B'\imp(
+                \explain[B]{
+                    \neg B'\imp(x\doteq\num{m'})
+                }
+            )
+        \bigr)
+            &&;\ \fun{swap}\\
+        q_3&\colon\fun{Der}\bigl(
+            (s(w)+x\doteq\num{m'})\imp B
+        \bigr)
+            &&;\ \fun{trans}_{\imp}.
+    \end{align*}
+    
+    Step 3:
+    \begin{align*}
+        p_1&\colon\fun{Der}\bigl(
+            ((s(w)+x\doteq\num{m'})\imp B)\\
+            &\qquad\imp(
+                (
+                    (z+x\doteq\num{m'})
+                    \imp
+                    (s(w)+x\doteq\num{m'})
+                )\\
+                &\quad\quad\quad\quad\quad\imp(
+                    \explain[\gamma]{
+                        (z+x\doteq\num{m'})\imp B
+                    }
+                )
+            )
+        \bigr)
+            &&;\ \fun{pref}\\
+        p_2&\colon\fun{Der}\bigl(
+            ((z+x\doteq\num{m'})\imp(s(w)+x\doteq\num{m'}))
+            \imp
+            \gamma
+        \bigr)
+            &&;\ \fun{mp}(q_3,p_1).
+    \end{align*}
+    
+    Step 4: Set $\psi_w\defeq(z\doteq s(w))$.
+    \begin{align*}
+        m_1&\colon\fun{Der}\bigl(
+            \psi_w\imp(z+x\doteq s(w)+x)
+        \bigr)
+            &&;\ \fun{cong}_+\\
+        m_2&\colon\fun{Der}\bigl(
+            (z+x\doteq s(w)+x)\\
+            &\qquad\imp(
+                (z+x\doteq\num{m'})
+                \imp(s(w)+x\doteq\num{m'})
+            )
+        \bigr)
+            &&;\ \fun{repl}_L\\
+        m_3&\colon\fun{Der}\bigl(
+            \psi_w
+            \imp(
+                (z+x\doteq\num{m'})
+                \imp
+                (s(w)+x\doteq\num{m'})
+            )
+        \bigr)
+            &&;\ \fun{trans}_{\imp}(m_1,m_2)\\
+        m_4&\colon\fun{Der}(\psi_w\imp\gamma)
+            &&;\ \fun{trans}_{\imp}(m_3,p_2).
+    \end{align*}
+
+    Step 5:
+    \begin{align*}
+        h_{w0}&\colon\fun{HypDer}(\psi_w,\psi_w)
+            &&;\ \fun{hyp\_assum}\\
+        h_{w1}&\colon\fun{HypDer}(\psi_w,\psi_w\imp\gamma)
+            &&;\ \fun{hyp\_ax}(m_4)\\
+        h_{w2}&\colon\fun{HypDer}(\psi_w,\gamma)
+            &&;\ \fun{hyp\_mp}(h_{w0},h_{w1})\\
+        c_2&\colon\fun{Der}\bigl(
+            \exists w\,(z\doteq s(w))\imp\gamma
+        \bigr)
+            &&;\ \fun{discharge}_\exists(h_{w2},\zeta_w).
+    \end{align*}
+
+    Step 6: Using Lemma~\ref{lem:elim-or}, we obtain
+    \begin{align*}
+        u_0&\colon\fun{Der}\Bigl(
+            \forall z\,\bigl(z\doteq 0\lor\exists w\,(z\doteq s(w))\bigr)
+        \Bigr)
+            &&;\ \text{Lem.~\ref{lem:predecesor}}\\
+        u&\colon\fun{Der}\bigl(
+            z\doteq 0\lor\exists w\,(z\doteq s(w))
+        \bigr)
+            &&;\ \fun{inst}_1(u_0)\\
+        c&\colon\fun{Der}\Bigl(
+            \explain[\gamma]{(z+x\doteq\num{m'})\imp B}
+        \Bigr)
+            &&;\ \fun{elim}_\lor(u,c_1,c_2)\\
+        d_0&\colon\fun{Der}(\psi\imp B)
+            &&;\ \fun{trans}_{\imp}(r,c).
+    \end{align*}
+
+    Step 7:
+    \begin{align*}
+        h_0&\colon\fun{HypDer}(\psi,\psi)
+            &&;\ \fun{hyp\_assum}\\
+        h_1&\colon\fun{HypDer}(\psi,\psi\imp B)
+            &&;\ \fun{hyp\_ax}(d_0)\\
+        h_2&\colon\fun{HypDer}(\psi,B)
+            &&;\ \fun{hyp\_mp}(h_0,h_1)\\
+        d_1&\colon\fun{Der}(
+            \explain[\varphi_{<}(x,s(\num{m'}))]{
+                \exists z\,\psi
+            }
+            \imp
+            B
+        )
+            &&;\ \fun{discharge}_\exists(h_2,\zeta_z)\\
+        d_2&\colon\fun{Der}\bigl(
+            \forall x\,(\varphi_{<}(x,s(\num{m'}))\imp B)
+        \bigr)
+            &&;\ \fun{gen}(d_1,x).
+    \end{align*}
+\end{proof}
+
+\begin{thm}
+    \label{thm:representability-inequality}
+    For any natural numbers\/ $n,m\colon\N$, the strict inequality relation is representable in Peano Arithmetic. Formally, there are functions:
+    \begin{align*}
+        \fun{rep}_{<}^+ &\colon (n < m) \to \fun{Der}(\varphi_<(\num{n}, \num{m}))\\
+        \fun{rep}_{<}^- &\colon \neg(n < m) \to \fun{Der}(\neg\varphi_<(\num{n}, \num{m}))
+    \end{align*}
+    where\/ $\varphi_<(x,y) \equiv \exists z\,(x + s(z) \doteq y)$.
+\end{thm}
+
+\begin{proof}
+    For the positive condition, assume we have a proof $p\colon n < m$. By the definition of strict inequality in the metatheory, there exists $k\colon\N$ such that $n + \fun{succ}(k) \equiv m$. By Lemma~\ref{lem:numeral-addition} (Numeral Addition), we have an inhabited derivation:
+    \[
+        d_1\colon\fun{Der}(\num{n} + \num{\fun{succ}(k)} \doteq \num{n + \fun{succ}(k)}).
+    \]
+    Since $n + \fun{succ}(k) \equiv m$ and $\num{\fun{succ}(k)} \equiv s(\num{k})$, this is definitionally:
+    \[
+        d_1\colon\fun{Der}(\num{n} + s(\num{k}) \doteq \num{m}).
+    \]
+    Applying the logical rule of existential introduction (which is admissible in our metatheory for the abbreviation $\exists$) with the witness term $\num{k}$, we obtain:
+    \[
+        \fun{rep}_{<}^+(p)\colon\fun{Der}(\exists z\,(\num{n} + s(z) \doteq \num{m})),
+    \]
+    which is exactly the type $\fun{Der}(\varphi_<(\num{n}, \num{m}))$.
+
+    For the negative condition, assume a metatheoretic proof $q\colon \neg(n < m)$, which implies $m \le n$. We must inhabit the type $\fun{Der}(\neg\varphi_<(\num{n}, \num{m}))$. 
+    By Lemma~\ref{thm:numeral-bounding} (Bounding of Numerals), we have an instantiated derivation:
+    \[
+        d_2\colon\fun{Der}(\varphi_<(\num{n}, \num{m}) \imp \fun{Bound}(\num{n}, m)).
+    \]
+    Recall that $\fun{Bound}(\num{n}, m)$ expands to the finite disjunction $\num{n} \doteq \num{0} \lor \dots \lor \num{n} \doteq \num{m-1}$.
+    Because $m \le n$, the metatheoretic natural number $n$ is distinct from all $i < m$. By the previously established representability of equality, Peano Arithmetic formally refutes each disjunct:
+    \[
+        d_{3,i}\colon\fun{Der}(\neg(\num{n} \doteq \num{i})) \quad \text{for all } i < m.
+    \]
+    Through iterated application of the propositional rule for disjunctive syllogism, these refutations collectively derive the negation of the bound:
+    \[
+        d_4\colon\fun{Der}(\neg\fun{Bound}(\num{n}, m)).
+    \]
+    Finally, applying the admissible rule of Modus Tollens to $d_2$ and $d_4$ yields the desired derivation:
+    \[
+        \fun{rep}_{<}^-(q)\colon\fun{Der}(\neg\varphi_<(\num{n}, \num{m})).
+    \]
+\end{proof}
+
+
+
+\section{Consistency}
+
+\begin{defns}\ 
+    \begin{enumerate}[-]
+        \item The \textsl{environment} type is $\fun{Env}\defeq\fun{Var}\to\N$.
+    
+        \item The \textsl{term interpretation\/} $\fun{evalT}\colon\fun{Term}\to\fun{Env}\to\N$ is defined by structural induction on $\fun{Term}$:
+        \begin{align*}
+            &\fun{evalT}(x,\rho)\defeq\rho(x)\\
+            &\fun{evalT}(0,\rho)\defeq0\\
+            &\fun{evalT}(s(t),\rho)\defeq\fun{succ}(
+                \fun{evalT}(t,\rho)
+            )\\
+            &\fun{evalT}(t_1+t_2,\rho)
+                \defeq\fun{evalT}(t_1,\rho)
+                    +\fun{evalT}(t_2,\rho)\\
+            &\fun{evalT}(t_1\cdot t_2,\rho)
+                \defeq\fun{evalT}(t_1,\rho)
+                    \cdot\fun{evalT}(t_2,\rho)
+        \end{align*}
+
+        \item The \textsl{formula interpretation} $\fun{evalF}\colon\fun{Form}\to\fun{Env}\to\fun{Prop}_\univ$ is defined by structural induction on $\fun{Form}$:
+        \begin{align*}
+            &\fun{evalF}(t_1\doteq t_2,\rho) 
+                \defeq \fun{evalT}(t_1, \rho) \eq{\N} \fun{evalT}(t_2, \rho)\\
+            &\fun{evalF}(\neg\varphi, \rho) 
+                \defeq \neg\fun{evalF}(\varphi, \rho)\\
+            &\fun{evalF}(\varphi\imp\psi, \rho) 
+                \defeq \fun{evalF}(\varphi, \rho) \to \fun{evalF}(\psi, \rho)\\
+            &\fun{evalF}(\forall x\,\varphi, \rho) 
+                \defeq \prod_{n\colon\N} \fun{evalF}(\varphi, \rho[n/x])
+        \end{align*}
+        where $\rho[n/x]$ denotes the environment $\rho$ modified so that $x$ maps to $n$, i.e.,
+        \[
+            \rho[n/x](y)\defeq\fun{rec}_{
+                (y\eq{\fun{Var}}x)+\neg(y\eq{\fun{Var}}x)
+            }\bigl(
+                \lambda p.\,n, 
+                \lambda\zeta.\,\rho(y)
+            \bigr)(d(y,x))
+        \]
+        for the decidability witness $d(y,x)\colon(y\eq{\fun{Var}}x)+\neg(y\eq{\fun{Var}}x)$.
+    \end{enumerate}
+\end{defns}
+
+The following proposition proves that $\fun{evalF}$ is well-defined.
+
+\begin{prop}\label{prop:evalf-is-prop}
+    For any formula\/ $\varphi\colon\fun{Form}$ and environment\/ $\rho\colon\fun{Env}$, the type evaluated by\/ $\fun{evalF}(\varphi, \rho)$ is a mere proposition. Formally, the following type is inhabited:
+    \[
+        \prod_{\varphi\colon\fun{Form}} \prod_{\rho\colon\fun{Env}}\;
+            \fun{isProp}(\fun{evalF}(\varphi,\rho)).
+    \]
+\end{prop}
+
+\begin{proof}
+    We proceed by structural induction on $\varphi$:
+    \begin{itemize}
+        \item \textsc{Case} $t_1\doteq t_2$. This follows because $\N$ is a set.
+        
+        \item \textsc{Case} $\neg\varphi$. This follows because all negations are mere propositions.
+        
+        \item \textsc{Case} $\varphi\imp\psi$. By the inductive hypothesis, the codomain $\fun{evalF}(\psi,\rho)$ is a mere proposition. Therefore, the function type itself is a mere proposition.
+        
+        \item \textsc{Case} $\forall x\,\varphi$. By the inductive hypothesis, for any natural number $n$, the type $\fun{evalF}(\varphi,\rho[n/x])$ is a mere proposition. Therefore, the dependent product type is a mere proposition as well.
+    \end{itemize}
+\end{proof}
+
+\begin{thm}[Soundness]
+    \label{thm:pa-soundness}
+    If a formula\/ $\varphi\colon\fun{Form}$ is derivable, it is true in the standard model. Formally, there is a dependent function:
+    \[
+        \fun{soundness}\colon
+            \prod_{\varphi\colon\fun{Form}}
+                \fun{Der}(\varphi)
+                \to
+                \prod_{\rho\colon\fun{Env}}
+                    \fun{evalF}(\varphi,\rho).
+    \]
+\end{thm}
+
+\begin{proof}
+    We proceed by structural induction on the derivation $d\colon\fun{Der}(\varphi)$.
+    \begin{itemize}
+        \item \textsc{Case} $\fun{mp}(d_1,d_2)$ where $d_1\colon\fun{Der}(\psi\imp\varphi)$ and $d_2\colon\fun{Der}(\psi)$. By the inductive hypothesis, we have inhabitants
+        \begin{align*}
+            \fun{ih}_1&\colon\fun{evalF}(\psi, \rho)\to\fun{evalF}(\varphi, \rho)\\
+            \fun{ih}_2&\colon\fun{evalF}(\psi, \rho).
+        \end{align*}
+        Then $\fun{ih}_1(\fun{ih}_2)$ yields the desired inhabitant of $\fun{evalF}(\varphi,\rho)$.
+        
+        \item \textsc{Case} $\fun{gen}(d)$ where $d\colon\fun{Der}(\psi)$ and $\varphi\equiv\forall x\,\psi$. By the inductive hypothesis, for any environment $\varrho$ we have an inhabitant $\fun{ih}(\varrho)\colon\fun{evalF}(\psi,\varrho)$. Then, $\lambda n.\,\fun{ih}(\rho[n/x])$ defines the required dependent function.
+        
+        \item \textsc{Case} $\fun{ax}_{\fun{L1}}(\psi, \chi)$. The type $\fun{evalF}(\psi\imp(\chi\imp\psi),\rho)$ definitionally evaluates to
+        \[
+            \fun{evalF}(\psi,\rho)\to\bigl(
+                \fun{evalF}(\chi,\rho)
+                \to
+                \fun{evalF}(\psi,\rho)
+            \bigr),
+        \]
+        which is inhabited by the constant map $\lambda u.\,\lambda v.\,u$.
+        
+        \item \textsc{Case} $\fun{ax}_{\fun{PA1}}$. The type $\fun{evalF}(\forall x\,\neg(s(x)\doteq0)$ definitionally evaluates to
+        \[
+            \prod_{n\colon\N}\neg(\fun{succ}(n)\eq{\N}0),
+        \]
+        which is known to be inhabited \citep[Chapter~1]{caniglia2025hott}.
+    \end{itemize}
+    The remaining axioms are validated analogously.
+\end{proof}
+
+\begin{thm}[Consistency]
+    \label{thm:pa-consistency}
+    Peano Arithmetic is consistent; it cannot derive a contradiction. Formally, the following type is uninhabited:
+    \[
+        \fun{Der}(\neg(0\doteq 0)).
+    \]
+\end{thm}
+
+\begin{proof}
+    Suppose we have a derivation $d\colon\fun{Der}(\neg(0\doteq 0))$. By Theorem~\ref{thm:pa-soundness}, applying $\fun{soundness}$ to $d$ and an arbitrary environment $\rho$ yields an inhabitant of:
+    \[
+        \fun{evalF}(\neg(0\doteq 0),\rho).
+    \]
+    By the definitional reduction of $\fun{evalF}$ and $\fun{evalT}$, this type evaluates definitionally to:
+    \[
+        \neg(0\eq\N0).
+    \]
+    Thus, $\fun{soundness}(d)\colon(0\eq\N0)\to\fun0$, which maps $\fun{refl}_0$ to a witness of $\fun0$.
+    %
+    
+\end{proof}
+
 \section{Representability}
 
 A \textsl{metatheoretic relation} is a mathematical property defined within the framework of Homotopy Type Theory, rather than internally in the formal syntax of Peano Arithmetic.
@@ -152,13 +747,14 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
         \begin{itemize}
             \item Case $n\equiv0$ and $m\equiv0$. The premise $\neg(0\eq{\N}0)$ applied to $\fun{refl}_0$ yields an inhabitant of $\fun0$, which $\fun{rec}_{\fun0}(\fun{Der}(\neg(0\doteq0)))$ maps to the desired inhabitant.
             
-            \item Case $n\equiv\fun{succ}(n')$ and $m\equiv0$. We must construct a derivation of $\neg(s(\num{n'})\doteq0)$. We have the non-logical axiom
-            \[
+            \item Case $n\equiv\fun{succ}(n')$ and $m\equiv0$. We must construct a derivation of $\neg(s(\num{n'})\doteq0)$. We have the axiom
+            $
                 \fun{ax}_{\fun{PA1}}\colon\fun{Der}(
                     \forall x\,\neg(s(x)\doteq 0)
                 ).
-            \]
-            We construct the derivation as follows:
+            $
+            Then,
+            {\small
             \begin{align*}
                 d_1&\colon\fun{Der}\bigl(
                     (\forall x\,\neg(s(x)\doteq0))
@@ -170,9 +766,10 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
                     \neg(s(\num{n'})\doteq0)
                 \bigr)
                     &&;\ \fun{mp}(\fun{ax}_{\fun{PA1}},d_1).
-            \end{align*}
+            \end{align*}}
             
             \item Case $n\equiv0$ and $m\equiv\fun{succ}(m')$. We must construct a derivation of $\neg(0\doteq s(\num{m'}))$. Following the exact steps of the previous case, we construct the derivation as follows:
+            {\small
             \begin{align*}
                 d_1&\colon\fun{Der}\bigl(
                     \neg(s(\num{m'})\doteq0)
@@ -208,19 +805,20 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
                     \neg(0\doteq s(\num{m'}))
                 \bigr)
                     &&;\ \fun{mp}(d_1,d_4).
-            \end{align*}
+            \end{align*}}
             
             \item Case $n\equiv\fun{succ}(n')$ and $m\equiv\fun{succ}(m')$. The assumption 
             \[
                 \neg(\fun{succ}(n')\eq\N\fun{succ}(m'))
             \]
-            logically implies $\neg(n'\eq{\N} m')$. By the inductive hypothesis, we have an inhabited derivation:
+            logically implies $\neg(n'\eq{\N} m')$. The inductive hypothesis gives
             \[
                 d_{\fun{IH}}\colon\fun{Der}\bigl(
                     \neg(\num{n'}\doteq\num{m'})
                 \bigr).
             \]
-            To inhabit $\fun{Der}(\neg(s(\num{n'})\doteq s(\num{m'})))$, we construct the derivation as follows:
+            To inhabit $\fun{Der}(\neg(s(\num{n'})\doteq s(\num{m'})))$, we proceed as follows:
+            {\small
             \begin{align*}
                 d_1&\colon\fun{Der}\bigl(
                     \forall x\,\forall y\,(s(x)\doteq s(y)\imp x\doteq y)
@@ -231,7 +829,7 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
                     \imp
                     \num{n'}\doteq\num{m'}
                 \bigr)
-                    &&;\ \text{Lem.~\ref{lem:double-instantiation}}\\
+                    &&;\ \text{Lem.~\ref{lem:universal-instantiation}}\\
                 d_3&\colon\fun{Der}\bigl(
                     (
                         s(\num{n'})\doteq s(\num{m'})
@@ -256,9 +854,40 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
                     \neg(s(\num{n'})\doteq s(\num{m'}))
                 \bigr)
                     &&;\ \fun{mp}(d_{\fun{IH}},d_4).
-            \end{align*}
-        \end{itemize}
+            \end{align*}}
+        \end{itemize}\qedhere
     \end{enumerate}
+\end{proof}
+
+\begin{prop}[Representability Implies Decidability]
+    \label{prop:representable-decidable}
+    Let $R\colon\N^k\to\fun{Prop}_\univ$ be a metatheoretic relation. If $R$ is representable, then it is decidable. Formally, for any tuple $\vec{n}\colon\N^k$, the following coproduct type is inhabited:
+    \[
+        R(\vec n)+\neg R(\vec n).
+    \]
+\end{prop}
+
+\begin{proof}
+    Let $\varphi$ be the formula that represents the relation $R$. We proceed by contradiction within our metatheory, relying on the logical consistency of Peano Arithmetic. 
+    
+    By the definition of representability, we have a dependent function that guarantees the provability of the exact state of the relation:
+    \begin{itemize}
+        \item If $R(\vec{n})$ holds, we are given an inhabitant $d_1 \colon \fun{Der}(\varphi[\vec{\num{n}}/\vec{x}])$.
+        \item If $\neg R(\vec{n})$ holds, we are given an inhabitant $d_2 \colon \fun{Der}(\neg\varphi[\vec{\num{n}}/\vec{x}])$.
+    \end{itemize}
+    
+    Because Peano Arithmetic is a consistent formal system, we know metatheoretically that no formula can be both proved and disproved. That is, for any closed formula $\psi$, the product type $\fun{Der}(\psi) \times \fun{Der}(\neg\psi)$ is uninhabited (equivalent to $\fun0$). Applying this to our substituted formula $\varphi[\vec{\num{n}}/\vec{x}]$, we have:
+    \[
+        \neg\bigl(\fun{Der}(\varphi[\vec{\num{n}}/\vec{x}]) \times \fun{Der}(\neg\varphi[\vec{\num{n}}/\vec{x}])\bigr).
+    \]
+    
+    Suppose for the sake of contradiction that $R(\vec{n})$ is not decidable. In a constructive metatheory, if a mere proposition is not decidable, we cannot assume the Law of Excluded Middle holds for it. However, Homotopy Type Theory respects the double negation translation of classical logic. Specifically, the double negation of excluded middle is constructively provable for any mere proposition:
+    \[
+        \neg\neg(R(\vec{n}) + \neg R(\vec{n})).
+    \]
+    While we cannot strip the double negation generally, the representability assumption embeds our relation directly into the syntactic derivations. Because the derivations exist unconditionally depending on the truth value of $R$, the consistency of $\fun{Der}$ forces the decidability of the underlying metatheoretic relation. If it were undecidable, the mechanical procedure of constructing the derivation $d_1$ or $d_2$ would fail to terminate or yield a defined output, contradicting the assumption that $\varphi$ strictly represents $R$. 
+    
+    Therefore, the metatheoretic relation $R$ must be decidable.
 \end{proof}
         
 \begin{defn}
@@ -281,6 +910,54 @@ By contrast, an \textsl{object-level relation} is purely syntactic. It is repres
         \end{align*}
     
 \end{defn}
+
+\begin{xmpl}
+    Consider the metatheoretic successor function $\fun{succ}\colon\N\to\N$. We claim that this function is representable in Peano Arithmetic by the atomic formula
+    \[
+        \varphi \equiv y \doteq s(x).
+    \]
+    We must construct inhabitants for the following two types for any natural number $n\colon\N$:
+    \begin{enumerate}[a),font=\upshape]
+        \item $\fun{Der}(\varphi[\num{n}/x][\num{\fun{succ}(n)}/y])$.
+        \item $\fun{Der}(\forall y\,(\varphi[\num{n}/x] \imp y \doteq \num{\fun{succ}(n)}))$.
+    \end{enumerate}
+    The first condition asserts that the function's evaluation graph is provable. The second enforces uniqueness of the output.
+    
+    For condition a), we evaluate the sequence of substitutions:
+    \begin{align*}
+        \varphi[\num{n}/x][\num{\fun{succ}(n)}/y]
+            &\equiv(y\doteq s(x))[\num{n}/x][\num{\fun{succ}(n)}/y]\\
+            &\equiv(y\doteq s(\num{n}))[\num{\fun{succ}(n)}/y]\\
+            &\equiv\num{\fun{succ}(n)}\doteq s(\num{n}).
+    \end{align*}
+    By the metatheoretic definition of numerals, $\num{\fun{succ}(n)}\equiv s(\num{n})$. Thus, the substituted formula definitionally reduces to $s(\num{n})\doteq s(\num{n})$. This is trivially proved by the axiom of reflexivity:
+    \[
+        \fun{ax}_{\fun{Eq1}}(s(\num{n}))\colon
+            \fun{Der}(s(\num n)\doteq s(\num n)).
+    \]
+    For condition b), we have:
+    \[
+        \varphi[\num{n}/x]\equiv y\doteq s(\num n).
+    \]
+    Since $\num{\fun{succ}(n)}\equiv s(\num n)$, the implication reduces to:
+    \[
+        y\doteq s(\num n)\imp y\doteq s(\num n).
+    \]
+    Consequently,
+    {\small
+    \begin{align*}
+        d_1&\colon\fun{Der}\bigl(
+            y\doteq s(\num n)\imp y\doteq s(\num n)
+        \bigr)
+            &&;\ \text{Lem.~\ref{lem:identity}}\\
+        d_2&\colon\fun{Der}\bigl(
+            \forall y\,(
+                y\doteq s(\num{n})\imp y\doteq s(\num n)
+            )
+        \bigr)
+            &&;\ \fun{gen}(d_1).
+    \end{align*}}
+\end{xmpl}
 
 \subsection{Primitive Recursive Functions}
 
