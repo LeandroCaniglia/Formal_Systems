@@ -1,163 +1,5 @@
 \chapter{Arithmetization of Syntax}
 
-\section{G\"odel Numbering}
-
-\begin{defn}
-    For the formal system of Peano Arithmetic, the \textsl{syntax} is the coproduct of the inductive types for terms and formulas:
-    \[
-        \fun{Syntax}\defeq\fun{Term}+\fun{Form}.
-    \]
-    Its \textsl{G\"odel numbering} is a function assigning a unique natural number to each syntactic object:
-    \begin{align*}
-        \fun{gn}\colon\fun{Syntax}&\to\N\\
-        s&\mapsto\gn{s}.
-    \end{align*}
-\end{defn}
-
-For this coding to be sound, the numbering function must be injective.
-
-To construct the G\"odel numbering constructively, we rely on the Fundamental Theorem of Arithmetic. By mapping each syntactic constructor to a unique power of $2$, and encoding its sub-components into subsequent prime factors ($3$ and $5$), we guarantee that every expression maps to a unique natural number.
-
-We construct the mapping in two stages: first by defining structural recursors for terms and formulas, and then by uniting them via the coproduct eliminator for the syntax type.
-
-\begin{defn}\label{defn:gn}
-    We define the functions
-    \[
-        \fun{gn}_{\fun{Term}}\colon\fun{Term}\to\N
-        \quad\text{and}\quad
-        \fun{gn}_{\fun{Form}}\colon\fun{Form}\to\N
-    \]
-    by structural recursion. 
-    
-    For terms,
-    \begin{align*}
-        \fun{gn}_{\fun{Term}}(\fun{var}(x))
-            &\defeq 2^1\cdot3^x\\
-        \fun{gn}_{\fun{Term}}(0)
-            &\defeq 2^2\\
-        \fun{gn}_{\fun{Term}}(s(t))
-            &\defeq 2^3\cdot3^{\fun{gn}_{\fun{Term}}(t)}\\
-        \fun{gn}_{\fun{Term}}(t_1+t_2)
-            &\defeq
-                2^4
-                \cdot
-                3^{\fun{gn}_{\fun{Term}}(t_1)}
-                \cdot
-                5^{\fun{gn}_{\fun{Term}}(t_2)}\\
-        \fun{gn}_{\fun{Term}}(t_1\cdot t_2)
-            &\defeq
-                2^5
-                \cdot
-                3^{\fun{gn}_{\fun{Term}}(t_1)}
-                \cdot
-                5^{\fun{gn}_{\fun{Term}}(t_2)}
-    \intertext{For formulas,}
-        \fun{gn}_{\fun{Form}}(t_1\doteq t_2)
-            &\defeq
-                2^6
-                \cdot
-                3^{\fun{gn}_{\fun{Term}}(t_1)}
-                \cdot 5^{\fun{gn}_{\fun{Term}}(t_2)} \\
-        \fun{gn}_{\fun{Form}}(\neg\varphi)
-            &\defeq
-                2^7
-                \cdot
-                3^{\fun{gn}_{\fun{Form}}(\varphi)}\\
-        \fun{gn}_{\fun{Form}}(\varphi\imp\psi)
-            &\defeq
-                2^8
-                \cdot
-                3^{\fun{gn}_{\fun{Form}}(\varphi)}
-                \cdot
-                5^{\fun{gn}_{\fun{Form}}(\psi)}\\
-        \fun{gn}_{\fun{Form}}(\forall x\,\varphi)
-            &\defeq
-                2^9
-                \cdot
-                3^x
-                \cdot 5^{\fun{gn}_{\fun{Form}}(\varphi)}.
-    \end{align*}
-    Since the type $\fun{Syntax}$ is defined as the coproduct $\fun{Term}+\fun{Form}$, we construct the global G\"odel numbering function $\fun{gn}\colon\fun{Syntax}\to\N$ by applying the non-dependent eliminator for coproducts. For any $c\colon\fun{Syntax}$:
-    \[
-        \fun{gn}\defeq\fun{ind}_{\fun{Term}+\fun{Form}}
-            (
-                \N,
-                \fun{gn}_{\fun{Term}},
-                \fun{gn}_{\fun{Form}}
-            ).
-    \]
-\end{defn}
-
-\begin{ntn}
-    To simplify the notation, we suppress the explicit coproduct injections when applying the G\"odel numbering function. For any term\/ $t\colon\fun{Term}$, formula\/ $\varphi\colon\fun{Form}$, and generic syntactic object\/ $s\colon\fun{Syntax}$, we write\/ $\gn{t}$, $\gn{\varphi}$, and\/ $\gn{s}$ to denote\/ $\fun{gn}(\fun{inl}(t))$, $\fun{gn}(\fun{inr}(\varphi))$, and\/ $\fun{gn}(s)$, respectively.
-\end{ntn}
-
-\begin{thm}\label{thm:gn-is-injective}
-    The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:\/
-    \[
-        \fun{isInj}(\fun{gn})\defeq
-        \prod_{s_1,s_2\colon\fun{Syntax}} 
-        (\gn{s_1}\eq{\N}\gn{s_2})
-        \to (s_1 \eq{\fun{Syntax}}s_2).
-    \]
-\end{thm}
-
-\begin{proof}
-    This follows from the unique factorization theorem of natural numbers.
-    
-    If $\gn{s_1}\eq{\N}\gn{s_2}$, then $s_1$ and $s_2$ cannot be mismatched elements of $\fun{Syntax}$ because terms yield exponents of $2$ between $1$ and $5$, and formulas between $6$ and~$9$.
-
-    If both are terms, they must be built from the same constructor; otherwise, their numbers would have distinct exponents for~$2$. Depending on the constructor, examining the exponents of $3$ and $5$ yields the conclusion by structural induction.
-
-    If both are formulas, a similar argument shows that they must be equal in $\fun{Form}$.
-\end{proof}
-
-\begin{thm}\label{thm:gn-has-decidable-fibers}
-    The fibers of the function\/ $\fun{gn}$ are decidable. In other words, the type
-    \[
-        \prod_{n\colon\N}
-            \fun{fib}_{\fun{gn}}(n)
-            +
-            \neg\fun{fib}_{\fun{gn}}(n)
-    \]
-    is inhabited.
-\end{thm}
-
-\begin{proof}
-    We proceed by strong induction on $n\colon\N$. To simplify the notation we will use `$=$' instead of `$\eq\N$'.
-    
-    Our inductive hypothesis assumes that for all $m<n$, the coproduct
-    \[\tag{$\ast$}
-        \fun{fib}_{\fun{gn}}(m)+\neg\fun{fib}_{\fun{gn}}(m)
-    \]
-    is inhabited. We analyze the given $n$ by cases:
-
-    For $n\equiv0$ and $n\equiv1$, no fiber is inhabited because it is easy to see by structural induction that $\gn s\ge2$ for all $s\colon\fun{Syntax}$. More precisely, given $\dep{s,e}\colon\fun{fib}_{\fun{gn}}(n)$, the path $e$ satisfies $e\colon\gn{s}=n$, which contradicts $\gn{s}\ge2$, allowing us to \textit{construct the negation}, i.e., to map $\dep{s,e}$ to $\fun0$.
-
-    For $n\ge2$, we algorithmically compute its unique prime factorization. Let $k$ be the exponent of the prime factor $2$.
-    
-    If $k<1$ or $k>9$, we can construct a witness of $\neg\fun{fib}_{\fun{gn}}(n)$ because structural induction shows that we must have $1\le k\le 9$.
-
-    If $1\le k\le9$, we analyze the values of $k$ and the exponents of $3$ and $5$.
-    
-    If any prime factor strictly greater than $5$, or greater than $3$ for unary constructors, divides $n$, we construct the negation. Otherwise, we rely on the  inductive hypothesis $(\ast)$ applied to the exponents. To validate the application of~$(\ast)$, observe that $m<p^m\le n$ for any prime~$p$, which implies that we must have $m<n$.
-    
-    \begin{itemize}
-        \item If $k=1$, $n\equiv2^1\cdot3^x$. We construct the dependent pair $\dep{\fun{inl}(\fun{var}(x)),\fun{refl}_n}$.
-        
-        \item If $k=2$ and $n=2^2\cdot3^0$, we construct $\dep{\fun{inl}(0), \fun{refl}}$; otherwise, if $n\ne 2^2\cdot3^0$, we construct the negation.
-        
-        \item If $k=3$, $n=2^3\cdot3^m$. If the induction hypothesis yields a fiber containing a term $t$, we construct $\dep{\fun{inl}(s(t)),\fun{refl}_n}$. If it yields a formula or the negation, we construct the negation.
-        
-        \item If $k=4$ and $n=2^4\cdot3^a\cdot 5^b$, we invoke $(\ast)$ on both. If they both yield terms $t_1$ and $t_2$, we construct $\dep{\fun{inl}(t_1+t_2),\fun{refl}}$. If either hypothesis yields a formula or a negation, we construct the negation.
-        
-        \item For all other values of $k$ (5 through 9), we analogously apply the inductive hypothesis to the exponents of $3$ and $5$.
-    \end{itemize}
-    Since the process constructs an inhabitant of the coproduct in all branches, the fibers of $\fun{gn}$ are decidable.
-    
-\end{proof}
-
-
 \section{Derivations}
 
 \begin{defn}[Derivations]
@@ -192,7 +34,7 @@ We construct the mapping in two stages: first by defining structural recursors f
 
             \item $\fun{ax}_{\fun{PA5}}\colon\fun{Der}\bigl(\forall x\,(0\cdot x\doteq0)\bigr)$.
 
-            \item $\fun{ax}_{\fun{PA6}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\cdot y\doteq(x\cdot y)+y)\bigr)$.
+            \item $\fun{ax}_{\fun{PA6}}\colon\fun{Der}\bigl(\forall x\,\forall y\,(s(x)\cdot y\doteq x\cdot y+y)\bigr)$.\footnote{With the usual precedence: $x\cdot y+y\equiv(x\cdot y)+y$.}
 
             \item $\fun{ax}_{\fun{Ind}}(\varphi,x)\colon
                 \fun{Der}\bigl(
@@ -220,7 +62,7 @@ We construct the mapping in two stages: first by defining structural recursors f
 \end{lem}
 
 \begin{proof}
-    Let the motive formula for equality replacement be $\varphi\equiv z\doteq t_1$. Substituting $t_1$ and $t_2$ for $z$ yields:
+    Let the motive formula for equality replacement be $\varphi\equiv z\doteq t_1$, where $z$ does not occur in either $t_1$ or $t_2$. Substituting $t_1$ and $t_2$ for $z$ yields:
     \begin{align*}
         \varphi[t_1/z]&\equiv t_1\doteq t_1\\
         \varphi[t_2/z]&\equiv t_2\doteq t_1.
@@ -256,12 +98,12 @@ We construct the mapping in two stages: first by defining structural recursors f
                 B\imp(A\imp B)
             \bigr).
     \]
-    Applying Modus Ponens to $d_2$ and $d_3$ weakens $B$ with the antecedent $A$:
+    Applying Modus Ponens to $d_2$ and $d_3$:
     \[
         d_4\defeq\fun{mp}_{B,A\imp B}(d_2,d_3)\colon
             \fun{Der}(A\imp B).
     \]
-    Next, we instantiate the implication distribution axiom $\fun{ax}_{\fun{L2}}$ with formulas $A$, $B$, and $C$:
+    Next, we instantiate the implication distribution axiom $\fun{ax}_{\fun{L2}}$:
     \[
         d_5\defeq\fun{ax}_{\fun{L2}}(A,B,C)
             \colon 
@@ -351,28 +193,33 @@ We construct the mapping in two stages: first by defining structural recursors f
                 )
             \bigr).
     \]
-    Consider the formula $\varphi \equiv t_1 \doteq x$. Substituting $t_2$ and $t_3$ for $x$,
+    Consider the formula $\varphi\equiv t_1\doteq x$, where $x$ does not occur in $t_1$, $t_2$, or $t_3$. Substituting $t_2$ and $t_3$ for $x$,
     \begin{align*}
         a_1&\colon\fun{Der}\bigl(
-            t_2 \doteq t_3 \imp (t_1 \doteq t_2 \imp t_1 \doteq t_3)
+            t_2\doteq t_3\imp(t_1\doteq t_2\imp t_1\doteq t_3)
         \bigr)
-            &&;\ \fun{ax}_{\fun{Eq2}}(t_1 \doteq x, x, t_2, t_3)\\
+            &&;\ \fun{ax}_{\fun{Eq2}}\\
         d_3&\colon\fun{Der}\bigl(
-            t_1 \doteq t_2 \imp t_1 \doteq t_3
+            t_1\doteq t_2\imp t_1\doteq t_3
         \bigr)
             &&;\ \fun{mp}(a_1, d_2)\\
         \fun{trans}(d_1, d_2)&\colon\fun{Der}\bigl(
-            t_1 \doteq t_3
+            t_1\doteq t_3
         \bigr)
-            &&;\ \fun{mp}(d_3, d_1).
+            &&;\ \fun{mp}(d_3,d_1).
     \end{align*}
 \end{proof}
 
 \begin{lem}[Syllogism]
     \label{lem:hyp-syllogism}
-    For any formulas\/ $\varphi, \psi, \chi \colon \fun{Form}$, there is a metatheoretic macro:
+    For any formulas\/ $\varphi,\psi,\chi\colon\fun{Form}$, there is a metatheoretic macro:
     \[
-        \fun{trans}_{\imp} \colon \fun{Der}(\varphi \imp \psi) \to \fun{Der}(\psi \imp \chi) \to \fun{Der}(\varphi \imp \chi).
+        \fun{trans}_{\imp}\colon
+            \fun{Der}(\varphi\imp\psi)
+            \to
+            \fun{Der}(\psi\imp\chi)
+            \to
+            \fun{Der}(\varphi\imp\chi).
     \]
 \end{lem}
 
@@ -384,29 +231,58 @@ We construct the mapping in two stages: first by defining structural recursors f
         \bigr)
             &&;\ \fun{ax}_{\fun{L1}}\\
         d_3&\colon\fun{Der}\bigl(
-            \varphi \imp (\psi \imp \chi)
+            \varphi\imp(\psi\imp\chi)
         \bigr)
             &&;\ \fun{mp}(a_1, d_2)\\
         a_2&\colon\fun{Der}\bigl(
-            (\varphi\imp(\psi\imp \chi)) 
+            (\varphi\imp(\psi\imp\chi)) 
             \imp 
             ((\varphi\imp\psi)\imp(\varphi\imp\chi))
         \bigr)
             &&;\ \fun{ax}_{\fun{L2}}\\
         d_4&\colon\fun{Der}\bigl(
-            (\varphi \imp \psi) \imp (\varphi \imp \chi)
+            (\varphi\imp\psi)\imp(\varphi\imp\chi)
         \bigr)
             &&;\ \fun{mp}(a_2, d_3)\\
         d_5&\colon\fun{Der}\bigl(
-            \varphi \imp \chi
+            \varphi\imp\chi
         \bigr)
-            &&;\ \fun{mp}(d_4, d_1).
+            &&;\ \fun{mp}(d_4,d_1).
+    \end{align*}
+\end{proof}
+
+\begin{lem}[Prefixing]\label{lem:prefixing}
+    For any formulas\/ $\varphi,\psi,\chi\colon\fun{Form}$, there is an inhabitant
+    \[
+        \fun{pref}(\varphi,\psi,\chi)\colon\fun{Der}\Bigl(
+            (\psi\imp \chi)\imp\bigl(
+                (\varphi\imp\psi)\imp(\varphi\imp\chi)
+            \bigr)
+        \Bigr).
+    \]
+\end{lem}
+
+\begin{proof}
+    To simplify the notation, we introduce the abbreviations
+    \begin{align*}
+        A\defeq\psi\imp\chi,\quad
+        B\defeq\varphi\imp(\psi\imp\chi),\quad
+        C\defeq(\varphi\imp\psi)\imp(\varphi\imp\chi).
+    \end{align*} 
+    Then,
+    \begin{align*}
+        d_1&\colon\fun{Der}(A\imp B)
+            &&;\ \fun{ax}_{\fun{L1}}\\
+        d_2&\colon\fun{Der}(B\imp C)
+            &&;\ \fun{ax}_{\fun{L2}}\\
+        \fun{pref}&\colon\fun{Der}(A\imp C)
+            &&;\ \fun{trans}_{\imp}.
     \end{align*}
 \end{proof}
 
 \begin{lem}[Antecedent Swap]
     \label{lem:swap}
-    For any formulas\/ $\alpha,\beta,\gamma \colon\fun{Form}$, there is a metatheoretic macro:
+    For any formulas\/ $\alpha,\beta,\gamma \colon\fun{Form}$, there is a map:
     \[
         \fun{swap}\colon
             \fun{Der}\bigl(
@@ -455,35 +331,6 @@ We construct the mapping in two stages: first by defining structural recursors f
             \beta\imp(\alpha\imp\gamma)
         \bigr)
             &&;\ \fun{mp}(d_2,a_2).
-    \end{align*}
-\end{proof}
-
-\begin{lem}[Prefixing]\label{lem:prefixing}
-    For any formulas\/ $\varphi,\psi,\chi\colon\fun{Form}$, there is an inhabitant
-    \[
-        \fun{pref}(\varphi,\psi,\chi)\colon\fun{Der}\Bigl(
-            (\psi\imp \chi)\imp\bigl(
-                (\varphi\imp\psi)\imp(\varphi\imp\chi)
-            \bigr)
-        \Bigr).
-    \]
-\end{lem}
-
-\begin{proof}
-    To simplify the notation, we introduce the abbreviations
-    \begin{align*}
-        A\defeq\psi\imp\chi,\quad
-        B\defeq\varphi\imp(\psi\imp\chi),\quad
-        C\defeq(\varphi\imp\psi)\imp(\varphi\imp\chi).
-    \end{align*} 
-    Then,
-    \begin{align*}
-        d_1&\colon\fun{Der}(A\imp B)
-            &&;\ \fun{ax}_{\fun{L1}}\\
-        d_2&\colon\fun{Der}(B\imp C)
-            &&;\ \fun{ax}_{\fun{L2}}\\
-        \fun{pref}&\colon\fun{Der}(A\imp C)
-            &&;\ \fun{trans}_{\imp}.
     \end{align*}
 \end{proof}
 
@@ -571,7 +418,7 @@ We construct the mapping in two stages: first by defining structural recursors f
         \fun{expl}(X,Y)&\colon\fun{Der}\bigl(
             \neg X\imp(X\imp Y)
         \bigr)
-            &&;\ \fun{trans}_{\imp}(e_1,e_2).
+            &&;\ \fun{trans}_{\imp}.
     \end{align*}
 \end{proof}
 
@@ -593,11 +440,11 @@ We construct the mapping in two stages: first by defining structural recursors f
         e&\colon\fun{Der}\big(
             \neg\varphi\imp(\varphi\imp\psi)
         \big)
-            &&;\ \text{Lem.~\ref{lem:explosion}}\\
+            &&;\ \fun{expl}\\
         s&\colon\fun{Der}\big(
             \varphi\imp(\neg\varphi\imp\psi)
         \big)
-            &&;\ \text{Lem.~\ref{lem:swap}}\\
+            &&;\ \fun{swap}\\
         d_1&\colon\fun{Der}(\neg\varphi\imp\psi)
             &&;\ \fun{mp}(s,d),
     \end{align*}
@@ -616,7 +463,7 @@ We construct the mapping in two stages: first by defining structural recursors f
     \end{align*}
 \end{lem}
 
-\begin{proof} We fist derive $\fun{dne}(\varphi)$, then $\fun{dni}(\varphi)$:
+\begin{proof} We fist derive $\fun{dne}(\varphi)$:
     {\small
     \begin{align*}
         e_1&\colon\fun{Der}\bigl(
@@ -663,15 +510,18 @@ We construct the mapping in two stages: first by defining structural recursors f
         \fun{dne}(\varphi)&\colon\fun{Der}(
             \neg\neg\varphi\imp\varphi
         )
-            &&;\ \fun{mp}(d_2,e_2).\\[4mm]
+            &&;\ \fun{mp}(d_2,e_2).
+    \intertext{For $\fun{dni}(\varphi)$:}
         n_1&\colon\fun{Der}(
             \neg\neg\neg\varphi\imp\neg\varphi
         )
-            &&;\ \fun{dne}(\neg\varphi)\\
+            &&;\ \fun{dne}\\
         n_2&\colon\fun{Der}\bigl(
-            (\neg\neg\neg\varphi\imp\neg\varphi)\imp(\varphi\imp\neg\neg\varphi)
+            (\neg\neg\neg\varphi\imp\neg\varphi)
+            \imp
+            (\varphi\imp\neg\neg\varphi)
         \bigr)
-            &&;\ \fun{ax}_{\fun{L3}}(\neg\neg\varphi,\varphi)\\
+            &&;\ \fun{ax}_{\fun{L3}}\\
         \fun{dni}(\varphi)&\colon\fun{Der}(
             \varphi\imp\neg\neg\varphi
         )
@@ -694,10 +544,10 @@ We construct the mapping in two stages: first by defining structural recursors f
 \begin{proof}
     To simplify the layout, we introduce the following abbreviations:
     \begin{align*}
-        A\defeq\varphi\imp\psi,\quad
-        B\defeq\varphi\imp\neg\neg\psi,\quad
-        C\defeq\neg\neg\varphi\imp\neg\neg\psi,\quad
-        D\defeq\neg\psi\imp\neg\varphi.
+        A&\defeq\varphi\imp\psi,\\
+        B&\defeq\varphi\imp\neg\neg\psi,\\
+        C&\defeq\neg\neg\varphi\imp\neg\neg\psi,\\
+        D&\defeq\neg\psi\imp\neg\varphi.
     \end{align*}
     The derivation proceeds as follows:
     {\small
@@ -787,7 +637,7 @@ We construct the mapping in two stages: first by defining structural recursors f
 \begin{proof}
     Recall that $\exists x\,\varphi$ is a syntactic abbreviation for $\neg\forall x\,\neg\varphi$.
     
-    Let $d\colon\fun{Der}(\varphi[t/x])$ be given. Since $t$ is free for $x$ in $\neg\varphi$, it is also free for $x$ in $\neg\varphi$. Hence, we have
+    Let $d\colon\fun{Der}(\varphi[t/x])$ be given. Since $t$ is free for $x$ in $\varphi$, it is also free for $x$ in $\neg\varphi$. Hence, we have
     \begin{align*}
         a_1&\colon\fun{Der}\bigl(
             \forall x\,\neg\varphi\imp(\neg\varphi)[t/x]
@@ -812,13 +662,13 @@ We construct the mapping in two stages: first by defining structural recursors f
         d_1&\colon\fun{Der}\bigl(
             \varphi[t/x]\imp\neg\neg(\varphi[t/x])
         \bigr)
-            &&;\ \text{Lem.~\ref{lem:double-negation}}\\
+            &&;\ \fun{dni}\\
         d_2&\colon\fun{Der}\bigl(
-            \varphi[t/x] \imp \neg\exists x\,\varphi
+            \varphi[t/x]\imp\exists x\,\varphi
         \bigr)
-            &&;\ \\
+            &&;\ \fun{trans}_{\imp}\\
         d_3&\colon\fun{Der}\bigl(
-            \neg\forall x\,\neg\varphi
+            \exists x\,\varphi
         \bigr)
             &&;\ \fun{mp}(d_2,d).
     \end{align*}}
@@ -849,11 +699,11 @@ We construct the mapping in two stages: first by defining structural recursors f
             &&;\ \fun{intro}_{\lor1}.
     \end{align*}}
 
-    \textsc{Inductive Step:} We must derive $\varphi(z) \imp \varphi(s(z))$. The formula $\varphi(s(z))$ evaluates to $s(z) \doteq 0 \lor \exists w\,(s(z) \doteq s(w))$. We can unconditionally derive the right disjunct by reflexivity and existential introduction (using $z$ as the witness for~$w$):
+    \textsc{Inductive Step:} We must derive $\varphi(z) \imp \varphi(s(z))$. The formula $\varphi(s(z))$ evaluates to $s(z) \doteq 0 \lor \exists w\,(s(z) \doteq s(w))$. Using $z$ as the witness for~$w$ in $s(z)\doteq s(w)$, we get:
     {\small
     \begin{align*}
         r_s&\colon\fun{Der}(s(z)\doteq s(z))
-            &&;\ \fun{ax}_{\fun{Eq1}(s(z))}\\
+            &&;\ \fun{ax}_{\fun{Eq1}}\\
         e_s&\colon\fun{Der}\bigl(
             \exists w\,(s(z)\doteq s(w))
         \bigr)
@@ -862,11 +712,11 @@ We construct the mapping in two stages: first by defining structural recursors f
             &&;\ \fun{intro}_{\lor 2}.
     \end{align*}}
     
-    Because $o_s$ is an unconditional derivation of $\varphi(s(z))$, it trivially implies the conditional step using the logical axiom $\fun{ax}_{\fun{L1}}$:
+    Since $s(z)\doteq0\lor\exists w\,(s(z)\doteq s(w))\equiv\varphi(s(z))$, we get
     {\small
     \begin{align*}
         a_1&\colon\fun{Der}\bigl(\varphi(s(z)) \imp (\varphi(z) \imp \varphi(s(z)))\bigr)
-            &&;\ \fun{ax}_{\fun{L1}}(\varphi(s(z)), \varphi(z))\\
+            &&;\ \fun{ax}_{\fun{L1}}\\
         i_s&\colon\fun{Der}\bigl(\varphi(z) \imp \varphi(s(z))\bigr)
             &&;\ \fun{mp}(a_1, o_s)\\
         d_s&\colon\fun{Der}\bigl(\forall z\,(\varphi(z) \imp \varphi(s(z)))\bigr)
@@ -875,22 +725,26 @@ We construct the mapping in two stages: first by defining structural recursors f
 
     \textsc{Conclusion:} By applying the formal induction axiom to the base case $d_0$ and the inductive step $d_s$, we obtain the final derivation:
     \[
-        d\colon\fun{Der}(\forall z\,\varphi(z)) \quad;\ \fun{ax}_{\fun{Ind}}(\varphi, d_0, d_s).
+        d\colon\fun{Der}(\forall z\,\varphi(z)) \quad;\ \fun{ax}_{\fun{Ind}}.
     \]
 \end{proof}
 
 \begin{lem}[Universal Instantiation]
     \label{lem:universal-instantiation}
-    For any formula\/ $\varphi\colon\fun{Form}$, variables\/ $x,y\colon\fun{Var}$, and terms\/ $t,t_1,t_2\colon\fun{Term}$, the following instantiation rules are admissible in the metatheory:
+    Given\/ $x,y\colon\fun{Var}$, $t,t_1,t_2\colon\fun{Term}$, and\/ $\varphi\colon\fun{Form}$, the following hold:
     \begin{enumerate}[a),font=\upshape]
-        \item Assuming that\/ $t$ is free for\/ $x$ in\/ $\varphi$, there is a function:
+        \item If\/ $t$ is free for\/ $x$ in\/ $\varphi$, there is a map:
         \[
             \fun{inst}_1\colon\fun{Der}(\forall x\,\varphi)\to\fun{Der}(\varphi[t/x]).
         \]
         
-        \item Assuming that\/ $t_1$ is free for\/ $x$ in\/ $\forall y\,\varphi$ and\/ $t_2$ is free for\/ $y$ in\/ $\varphi[t_1/x]$, there is a function:
+        \item If\/ $\neg(x\eq{\fun{Var}}y)$, and\/ $t_1$ is free for\/ $x$ in\/ $\forall y\,\varphi$ and\/ $t_2$ is free for\/ $y$ in\/ $\varphi[t_1/x]$, there is a map:
         \[
-            \fun{inst}_2\colon\fun{Der}(\forall x\,\forall y\,\varphi)\to\fun{Der}(\varphi[t_1/x][t_2/y]).
+            \fun{inst}_2\colon\fun{Der}(
+                \forall x\,\forall y\,\varphi
+            )
+            \to
+            \fun{Der}(\varphi[t_1/x][t_2/y]).
         \]
     \end{enumerate}
 \end{lem}
@@ -918,19 +772,48 @@ We construct the mapping in two stages: first by defining structural recursors f
             d_1&\colon\fun{Der}\bigl(
                 \forall y\,(\varphi[t_1/x])
             \bigr)
-                &&;\ \text{Def.~\ref{defn:substitution}}\\
+                &&;\ \text{Defs.~\ref{defn:substitution}
+                    \& \ref{defn:free-for-in}}\\
             \fun{inst}_2(d,t_1,t_2)&\colon\fun{Der}\bigl(
                 \varphi[t_1/x][t_2/y]
             \bigr)
                 &&;\ \fun{inst}_1(d_1, t_2).
         \end{align*}
-        The second step above is valid because $(\forall y\,\varphi)[t_1/x]\equiv\forall y\,(\varphi[t_1/x])$.
+        In the second step above $(\forall y\,\varphi)[t_1/x]\equiv\forall y\,(\varphi[t_1/x])$ because the hypothesis $\neg(x\eq{\fun{Var}}y)$ implies $\neg\fun{FV}(t_1)(x)$.
         
         The hypothesis that $t_2$ is free for $y$ in $\varphi[t_1/x]$ validates the third step.
-
     \end{enumerate}
 
 \end{proof}
+
+\begin{rem}\label{rem:inst2-distinct}
+    The distinctness hypothesis $\neg(x\eq{\fun{Var}}y)$ in $\fun{inst}_2$ is essential. When $x\eq{\fun{Var}}y$, Definition~\ref{defn:substitution} implies:
+    \[
+        \psi[t_1/x]
+        \equiv(\forall y\,\varphi)[t_1/x]
+        \equiv\forall y\,\varphi.
+    \]
+    Consequently, applying $\fun{inst}_1$ to $\forall x\,\psi$ at $t_1$ strips the outer quantifier and yields $\forall y\,\varphi$. A second application of $\fun{inst}_1$ (at $t_2$) then strips $\forall y$ and yields $\varphi[t_2/y]$ rather than $\varphi[t_1/x][t_2/y]$.
+    
+    In fact, under those side conditions, the map
+    \[
+        \fun{Der}(\forall x\,\forall y\,\varphi)
+        \to
+        \fun{Der}(\varphi[t_1/x][t_2/y])
+    \]
+    is not generally inhabited when $x\eq{\fun{Var}}y$. For pairwise distinct variables $x,z,w\colon\fun{Var}$, set $y\equiv x$, $t_1\defeq z$, $t_2\defeq 0$, and
+    \[
+        \varphi\defeq\bigl(\forall z\,(x\doteq z)\bigr)\imp(x\doteq w).
+    \]
+    Then $\forall x\,\forall x\,\varphi$ is derivable (by $\fun{ax}_{\fun{L4}}$ and two applications of $\fun{gen}$), $t_1$ is vacuously free for $x$ in $\forall x\,\varphi$ (since $\neg\fun{FV}(\forall x\,\varphi)(x)$), and $t_2$ is closed and hence free for $x$ in $\varphi[z/x]$. Yet direct substitution captures $z$:
+    \[
+        \varphi[z/x][0/x]
+        \equiv\bigl(\forall z\,(z\doteq z)\bigr)\imp(z\doteq w),
+    \]
+    which is invalid (combined with $\fun{ax}_{\fun{Eq1}}$ and $\fun{gen}$, it derives $z\doteq w$, and in PA even $0\doteq s(0)$).
+
+    If one instead strengthens the first side condition to require that $t_1$ be free for $x$ in $\varphi$ itself, then the conclusion holds even when $x\eq{\fun{Var}}y$: one drops the vacuous outer quantifier via $\fun{inst}_1$ and applies $\fun{inst}_1$ once with $t_1[t_2/x]$, transporting along the substitution-collapse identity $\varphi[t_1/x][t_2/x]\eq{\fun{Form}}\varphi[t_1[t_2/x]/x]$. Requiring $\neg(x\eq{\fun{Var}}y)$ avoids this degenerate case and keeps the proof of $\fun{inst}_2$ a direct two-step composition of $\fun{inst}_1$.
+\end{rem}
 
 \begin{lem}[Existential Elimination]
     \label{lem:existential-elimination}
@@ -1958,6 +1841,164 @@ To resolve this, we must define an explicit inductive type representing the synt
     \]
     This establishes the required equivalence, since $\pi_1(\fun{bound}_k(j))\equiv\fun{emb}_k(j)$, from which the decidability of the bounded sum follows.
 \end{proof}
+
+\section{G\"odel Numbering}
+
+\begin{defn}
+    For the formal system of Peano Arithmetic, the \textsl{syntax} is the coproduct of the inductive types for terms and formulas:
+    \[
+        \fun{Syntax}\defeq\fun{Term}+\fun{Form}.
+    \]
+    Its \textsl{G\"odel numbering} is a function assigning a unique natural number to each syntactic object:
+    \begin{align*}
+        \fun{gn}\colon\fun{Syntax}&\to\N\\
+        s&\mapsto\gn{s}.
+    \end{align*}
+\end{defn}
+
+For this coding to be sound, the numbering function must be injective.
+
+To construct the G\"odel numbering constructively, we rely on the Fundamental Theorem of Arithmetic. By mapping each syntactic constructor to a unique power of $2$, and encoding its sub-components into subsequent prime factors ($3$ and $5$), we guarantee that every expression maps to a unique natural number.
+
+We construct the mapping in two stages: first by defining structural recursors for terms and formulas, and then by uniting them via the coproduct eliminator for the syntax type.
+
+\begin{defn}\label{defn:gn}
+    We define the functions
+    \[
+        \fun{gn}_{\fun{Term}}\colon\fun{Term}\to\N
+        \quad\text{and}\quad
+        \fun{gn}_{\fun{Form}}\colon\fun{Form}\to\N
+    \]
+    by structural recursion. 
+    
+    For terms,
+    \begin{align*}
+        \fun{gn}_{\fun{Term}}(\fun{var}(x))
+            &\defeq 2^1\cdot3^x\\
+        \fun{gn}_{\fun{Term}}(0)
+            &\defeq 2^2\\
+        \fun{gn}_{\fun{Term}}(s(t))
+            &\defeq 2^3\cdot3^{\fun{gn}_{\fun{Term}}(t)}\\
+        \fun{gn}_{\fun{Term}}(t_1+t_2)
+            &\defeq
+                2^4
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot
+                5^{\fun{gn}_{\fun{Term}}(t_2)}\\
+        \fun{gn}_{\fun{Term}}(t_1\cdot t_2)
+            &\defeq
+                2^5
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot
+                5^{\fun{gn}_{\fun{Term}}(t_2)}
+    \intertext{For formulas,}
+        \fun{gn}_{\fun{Form}}(t_1\doteq t_2)
+            &\defeq
+                2^6
+                \cdot
+                3^{\fun{gn}_{\fun{Term}}(t_1)}
+                \cdot 5^{\fun{gn}_{\fun{Term}}(t_2)} \\
+        \fun{gn}_{\fun{Form}}(\neg\varphi)
+            &\defeq
+                2^7
+                \cdot
+                3^{\fun{gn}_{\fun{Form}}(\varphi)}\\
+        \fun{gn}_{\fun{Form}}(\varphi\imp\psi)
+            &\defeq
+                2^8
+                \cdot
+                3^{\fun{gn}_{\fun{Form}}(\varphi)}
+                \cdot
+                5^{\fun{gn}_{\fun{Form}}(\psi)}\\
+        \fun{gn}_{\fun{Form}}(\forall x\,\varphi)
+            &\defeq
+                2^9
+                \cdot
+                3^x
+                \cdot 5^{\fun{gn}_{\fun{Form}}(\varphi)}.
+    \end{align*}
+    Since the type $\fun{Syntax}$ is defined as the coproduct $\fun{Term}+\fun{Form}$, we construct the global G\"odel numbering function $\fun{gn}\colon\fun{Syntax}\to\N$ by applying the non-dependent eliminator for coproducts. For any $c\colon\fun{Syntax}$:
+    \[
+        \fun{gn}\defeq\fun{ind}_{\fun{Term}+\fun{Form}}
+            (
+                \N,
+                \fun{gn}_{\fun{Term}},
+                \fun{gn}_{\fun{Form}}
+            ).
+    \]
+\end{defn}
+
+\begin{ntn}
+    To simplify the notation, we suppress the explicit coproduct injections when applying the G\"odel numbering function. For any term\/ $t\colon\fun{Term}$, formula\/ $\varphi\colon\fun{Form}$, and generic syntactic object\/ $s\colon\fun{Syntax}$, we write\/ $\gn{t}$, $\gn{\varphi}$, and\/ $\gn{s}$ to denote\/ $\fun{gn}(\fun{inl}(t))$, $\fun{gn}(\fun{inr}(\varphi))$, and\/ $\fun{gn}(s)$, respectively.
+\end{ntn}
+
+\begin{thm}\label{thm:gn-is-injective}
+    The function\/ $\fun{gn}$ is injective. We express this by inhabiting the following type:\/
+    \[
+        \fun{isInj}(\fun{gn})\defeq
+        \prod_{s_1,s_2\colon\fun{Syntax}} 
+        (\gn{s_1}\eq{\N}\gn{s_2})
+        \to (s_1 \eq{\fun{Syntax}}s_2).
+    \]
+\end{thm}
+
+\begin{proof}
+    This follows from the unique factorization theorem of natural numbers.
+    
+    If $\gn{s_1}\eq{\N}\gn{s_2}$, then $s_1$ and $s_2$ cannot be mismatched elements of $\fun{Syntax}$ because terms yield exponents of $2$ between $1$ and $5$, and formulas between $6$ and~$9$.
+
+    If both are terms, they must be built from the same constructor; otherwise, their numbers would have distinct exponents for~$2$. Depending on the constructor, examining the exponents of $3$ and $5$ yields the conclusion by structural induction.
+
+    If both are formulas, a similar argument shows that they must be equal in $\fun{Form}$.
+\end{proof}
+
+\begin{thm}\label{thm:gn-has-decidable-fibers}
+    The fibers of the function\/ $\fun{gn}$ are decidable. In other words, the type
+    \[
+        \prod_{n\colon\N}
+            \fun{fib}_{\fun{gn}}(n)
+            +
+            \neg\fun{fib}_{\fun{gn}}(n)
+    \]
+    is inhabited.
+\end{thm}
+
+\begin{proof}
+    We proceed by strong induction on $n\colon\N$. To simplify the notation we will use `$=$' instead of `$\eq\N$'.
+    
+    Our inductive hypothesis assumes that for all $m<n$, the coproduct
+    \[\tag{$\ast$}
+        \fun{fib}_{\fun{gn}}(m)+\neg\fun{fib}_{\fun{gn}}(m)
+    \]
+    is inhabited. We analyze the given $n$ by cases:
+
+    For $n\equiv0$ and $n\equiv1$, no fiber is inhabited because it is easy to see by structural induction that $\gn s\ge2$ for all $s\colon\fun{Syntax}$. More precisely, given $\dep{s,e}\colon\fun{fib}_{\fun{gn}}(n)$, the path $e$ satisfies $e\colon\gn{s}=n$, which contradicts $\gn{s}\ge2$, allowing us to \textit{construct the negation}, i.e., to map $\dep{s,e}$ to $\fun0$.
+
+    For $n\ge2$, we algorithmically compute its unique prime factorization. Let $k$ be the exponent of the prime factor $2$.
+    
+    If $k<1$ or $k>9$, we can construct a witness of $\neg\fun{fib}_{\fun{gn}}(n)$ because structural induction shows that we must have $1\le k\le 9$.
+
+    If $1\le k\le9$, we analyze the values of $k$ and the exponents of $3$ and $5$.
+    
+    If any prime factor strictly greater than $5$, or greater than $3$ for unary constructors, divides $n$, we construct the negation. Otherwise, we rely on the  inductive hypothesis $(\ast)$ applied to the exponents. To validate the application of~$(\ast)$, observe that $m<p^m\le n$ for any prime~$p$, which implies that we must have $m<n$.
+    
+    \begin{itemize}
+        \item If $k=1$, $n\equiv2^1\cdot3^x$. We construct the dependent pair $\dep{\fun{inl}(\fun{var}(x)),\fun{refl}_n}$.
+        
+        \item If $k=2$ and $n=2^2\cdot3^0$, we construct $\dep{\fun{inl}(0), \fun{refl}}$; otherwise, if $n\ne 2^2\cdot3^0$, we construct the negation.
+        
+        \item If $k=3$, $n=2^3\cdot3^m$. If the induction hypothesis yields a fiber containing a term $t$, we construct $\dep{\fun{inl}(s(t)),\fun{refl}_n}$. If it yields a formula or the negation, we construct the negation.
+        
+        \item If $k=4$ and $n=2^4\cdot3^a\cdot 5^b$, we invoke $(\ast)$ on both. If they both yield terms $t_1$ and $t_2$, we construct $\dep{\fun{inl}(t_1+t_2),\fun{refl}}$. If either hypothesis yields a formula or a negation, we construct the negation.
+        
+        \item For all other values of $k$ (5 through 9), we analogously apply the inductive hypothesis to the exponents of $3$ and $5$.
+    \end{itemize}
+    Since the process constructs an inhabitant of the coproduct in all branches, the fibers of $\fun{gn}$ are decidable.
+    
+\end{proof}
+
 \section{Arithmetization}
 
 \begin{defn}[Formula Sequences]
@@ -2188,8 +2229,8 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \end{align*}
         Evaluating the concatenation operator yields a sequence of length 2, represented as $\dep{2,f}$, where the indexing function $f\colon\fun{Fin}(2)\to\fun{Form}$ evaluates to:
         \begin{align*}
-            f(0)&\equiv\forall x\,(0+x\doteq x)\\
-            f(1)&\equiv\forall y\,\forall x\,(0+x\doteq x).
+            f(0)\equiv\forall x\,(0+x\doteq x),\quad
+            f(1)\equiv\forall y\,\forall x\,(0+x\doteq x).
         \end{align*}
     \end{description}
 \end{xmpls}
@@ -2239,6 +2280,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
     To verify that $\mu_P(d)(n)$ satisfies the specified properties, we proceed by induction on $n\colon\N$. 
     
     The base case $n\equiv0$ follows because
+    {\small
     \begin{align*}
         \mu_P(d)(0)
             &\equiv g_0(d(0))\\
@@ -2257,9 +2299,10 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \eqmakebox[casecol][l]{$1$}
                     &\text{if }\neg P(0)\text{ holds}.
             \end{cases}
-    \end{align*}
+    \end{align*}}
     
     For the inductive step $n\equiv m+1$, set $x\defeq\mu_P(d)(m)$, then
+    {\small
     \begin{align*}
         \mu_P(d)(m+1)
             &\equiv h_{x,m}(e)\\
@@ -2275,8 +2318,10 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \eqmakebox[casecol][l]{$g_{m+1}(d(m+1))$}
                     &\text{if }x>m.
             \end{cases}
-    \end{align*}
+    \end{align*}}
+    
     In the first case, a minimal index $x\le m$ has already been found, so it remains the minimum for $m+1$. In the second case, $x\equiv m+1$, so we evaluate $g_{m+1}(d(m+1))$:
+    {\small
     \begin{align*}
         g_{m+1}(d(m+1))
             &\equiv\begin{cases}
@@ -2291,13 +2336,10 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
                 \eqmakebox[casecol][l]{$m+2$}
                     &\text{if }\neg P(m+1)\text{ holds}.
             \end{cases}
-    \end{align*}
-    This establishes the required properties for $m+1$, completing the proof.
-
-    Here is a flow diagram illustrating the function:
-    \medskip
+    \end{align*}}
+    %\medskip
     \[
-    \begin{tikzpicture}[>=stealth,font=\small]
+    \begin{tikzpicture}[>=stealth,font=\small,scale=1.0]
         % Nodes
         \node (start) at (0, 0) [draw, rounded corners, inner sep=4pt] {Evaluate $\mu_P(d)(m+1)$ given $x \defeq \mu_P(d)(m)$};
         \node (dec1) at (0, -1.3) [draw, inner sep=4pt] {$e \colon (x \le m) + (x > m)$};
@@ -2312,7 +2354,7 @@ To bridge the inductive type family $\fun{Der}$ with the sequential representati
         \draw[->] (dec1) -| node[above] {$\fun{inr}(v)$} (dec2);
         \draw[->] (dec2) -| node[above,xshift=-2pt] {$\fun{inl}(p)$} (retM1);
         \draw[->] (dec2) -| node[above,xshift=2pt] {$\fun{inr}(\zeta)$} (retM2);
-    \end{tikzpicture}
+    \end{tikzpicture}%\qedhere
     \]
 \end{proof}
 

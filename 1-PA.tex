@@ -20,7 +20,7 @@ The statement type $S$ becomes a discrete collection of strings in a given alpha
 
 \section{Peano Arithmetic}
 \begin{defn}[Syntax]
-    Fix the countably infinite type of variables $\fun{Var}\defeq\N$ with canonical elements $x,y,z,\dots\colon\fun{Var}$.
+    Fix the countably infinite type of variables $\fun{Var}\defeq\N$ with canonical elements $x,y,z,\dots\colon\fun{Var}$.\footnote{This is an implementation choice: all that the metatheory requires of $\fun{Var}$ is decidable equality together with a way to generate a fresh variable outside any finite collection. The name $\fun{Var}$ encapsulates this role as an abstract type of variable names.}
     \begin{enumerate}[a),font=\upshape]
         \item The type of arithmetic \textsl{terms}, denoted $\fun{Term}\colon\univ$, is defined inductively by the following constructors:
         \begin{itemize}
@@ -69,7 +69,7 @@ The statement type $S$ becomes a discrete collection of strings in a given alpha
 \end{rem}
 
 \begin{rem}\label{rem:Var-equality-facts}
-    As proven in \citep{caniglia2025hott} for the type $\N$, the identity type $x\eq{\fun{Var}}y$ of variables $x,y\colon\fun{Var}$ is both a mere proposition and decidable. These properties are used implicitly hereafter.
+    As proved in \citep{caniglia2025hott} for $\N$, for any variables $x,y\colon\fun{Var}$ the identity type $x\eq{\fun{Var}}y$ is decidable and hence a mere proposition (so $\fun{Var}$ is a set). These properties are used implicitly hereafter.
 \end{rem}
 
 \subsection{Structural Induction as Dependent Elimination}
@@ -114,6 +114,7 @@ Structural recursion is the specialization of induction when the motive is a con
     \end{enumerate}
 \end{thm}
 
+\needspace{2\baselineskip}
 \begin{proof}\ 
     \begin{enumerate}[a)]
         \item Define a predecessor function $\fun{pred}\colon\fun{Term}\to\fun{Term}$ by structural recursion:
@@ -260,7 +261,7 @@ Structural recursion is the specialization of induction when the motive is a con
     \]
     We proceed by double structural induction on $\varphi$ and $\psi$.
     \begin{itemize}
-        \item Suppose that $\varphi\equiv t_1\doteq t_2$ and $\psi\equiv u_1\doteq u_2$. Relying on the decidability of equality for terms, there are two cases. If both equalities hold, the congruence of constructors yields $\varphi\eq{\fun{Form}}\psi$. Otherwise, we may suppose $\neg(t_1\eq{\fun{Term}}u_1)$. By the injectivity of the $\doteq$ constructor, there is a projection $(\varphi\eq{\fun{Form}}\psi)\to(t_1\eq{\fun{Term}}u_1)$. Thus, $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from $\neg(t_1\eq{\fun{Term}}u_1)$.
+        \item Suppose that $\varphi\equiv t_1\doteq t_2$ and $\psi\equiv u_1\doteq u_2$. Relying on the decidability of equality for terms, there are two cases. If both equalities $t_1\eq{\fun{Term}}u_1$ and $t_2\eq{\fun{Term}}u_2$ hold, the congruence of constructors yields $\varphi\eq{\fun{Form}}\psi$. Otherwise, we may suppose $\neg(t_1\eq{\fun{Term}}u_1)$. By the injectivity of the $\doteq$ constructor, there is a projection $(\varphi\eq{\fun{Form}}\psi)\to(t_1\eq{\fun{Term}}u_1)$. Thus, $\neg(\varphi\eq{\fun{Form}}\psi)$ follows from $\neg(t_1\eq{\fun{Term}}u_1)$.
         
         \item Mismatched constructors (e.g., $\neg\varphi'$ vs $\psi_1\to\psi_2$) are trivially distinct by the disjointness of constructors.
         
@@ -271,7 +272,7 @@ Structural recursion is the specialization of induction when the motive is a con
     In conclusion, identities in $\fun{Form}$ are also decidable.
 \end{proof}
 
-\section{Free Variables}
+\section{Free Variables \&\ Substitution}
 
 We begin with a set-theoretic approach to build intuition.
 
@@ -339,9 +340,9 @@ We begin with a set-theoretic approach to build intuition.
 \end{rem}
 
 \begin{defn}[Free Variables as Predicates]\label{defn:FV}
-    Using the notation of \citep{caniglia2025hott}, the \textsl{free variable maps} $\fun{Term}\to\fun{Pred}(\fun{Var})$ and $\fun{Form}\to\fun{Pred}(\fun{Var})$ assign to each term and formula a predicate indicating whether a given variable has any free occurrence in it. 
+    Using the notation of \citep{caniglia2025hott}, the \textsl{free variable maps} $\fun{Term}\to\fun{Pred}(\fun{Var})$ and $\fun{Form}\to\fun{Pred}(\fun{Var})$ assign to each term and formula a predicate indicating whether a given variable has any free occurrence in it.\footnote{Recall that a \textsl{predicate} is a family of mere propositions, i.e., $\fun{Pred}(A)\defeq A\to\fun{Prop}_\univ$.} 
 
-    Both maps are denoted by $\fun{FV}(s(\num n)(y))$ and defined by structural recursion. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
+    Both maps are denoted by $\fun{FV}$ and defined by structural recursion. For any $y\colon\fun{Var}$, the proposition $\fun{FV}(t)(y)$ is given by:
     \begin{itemize}
         \item $\fun{FV}(x)(y) \defeq y\eq{\fun{Var}}x$ for any $x\colon\fun{Var}$.
         \item $\fun{FV}(0)(y)\defeq\fun0$.
@@ -383,44 +384,567 @@ We begin with a set-theoretic approach to build intuition.
     
 \end{proof}
 
-\begin{defn}[Substitution]\label{defn:substitution}
-    Let $x\colon\fun{Var}$ and $t\colon\fun{Term}$. The \textsl{substitution of\/ $t$ for\/ $x$} in a term $\tau$, denoted $\tau[t/x]$, is defined by induction on the structure of $\tau$:
+\begin{defn}[Variable Occurrence and Fresh Variables]\label{defn:fresh}
+    Every variable occurring in a term occurs free, so variable occurrence in terms is already given by $\fun{FV}$ and we can set
+    \begin{align*}
+        \fun{Occ}\colon\fun{Term}&\to\fun{Pred}(\fun{Var})\\
+        \tau&\mapsto\fun{FV}(\tau).
+    \end{align*}
+    
+    For formulas, the \textsl{variable occurrence} predicate
+    \[
+        \fun{Occ}\colon\fun{Form}\to\fun{Pred}(\fun{Var})
+    \]
+    (capturing both free and bound occurrences) is defined by structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$:
     \begin{itemize}
-        \item $\fun{var}(y)[t/x]\defeq\begin{cases}
-            t&\text{if }x\eq{\fun{Var}}y,\\ 
-            \fun{var}(y)&\text{if }\neg(x\eq{\fun{Var}}y). 
-        \end{cases}$
+        \item $\fun{Occ}(\tau_1\doteq\tau_2)(v)\defeq\lVert\fun{FV}(\tau_1)(v)+\fun{FV}(\tau_2)(v)\rVert$.
+        \item $\fun{Occ}(\neg\varphi)(v)\defeq\fun{Occ}(\varphi)(v)$.
+        \item $\fun{Occ}(\varphi\imp\psi)(v)\defeq\lVert\fun{Occ}(\varphi)(v)+\fun{Occ}(\psi)(v)\rVert$.
+        \item $\fun{Occ}(\forall y\,\varphi)(v)\defeq\lVert(y\eq{\fun{Var}}v)+\fun{Occ}(\varphi)(v)\rVert$.
+    \end{itemize}
+    Using the representation $\fun{Var}\defeq\N$ together with the binary maximum
+    \[
+        \max\colon\N\to\N\to\N,
+    \]
+    we define the \textsl{maximum variable index} of a term, 
+    \[
+        \fun{maxVar}\colon\fun{Term}\to\N,
+    \]
+    by structural recursion $\fun{rec}_{\fun{Term}}$ on $\fun{Term}$:
+    \begin{itemize}
+        \item $\fun{maxVar}(\fun{var}(y))\defeq y$.
+        \item $\fun{maxVar}(0)\defeq 0$.
+        \item $\fun{maxVar}(s(\tau))\defeq\fun{maxVar}(\tau)$.
+        \item $\fun{maxVar}(\tau_1+\tau_2)\defeq\max\bigl(\fun{maxVar}(\tau_1),\fun{maxVar}(\tau_2)\bigr)$.
+        \item $\fun{maxVar}(\tau_1\cdot\tau_2)\defeq\max\bigl(\fun{maxVar}(\tau_1),\fun{maxVar}(\tau_2)\bigr)$.
+    \end{itemize}
+    Similarly, 
+    \[
+        \fun{maxVar}\colon\fun{Form}\to\N,
+    \]
+    is defined by structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$:
+    \begin{itemize}
+        \item $\fun{maxVar}(\tau_1\doteq\tau_2)\defeq\max\bigl(\fun{maxVar}(\tau_1),\fun{maxVar}(\tau_2)\bigr)$.
+        \item $\fun{maxVar}(\neg\varphi)\defeq\fun{maxVar}(\varphi)$.
+        \item $\fun{maxVar}(\varphi\imp\psi)\defeq\max\bigl(\fun{maxVar}(\varphi),\fun{maxVar}(\psi)\bigr)$.
+        \item $\fun{maxVar}(\forall y\,\varphi)\defeq\max\bigl(y,\fun{maxVar}(\varphi)\bigr)$.
+    \end{itemize}
+    Finally, the \textsl{fresh variable} function $\fun{fresh}\colon\N\to\fun{Var}$ is defined by
+    \[
+        \fun{fresh}(b)\defeq\fun{succ}(b).
+    \]
+\end{defn}
+
+\begin{lem}[Freshness Guarantee]\label{lem:freshness}
+    Let\/ $b\colon\N$ and set\/ $z\defeq\fun{fresh}(b)\colon\fun{Var}$.
+    \begin{enumerate}[a),font=\upshape]
+        \item For every variable\/ $x\colon\fun{Var}$, if\/ $x\le b$, then\/ $\neg(z\eq{\fun{Var}}x)$.
+
+        \item For every term\/ $\tau\colon\fun{Term}$, if\/ $\fun{maxVar}(\tau)\le b$, then\/ $\neg\fun{FV}(\tau)(z)$.
+
+        \item For any $\varphi\colon\fun{Form}$ and $v\colon\fun{Var}$, there is a map $\fun{Occ}(\varphi)(v)\to v\le\fun{maxVar}(\varphi)$.
+
+        \item For any $\varphi\colon\fun{Form}$ and $v\colon\fun{Var}$, there is a map $\fun{FV}(\varphi)(v)\to\fun{Occ}(\varphi)(v)$. 
+
+        \item For every formula\/ $\varphi\colon\fun{Form}$, if\/ $\fun{maxVar}(\varphi)\le b$, then\/ $\neg\fun{Occ}(\varphi)(z)$, and consequently\/ $\neg\fun{FV}(\varphi)(z)$.
+    \end{enumerate}
+\end{lem}
+
+\begin{proof}
+    By definition, $z\equiv\fun{succ}(b)$, so $b<z$.
+    \begin{enumerate}[a),font=\upshape]
+        \item Suppose $x\le b$ and $p\colon z\eq{\fun{Var}}x$. Combining $x\le b$ with $b<z$ yields a witness $q\colon x<z$. Then
+        \[
+            \fun{transport}^{u\mapsto(x<u)}(p,\dummy)\colon (x<z)\to(x<x).
+        \]
+        Applying this map to $q$ gives an element of $x<x$, which is uninhabited.
+        \item We first show by induction on $\tau\colon\fun{Term}$ that for all $v\colon\fun{Var}$,
+        \begin{equation}\label{eq:maxVar-inequality}
+            \tag{$\ast$}
+            \fun{FV}(\tau)(v)\to v\le\fun{maxVar}(\tau).
+        \end{equation}
+
+        \begin{itemize}
+            \item For $\tau\equiv\fun{var}(y)$, we have 
+            \[
+                \fun{FV}(\fun{var}(y))(v)
+                    \equiv(y\eq{\fun{Var}}v)
+                \quad\text{and}\quad
+                \fun{maxVar}(\fun{var}(y))\equiv y.
+            \]
+            Thus, given $p\colon y\eq\N v$, the function $\fun{transport}^{u\mapsto(u\le y)}(p,\dummy)$ maps a witness $r\colon y\le y$ to an inhabitant of $v\le y$.
+
+            \item For $\tau\equiv 0$, $\fun{FV}(0)(v)\equiv\fun0$, so $\fun{rec}_{\fun0}(v\le\fun{maxVar}(0))$ is the desired map.
+
+            \item The successor case $s(\tau')$ follows from the induction hypothesis because $\fun{FV}(s(\tau'))\equiv\fun{FV}(\tau')$ and $\fun{maxVar}(\tau')\equiv\fun{maxVar}(s(\tau'))$.
+
+            \item For $\tau_1+\tau_2$, coproduct recursion on $\fun{FV}(\tau_1)(v)+\fun{FV}(\tau_2)(v)$ together with the induction hypotheses gives
+            \[
+                v\le\fun{maxVar}(\tau_1)
+                +
+                v\le\fun{maxVar}(\tau_2).
+            \]
+            In either case
+            \[
+                v\le\max\bigl(
+                    \fun{maxVar}(\tau_1),\fun{maxVar}(\tau_2)
+                \bigr)
+                \equiv
+                \fun{maxVar}(\tau_1+\tau_2). 
+            \]
+            
+            \item The case $\tau_1\cdot\tau_2$ is identical to the sum.
+        \end{itemize}
+
+        Now assume $\fun{maxVar}(\tau)\le b$ and $\fun{FV}(\tau)(z)$. The map \eqref{eq:maxVar-inequality} produces a witness of $z\le\fun{maxVar}(\tau)$. Hence, $z\le b$. Combining $b<z$ with $z\le b$ yields $b<b$, which is uninhabited.
+
+        \item We proceed by structural induction on $\varphi$.
+        \begin{itemize}
+            \item For $\varphi\equiv\tau_1\doteq\tau_2$, coproduct recursion on $\fun{FV}(\tau_1)(v)+\fun{FV}(\tau_2)(v)$ and the map \eqref{eq:maxVar-inequality} from part~b) give
+            \[
+                v\le\max\bigl(
+                    \fun{maxVar}(\tau_1),\fun{maxVar}(\tau_2)
+                \bigr)
+                \equiv
+                \fun{maxVar}(\tau_1\doteq\tau_2).
+            \]
+
+            \item The negation and implication cases follow immediately from the induction hypotheses and coproduct recursion for $\imp$.
+
+            \item For $\varphi\equiv\forall y\,\psi$, by Definition~\ref{defn:fresh} we must construct a map
+            \[
+            \bigl(
+                (y\eq{\fun{Var}}v)+\fun{Occ}(\psi)(v)
+                \bigr)
+                \to
+                v\le\max\bigl(y,\fun{maxVar}(\psi)\bigr)
+            \]
+            from the induction hypothesis $h\colon\fun{Occ}(\psi)(v)\to v\le\fun{maxVar}(\psi)$. Set
+            \[
+                C\defeq v\le\max\bigl(
+                    y,\fun{maxVar}(\psi)
+                \bigr).
+            \]
+            We define two branch maps into $C$:
+            \begin{enumerate}[-]
+                \item For $f_1\colon(y\eq{\fun{Var}}v)\to C$, given $p\colon y\eq\N v$, transporting a reflexivity witness $r\colon y\le y$ along $p$ gives
+                \[
+                    \fun{transport}^{u\mapsto u\le y}(p,r)
+                        \colon v\le y.
+                \]
+                Combining $v\le y$ with $y\le\max\bigl(y,\fun{maxVar}(\psi)\bigr)$ yields an inhabitant of $C$.
+                
+                \item For $f_2\colon\fun{Occ}(\psi)(v)\to C$, the induction hypothesis applied to a witness of $\fun{Occ}(\psi)(v)$ gives $v\le\fun{maxVar}(\psi)$. 
+                
+                Combining with $\fun{maxVar}(\psi)\le\max\bigl(y,\fun{maxVar}(\psi)\bigr)$ yields an inhabitant of $C$.
+            \end{enumerate}
+            Coproduct recursion based on $f_1$ and $f_2$ provides the required map.
+        \end{itemize}
         
-        \item $0[t/x]\defeq0$.
+        \item Fix $v\colon\fun{Var}$ and proceed by structural induction on $\varphi\colon\fun{Form}$.
+        \begin{itemize}
+            \item For $\varphi\equiv\tau_1\doteq\tau_2$, both $\fun{FV}(\tau_1\doteq\tau_2)(v)$ and $\fun{Occ}(\tau_1\doteq\tau_2)(v)$ reduce definitionally to $\lVert\fun{FV}(\tau_1)(v)+\fun{FV}(\tau_2)(v)\rVert$, so the identity map fulfills the requirement.
+            
+            \item For $\varphi\equiv\neg\psi$, we have 
+            \[
+                \fun{FV}(\neg\psi)(v)
+                    \equiv\fun{FV}(\psi)(v)
+                \quad\text{and}\quad
+                \fun{Occ}(\neg\psi)(v)
+                    \equiv\fun{Occ}(\psi)(v),
+            \]
+            and the induction hypothesis yields the desired map.
+            
+            \item For $\varphi\equiv\psi_1\imp\psi_2$, let \begin{align*}
+                h_1&\colon\fun{FV}(\psi_1)(v)
+                    \to\fun{Occ}(\psi_1)(v)\\
+                h_2&\colon\fun{FV}(\psi_2)(v)
+                    \to\fun{Occ}(\psi_2)(v)
+            \end{align*}
+            be the maps provided by the induction hypotheses. Set
+            \[
+                C\defeq\fun{Occ}(\psi_1\imp\psi_2)(v)
+                    \equiv\lVert
+                        \fun{Occ}(\psi_1)(v)+\fun{Occ}
+                            (\psi_2)(v)
+                    \rVert.
+            \]
+            Coproduct recursion yields a map
+            \begin{align*}
+                g\colon
+                    \fun{FV}(\psi_1)(v)+\fun{FV}(\psi_2)(v)
+                    &\to
+                    C\\
+                u&\mapsto\lvert\fun{inl}(h_1(u))\rvert,\\
+                w&\mapsto\lvert\fun{inr}(h_2(w))\rvert.
+            \end{align*}
+            Since $C$ is a mere proposition, the recursion principle of propositional truncation factors $g$ through a map
+            \[
+            \lVert\fun{FV}(\psi_1)(v)+\fun{FV}(\psi_2)(v)\rVert\to C
+            \]
+            of the required type.
+            
+            \item For $\varphi\equiv\forall y\,\psi$, the induction hypothesis gives a map
+            \[
+                h\colon\fun{FV}(\psi)(v)
+                    \to\fun{Occ}(\psi)(v).
+            \]
+            Since
+            \[
+            \fun{FV}(\forall y\,\psi)(v)
+                \equiv
+                    \fun{FV}(\psi)(v)
+                    \times
+                    \neg(v\eq{\fun{Var}}y)
+            \]
+            and
+            \[
+                \fun{Occ}(\forall y\,\psi)(v)
+                    \equiv\lVert
+                        (y\eq{\fun{Var}}v)+\fun{Occ}(\psi)(v)
+                    \rVert,
+            \]
+            the required map is given by
+            \[
+                \lambda x.\,\lvert
+                    \fun{inr}(h(\pi_1(x)))
+                \rvert
+                \colon\fun{FV}(\forall y\,\psi)(v)
+                    \to\fun{Occ}(\forall y\,\psi)(v).
+            \]
+        \end{itemize}
+
+        \item Suppose we are given a witness of $\fun{maxVar}(\varphi)\le b$, and let
+        \[
+        f\colon\fun{Occ}(\varphi)(z)\to z\le\fun{maxVar}(\varphi)
+        \quad\text{and}\quad
+        g\colon\fun{FV}(\varphi)(z)\to\fun{Occ}(\varphi)(z)
+        \]
+        be the maps provided by parts~c) and~d) at $v\equiv z$.
+        
+        To inhabit $\neg\fun{Occ}(\varphi)(z)$, let $u\colon\fun{Occ}(\varphi)(z)$. Then $f(u)\colon z\le\fun{maxVar}(\varphi)$, which combined with $\fun{maxVar}(\varphi)\le b$ yields a witness of $z\le b$. Since $b<z$, this produces an inhabitant of $b<b$, which is uninhabited. Thus, we have
+        \[
+            \zeta\colon\fun{Occ}(\varphi)(z)\to\fun0.
+        \]
+        Composing $\zeta$ with $g$ then yields an inhabitant of $\neg\fun{FV}(\varphi)(z)$.
+    \end{enumerate}
+\end{proof}
+
+\begin{defns}[Height and Renaming]\label{defn:ht-ren}
+    Let
+    \begin{align*}
+        d_{\fun{Var}}&\colon
+            \prod_{u,v\colon\fun{Var}}
+                (u\eq{\fun{Var}}v)+\neg(u\eq{\fun{Var}}v)
+    \end{align*}
+    denote the decidability witness for variable equality.
+    \begin{enumerate}[i),font=\upshape]
+        \item The \textsl{formula height} function
+        \[
+            \fun{ht}\colon\fun{Form}\to\N
+        \]
+        is defined by structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$:
+        \begin{itemize}
+            \item $\fun{ht}(\tau_1\doteq\tau_2)\defeq 0$.
+            
+            \item $\fun{ht}(\neg\varphi)\defeq\fun{succ}(\fun{ht}(\varphi))$.
+            
+            \item $\fun{ht}(\varphi\imp\psi)\defeq\fun{succ}\bigl(\max(\fun{ht}(\varphi),\fun{ht}(\psi))\bigr)$.
+            
+            \item $\fun{ht}(\forall y\,\varphi)\defeq\fun{succ}(\fun{ht}(\varphi))$.
+            \end{itemize}
+            
+            \item Fix $x\colon\fun{Var}$ and $t\colon\fun{Term}$. The \textsl{term substitution} of $t$ for $x$ in a term $\tau\colon\fun{Term}$, denoted $\tau[t/x]\colon\fun{Term}$, is defined by structural recursion $\fun{rec}_{\fun{Term}}$ on $\fun{Term}$:
+        \begin{itemize}
+        \item
+        \[
+            \fun{var}(y)[t/x]\defeq
+            \begin{cases}
+                t
+                    &\text{if }x\eq{\fun{Var}}y,\\
+                \fun{var}(y)
+                    &\text{if }\neg(x\eq{\fun{Var}}y).
+            \end{cases}
+        \]
+        More precisely, setting $E\defeq x\eq{\fun{Var}}y$,
+        \[
+            \fun{var}(y)[t/x]\defeq\fun{rec}_{E+\neg E}\bigl(
+                \fun{Term},
+                \lambda e.\,t,
+                \lambda\zeta.\,\fun{var}(y),
+                d_{\fun{Var}}(x,y)
+            \bigr).
+        \]
+        
+        \item $0[t/x]\defeq 0$.
         
         \item $s(\tau)[t/x]\defeq s(\tau[t/x])$.
         
         \item $(\tau_1+\tau_2)[t/x]\defeq\tau_1[t/x]+\tau_2[t/x]$.
         
         \item $(\tau_1\cdot\tau_2)[t/x]\defeq\tau_1[t/x]\cdot\tau_2[t/x]$.
-    \end{itemize}
+        \end{itemize}
+        
+        \item Fix $x,z\colon\fun{Var}$. The \textsl{direct variable renaming} map
+        \[
+            \fun{ren}(\dummy,x,z)\colon
+                \fun{Form}\to\fun{Form}
+        \]
+        is defined by structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$:
+        \begin{itemize}
+            \item $\fun{ren}(\tau_1\doteq\tau_2,x,z)\defeq\tau_1[\fun{var}(z)/x]\doteq\tau_2[\fun{var}(z)/x]$.
+            
+            \item $\fun{ren}(\neg\varphi,x,z)\defeq\neg\fun{ren}(\varphi,x,z)$.
+            
+            \item $\fun{ren}(\varphi\imp\psi,x,z)\defeq\fun{ren}(\varphi,x,z)\imp\fun{ren}(\psi,x,z)$.
+            
+            \item
+            \[
+                \fun{ren}(\forall y\,\psi,x,z)\defeq
+                \begin{cases}
+                    \forall y\,\psi
+                        &\text{if }x\eq{\fun{Var}}y,\\
+                    \forall y\,\fun{ren}(\psi,x,z)
+                        &\text{if }\neg(x\eq{\fun{Var}}y).
+                \end{cases}
+            \]
+            More precisely, setting $\varphi\defeq\forall y\,\psi$ and $E\defeq x\eq{\fun{Var}}y$,
+            \[
+                \fun{ren}(\varphi,x,z)\defeq
+                    \fun{rec}_{E+\neg E}\bigl(
+                        \fun{Form},
+                        \lambda e.\,\varphi,
+                        \lambda\zeta.\,\forall y\,\fun{ren}(\psi,x,z),
+                        d_{\fun{Var}}(x,y)
+                    \bigr).
+            \]
+        \end{itemize}
+    \end{enumerate}
+\end{defns}
 
-    Similarly, the \textsl{capture-avoiding substitution of\/ $t$ for\/ $x$} in a formula $\varphi$, denoted $\varphi[t/x]$, is defined by induction on the structure of $\varphi$:
+\begin{lem}\label{lem:ren-preserves-ht}
+    For any formula\/ $\varphi\colon\fun{Form}$ and variables\/ $y,z\colon\fun{Var}$, direct variable renaming preserves formula height:
+    \[
+        \fun{ht}\bigl(
+            \fun{ren}(\varphi,y,z)
+        \bigr)
+        \eq\N
+        \fun{ht}(\varphi).
+    \]
+\end{lem}
+
+\begin{proof}
+    Fix $y,z\colon\fun{Var}$ and proceed by structural induction on $\varphi\colon\fun{Form}$.
+        \begin{itemize}
+        \item \textsc{Case} $\varphi\equiv\tau_1\doteq\tau_2$. By Definition~\ref{defn:substitution},
+        \begin{align*}
+            \fun{ht}(
+                \fun{ren}(\tau_1\doteq\tau_2,y,z)
+            )
+                &\equiv\fun{ht}\bigl(
+                    \tau_1[\fun{var}(z)/y]
+                    \doteq
+                    \tau_2[\fun{var}(z)/y]
+                \bigr)\\
+                &\equiv0\\
+                &\equiv\fun{ht}(\tau_1\doteq\tau_2),
+        \end{align*}
+        which is witnessed by $\fun{refl}_0$.
+        
+        \item \textsc{Case} $\varphi\equiv\neg\psi$. Let $p\colon\fun{ht}(\fun{ren}(\psi,y,z))\eq\N\fun{ht}(\psi)$ be the path given by the induction hypothesis. Since
+        \[
+            \fun{ht}(
+                \fun{ren}(\neg\psi,y,z)
+            )
+            \equiv\fun{succ}\bigl(
+                \fun{ht}(\fun{ren}(\psi,y,z))
+            \bigr)
+            \quad\text{and}\quad
+            \fun{ht}(\neg\psi)
+            \equiv\fun{succ}(\fun{ht}(\psi)),
+        \]
+        applying $\fun{ap}_{\fun{succ}}(p)$ yields the required path.
+        
+        \item \textsc{Case} $\varphi\equiv\psi_1\imp\psi_2$. Let
+        \begin{align*}
+            p_1&\colon\fun{ht}(\fun{ren}(\psi_1,y,z))
+                \eq\N\fun{ht}(\psi_1)
+            \text{ and}\\
+            p_2&\colon\fun{ht}(\fun{ren}(\psi_2,y,z))
+                \eq\N\fun{ht}(\psi_2)
+        \end{align*}
+        be the paths given by the induction hypotheses. Applying Lemma~\ref{lem:binap} to $\max\colon\N\times\N\to\N$ yields
+        \begin{align*}
+            \fun{binap}_{\max}(p_1,p_2)\colon
+                &\max\bigl(
+                    \fun{ht}(\fun{ren}(\psi_1,y,z)),
+                    \fun{ht}(\fun{ren}(\psi_2,y,z))
+                \bigr)\\
+                &\eq\N\\
+                &\max\bigl(
+                    \fun{ht}(\psi_1),\fun{ht}(\psi_2)
+                \bigr).
+        \end{align*}
+        Applying $\fun{ap}_{\fun{succ}}$ to this path constructs a witness of
+        \[
+            \fun{ht}(
+                \fun{ren}(\psi_1\imp\psi_2,y,z)
+            )
+            \eq\N
+            \fun{ht}(\psi_1\imp\psi_2).
+        \]
+        
+        \item \textsc{Case} $\varphi\equiv\forall w\,\psi$. Let $p\colon\fun{ht}(\fun{ren}(\psi,y,z))\eq\N\fun{ht}(\psi)$ be the induction hypothesis, set $E\defeq y\eq{\fun{Var}}w$, and define the type family $P\colon(E+\neg E)\to\univ$ by
+        \[
+            P(u)\defeq
+                \fun{ht}(
+                    \fun{rec}_{E+\neg E}(
+                        \fun{Form},
+                        \lambda e.\,\forall w\,\psi,
+                        \lambda\zeta.\,
+                            \forall w\,\fun{ren}(\psi,y,z),u
+                    )
+                )
+                \eq\N
+                \fun{ht}(\forall w\,\psi).
+        \]
+        We construct a section of $P$ by coproduct induction $\fun{ind}_{E+\neg E}$:
+        \begin{enumerate}[i)]
+            \item For $u\equiv\fun{inl}(e)$ with $e\colon E$, the recursor reduces definitionally to $\forall w\,\psi$, so $P(\fun{inl}(e))$ reduces to $\fun{ht}(\forall w\,\psi)\eq\N\fun{ht}(\forall w\,\psi)$, which is inhabited by $\fun{refl}_{\fun{ht}(\forall w\,\psi)}$.
+            
+            \item For $u\equiv\fun{inr}(\zeta)$ with $\zeta\colon\neg E$, the recursor reduces definitionally to $\forall w\,\fun{ren}(\psi,y,z)$, so $P(\fun{inr}(\zeta))$ reduces to
+            \[
+                \fun{succ}\bigl(
+                    \fun{ht}(\fun{ren}(\psi,y,z))
+                \bigr)
+                \eq\N
+                \fun{succ}(\fun{ht}(\psi)),
+            \]
+            which is inhabited by $\fun{ap}_{\fun{succ}}(p)$.
+        \end{enumerate}
+        Evaluating this section at $d_{\fun{Var}}(y,w)$ gives a path
+        \[
+            \fun{ht}(
+                \fun{ren}(\forall w\,\psi,y,z)
+            )
+            \eq\N
+            \fun{ht}(\forall w\,\psi).
+        \]
+    \end{itemize}
+\end{proof}
+
+
+\begin{defn}[Substitution]\label{defn:substitution}
+    Let
+    \begin{align*}
+        d_{\fun{FV}}^{\fun{Term}}&\colon
+            \prod_{\tau\colon\fun{Term}}\;
+            \prod_{v\colon\fun{Var}}
+                \fun{FV}(\tau)(v)+\neg\fun{FV}(\tau)(v),\\
+        d_{\fun{FV}}^{\fun{Form}}&\colon
+            \prod_{\psi\colon\fun{Form}}\;
+            \prod_{v\colon\fun{Var}}
+                \fun{FV}(\psi)(v)+\neg\fun{FV}(\psi)(v)
+    \end{align*}
+    denote the decidability witnesses for free-variable membership in terms and formulas.
+    
+    Fix $x\colon\fun{Var}$ and $t\colon\fun{Term}$. The \textsl{capture-avoiding substitution} of $t$ for $x$ in a formula $\varphi\colon\fun{Form}$, denoted $\varphi[t/x]\colon\fun{Form}$, is defined by strong recursion on $\fun{ht}(\varphi)\colon\N$.
     \begin{itemize}
-        \item $(\tau_1\doteq \tau_2)[t/x]\defeq \tau_1[t/x]\doteq \tau_2[t/x]$.
+        \item $(\tau_1\doteq\tau_2)[t/x]\defeq\tau_1[t/x]\doteq\tau_2[t/x]$.
         
         \item $(\neg\varphi)[t/x]\defeq\neg(\varphi[t/x])$.
         
-        \item $(\varphi\imp \psi)[t/x]\defeq\varphi[t/x]\imp \psi[t/x]$.
+        \item $(\varphi\imp\psi)[t/x]\defeq\varphi[t/x]\imp\psi[t/x]$.
         
-        \item $(\forall y\,\varphi)[t/x]\defeq \begin{cases}
-            \forall y\,\varphi
-                &\text{if }x\eq{\fun{Var}}y,\\
-            \forall y\,(\varphi[t/x])
-                &\text{if }\neg(x\eq{\fun{Var}}y)
-                    \text{ and }\neg\fun{FV}(t)(y),\\
-            \forall z\,\varphi[z/y][t/x]
-                &\text{if }\neg(x\eq{\fun{Var}}y)
-                    \text{ and }\fun{FV}(t)(y),
-        \end{cases}$
+        \item Setting
+        \[
+            m\defeq\max\bigl(
+                x,
+                \max(
+                    \fun{maxVar}(t),
+                    \fun{maxVar}(\forall y\,\varphi)
+                )
+            \bigr)
+            \quad\text{and}\quad
+            z\defeq\fun{fresh}(m),
+        \]
+        \[
+            (\forall y\,\varphi)[t/x]\defeq
+            \begin{cases}
+                \forall y\,\varphi
+                    &\text{if }\neg\fun{FV}(
+                        \forall y\,\varphi
+                    )(x),\\
+                \forall y\,(\varphi[t/x])
+                    &\text{if }\fun{FV}(
+                        \forall y\,\varphi
+                    )(x)
+                    \times
+                    \neg\fun{FV}(t)(y),\\
+                \forall z\,\bigl(
+                    \fun{ren}(\varphi,y,z)[t/x]
+                \bigr)
+                    &\text{if }\fun{FV}(
+                        \forall y\,\varphi
+                    )(x)
+                    \times\fun{FV}(t)(y).
+            \end{cases}
+        \]
+        More precisely, with $P\defeq\fun{FV}(\forall y\,\varphi)(x)$ and $Q\defeq\fun{FV}(t)(y)$,
+        \[
+            (\forall y\,\varphi)[t/x]
+            \defeq
+            \fun{rec}_{P+\neg P}\bigl(
+                \fun{Form},
+                \lambda p.\,b,
+                \lambda\zeta.\,\forall y\,\varphi,
+                d_{\fun{FV}}^{\fun{Form}}(
+                    \forall y\,\varphi,x
+                )
+            \bigr),
+        \]
+        where
+        \begin{align*}
+            b\defeq\fun{rec}_{Q+\neg Q}\bigl(
+                &\fun{Form},\\
+                &\lambda q.\,\forall z\,\bigl(
+                    \fun{ren}(\varphi,y,z)[t/x]
+                \bigr),\\
+                &\lambda\zeta.\,\forall y\,(
+                    \varphi[t/x]
+                ),\\
+                &d_{\fun{FV}}^{\fun{Term}}(t,y)
+            \bigr).
+        \end{align*}
     \end{itemize}
-    where $z\colon\fun{Var}$ is a variable such that $\neg(z\eq{\fun{Var}}x)$ and $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
-\end{defn}
+\end{defn}        
+
+
+\begin{rem}\label{rem:substitution-strong-recursion}
+    Capture-avoiding substitution cannot be defined directly by plain structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$. In the quantifier clause for $\forall y\,\varphi$, the structural recursor supplies the recursively computed result only for the immediate subformula $\varphi$. In the capturing branch, where both $\fun{FV}(\forall y\,\varphi)(x)$ and $\fun{FV}(t)(y)$ hold, the definition must instead apply substitution to the renamed formula $\fun{ren}(\varphi,y,z)$, which is a newly constructed formula rather than a syntactic subformula of $\forall y\,\varphi$.
+    
+    Defining substitution by strong recursion on the natural number $n\defeq\fun{ht}(\varphi)$ resolves this obstacle. At stage $n\colon\N$, the recursion hypothesis provides substitution for every formula $\chi\colon\fun{Form}$ satisfying $\fun{ht}(\chi)<n$. Consequently, whenever the clause for a formula $\phi$ invokes a recursive call on a formula $\chi$, well-typedness requires a proof of the strict inequality $\fun{ht}(\chi)<\fun{ht}(\phi)$. These obligations fall into two groups:
+    \begin{itemize}
+        \item \textsl{Immediate subformulas.} The atomic clause $\tau_1\doteq\tau_2$ makes no recursive call on formulas. For $\neg\varphi$, $\varphi\imp\psi$, and the non-capturing branch of $\forall y\,\varphi$, the defining equations of $\fun{ht}$ directly yield
+        \[
+            \fun{ht}(\varphi)<\fun{ht}(\neg\varphi),
+            \quad\fun{ht}(\varphi),\fun{ht}(\psi)
+                <\fun{ht}(\varphi\imp\psi),
+            \quad\fun{ht}(\varphi)<\fun{ht}(\forall y\,\varphi),
+        \]
+        without requiring induction on formulas.
+        
+        \item \textsl{Renamed subformula.} In the capturing branch of $\forall y\,\varphi$, the non-structural call on $\fun{ren}(\varphi,y,z)$ requires a witness of $\fun{ht}(\fun{ren}(\varphi,y,z))<\fun{ht}(\forall y\,\varphi)$. Because direct variable renaming acts only on terms within atomic subformulas and leaves all logical connectives and quantifiers intact, ordinary structural induction on $\varphi$ constructs a path
+        \[
+            p\colon\fun{ht}\bigl(
+                \fun{ren}(\varphi,y,z)
+            \bigr)
+            \eq\N
+            \fun{ht}(\varphi).
+        \]
+        Transporting the strict inequality $\fun{ht}(\varphi)<\fun{succ}(\fun{ht}(\varphi))\equiv\fun{ht}(\forall y\,\varphi)$ along $p^{-1}$ in the family $k\mapsto\bigl(k<\fun{ht}(\forall y\,\varphi)\bigr)$ yields the required witness of $\fun{ht}(\fun{ren}(\varphi,y,z))<\fun{ht}(\forall y\,\varphi)$.
+    \end{itemize}
+\end{rem}
 
 \begin{xmpl}
     The following examples illustrate the behavior of capture-avoiding substitution in universally quantified formulas.
@@ -457,8 +981,11 @@ We begin with a set-theoretic approach to build intuition.
                 \eq{\fun{Prop}_\univ}
                 (y\eq{\fun{Var}}y),
         \]
-        which is inhabited by $\fun{refl}_y$. Therefore, if we were to blindly substitute $x$ with $y+s(0)$, the free variable $y$ would be captured, i.e., it would become bound. The definition tells us to proceed as follows:
-        \begin{enumerate}[i)]
+        which is inhabited by $\fun{refl}_y$. Therefore, if we were to blindly substitute $x$ with $y+s(0)$, the free variable $y$ would be captured, i.e., it would become bound.
+
+        \needspace{2\baselineskip}
+        The definition tells us to proceed as follows:
+        \begin{enumerate}[1)]
             \item Pick a fresh variable $z$ not present in the expressions, i.e., so that $\neg(z\eq{\fun{Var}}x)$ and $\neg\lVert\fun{FV}(t)(z)+\fun{FV}(\varphi)(z)\rVert$.
             \item Rename the bound variable inside the subformula $\varphi$:
             \[
@@ -495,13 +1022,13 @@ We begin with a set-theoretic approach to build intuition.
             \times
             \fun{isFreeFor}(t,x,\psi_2)\\
         &\fun{isFreeFor}(t,x,\forall y\,\psi)
-            \defeq\lVert(x\eq{}y)
+            \defeq\big\lVert(x\eq{}y)
             +
             \bigl(
                 \neg(x\eq{}y)\times\neg\fun{FV}(t)(y)
                 \times
                 \fun{isFreeFor}(t,x,\psi)
-            \bigr)\rVert.
+            \bigr)\big\rVert.
     \end{align*}
 \end{defn}
 
@@ -543,6 +1070,44 @@ We begin with a set-theoretic approach to build intuition.
     Cases a) and c) follow similarly. 
 \end{proof}
 
+\begin{lem}[Term Substitution Properties]\label{lem:term-substitution}
+    Let\/ $x,y\colon\fun{Var}$ and\/ $\tau,t,u\colon\fun{Term}$. Term substitution satisfies the following properties:
+    \begin{enumerate}[a),font=\upshape]
+        \item $\tau[x/x]\eq{\fun{Term}}\tau$.
+
+        \item If\/ $\neg\fun{FV}(\tau)(x)$, then\/ $\tau[t/x]\eq{\fun{Term}}\tau$.
+
+        \item If\/ $\neg(x\eq{\fun{Var}}y)$ and\/ $\neg\fun{FV}(u)(x)$, then\/ $\tau[t/x][u/y]\eq{\fun{Term}}\tau[u/y][t[u/y]/x]$.
+    \end{enumerate}
+\end{lem}
+
+\begin{proof}
+    Each part is proved by induction on $\tau\colon\fun{Term}$. In all three parts, the constant case $\tau\equiv 0$ holds by reflexivity, and the inductive steps for $s(\tau')$, $\tau_1+\tau_2$, and $\tau_1\cdot \tau_2$ follow directly from the induction hypotheses by congruence ($\fun{ap}$), noting for part~b) that $\neg\fun{FV}(\tau_1+\tau_2)(x)$ (and likewise for multiplication) implies both $\neg\fun{FV}(\tau_1)(x)$ and $\neg\fun{FV}(\tau_2)(x)$. It therefore suffices to check the variable case $\tau\equiv v$ for $v\colon\fun{Var}$.
+    \begin{enumerate}[a),font=\upshape]
+        \item By decidability of equality on $\fun{Var}$, either $v\eq{\fun{Var}}x$ or $\neg(v\eq{\fun{Var}}x)$. In the first case, $v[x/x]\equiv x$, which equals $v$ by symmetry of $v\eq{\fun{Var}}x$; in the second, $v[x/x]\equiv v$ by definition.
+
+        \item The hypothesis $\neg\fun{FV}(v)(x)$ means $\neg(v\eq{\fun{Var}}x)$, so $v[t/x]\equiv v$.
+
+        \item We split by decidability of $v\eq{\fun{Var}}x$ and $v\eq{\fun{Var}}y$:
+        \begin{itemize}
+            \item If $v\eq{\fun{Var}}x$, then $\neg(v\eq{\fun{Var}}y)$ since $\neg(x\eq{\fun{Var}}y)$. Hence
+            \[
+                v[t/x][u/y]\equiv t[u/y]\equiv v[t[u/y]/x]\equiv v[u/y][t[u/y]/x].
+            \]
+            \item If $v\eq{\fun{Var}}y$, then $\neg(v\eq{\fun{Var}}x)$ since $\neg(x\eq{\fun{Var}}y)$. Thus
+            \[
+                v[t/x][u/y]\equiv v[u/y]\equiv u,
+            \]
+            while
+            \[
+                v[u/y][t[u/y]/x]\equiv u[t[u/y]/x].
+            \]
+            Since $\neg\fun{FV}(u)(x)$, part~b) gives $u[t[u/y]/x]\eq{\fun{Term}}u$.
+            \item If $\neg(v\eq{\fun{Var}}x)$ and $\neg(v\eq{\fun{Var}}y)$, then both sides reduce to $v$.
+        \end{itemize}
+    \end{enumerate}
+\end{proof}
+
 \begin{prop}\label{prop:substitution-properties}
     Let\/ $x,y\colon\fun{Var}$, $t,u\colon\fun{Term}$, and\/ $\varphi\colon\fun{Form}$. Substitution satisfies the following properties:
     \begin{enumerate}[a),font=\upshape]
@@ -560,7 +1125,7 @@ We begin with a set-theoretic approach to build intuition.
     \begin{enumerate}[a),font=\upshape]
         \item 
         \begin{itemize}
-            \item If $\varphi\equiv \tau_1\doteq \tau_2$, then $(\tau_1\doteq \tau_2)[x/x]\equiv \tau_1[x/x]\doteq \tau_2[x/x]$. By Definition~\ref{defn:substitution}, this is $\tau_1\doteq \tau_2$.
+            \item If $\varphi\equiv\tau_1\doteq\tau_2$, then $(\tau_1\doteq \tau_2)[x/x]\equiv \tau_1[x/x]\doteq \tau_2[x/x]$. By Lemma~\ref{lem:term-substitution}, this is $\tau_1\doteq\tau_2$.
             
             \item For the propositional connectives, the definition of substitution distributes the operation directly over the subformulas. We illustrate this with the implication $\varphi \equiv\psi_1\imp\psi_2$. By definition
             \[
@@ -595,14 +1160,18 @@ We begin with a set-theoretic approach to build intuition.
             
             \item The propositional connective cases follow directly from the induction hypothesis.
             
-            \item Suppose $\varphi\equiv\forall y\,\psi$. If $x\eq{\fun{Var}}y$, the substitution of $t$ for $x$ returns $\varphi$, as stated. Otherwise, $\neg(x\eq{\fun{Var}}y)$. Without loss of generality, we may assume that the bound variable $y$ satisfies $\neg\fun{FV}(t)(y)$. Then the substitution yields $\forall y\,(\psi[t/x])$. Since Definition~\ref{defn:FV} establishes the identity
-            $
+            \item Suppose $\varphi\equiv\forall y\,\psi$. By the decidability of $\fun{Var}$ there are two possibilities:
+            
+            $-$ If $x\eq{\fun{Var}}y$, the substitution of $t$ for $x$ returns $\varphi$, as stated.
+            
+            $-$ If $\neg(x\eq{\fun{Var}}y)$, we may assume without loss of generality that the bound variable $y$ satisfies $\neg\fun{FV}(t)(y)$. Then the substitution yields $\forall y\,(\psi[t/x])$. Since Definition~\ref{defn:FV} establishes the identity
+            \[
                 \fun{FV}(\forall y\,\psi)(x)
                 \equiv
                 \fun{FV}(\psi)(x)
                 \times
                 \neg(x\eq{\fun{Var}}y),
-            $
+            \]
             and we have $\neg\fun{FV}(\forall y\,\psi)(x)$ by hypothesis, we deduce $\neg\fun{FV}(\psi)(x)$. Thus, the inductive hypothesis implies $\psi[t/x]\eq{\fun{Form}}\psi$, and so the substitution in $\varphi$ reduces to $\forall y\,\psi$.
         \end{itemize}
         
