@@ -736,7 +736,7 @@ We begin with a set-theoretic approach to build intuition.
 \begin{proof}
     Fix $y,z\colon\fun{Var}$ and proceed by structural induction on $\varphi\colon\fun{Form}$.
         \begin{itemize}
-        \item \textsc{Case} $\varphi\equiv\tau_1\doteq\tau_2$. By Definition~\ref{defn:substitution},
+        \item \textsc{Case} $\varphi\equiv\tau_1\doteq\tau_2$. By Definition~\ref{defn:ht-ren},
         \begin{align*}
             \fun{ht}(
                 \fun{ren}(\tau_1\doteq\tau_2,y,z)
@@ -860,10 +860,8 @@ We begin with a set-theoretic approach to build intuition.
         \[
             m\defeq\max\bigl(
                 x,
-                \max(
-                    \fun{maxVar}(t),
-                    \fun{maxVar}(\forall y\,\varphi)
-                )
+                \fun{maxVar}(t),
+                \fun{maxVar}(\forall y\,\varphi)
             \bigr)
             \quad\text{and}\quad
             z\defeq\fun{fresh}(m),
@@ -921,28 +919,43 @@ We begin with a set-theoretic approach to build intuition.
 
 
 \begin{rem}\label{rem:substitution-strong-recursion}
-    Capture-avoiding substitution cannot be defined directly by plain structural recursion $\fun{rec}_{\fun{Form}}$ on $\fun{Form}$. In the quantifier clause for $\forall y\,\varphi$, the structural recursor supplies the recursively computed result only for the immediate subformula $\varphi$. In the capturing branch, where both $\fun{FV}(\forall y\,\varphi)(x)$ and $\fun{FV}(t)(y)$ hold, the definition must instead apply substitution to the renamed formula $\fun{ren}(\varphi,y,z)$, which is a newly constructed formula rather than a syntactic subformula of $\forall y\,\varphi$.
+    In the capturing branch of Definition~\ref{defn:substitution} for $(\forall y\,\varphi)[t/x]$, where both $\fun{FV}(\forall y\,\varphi)(x)$ and $\fun{FV}(t)(y)$ hold, substitution is applied to the renamed formula $\fun{ren}(\varphi,y,z)$. Because $\fun{ren}(\varphi,y,z)$ is a newly constructed formula rather than an immediate syntactic subformula of $\forall y\,\varphi$, capture-avoiding substitution cannot be defined directly by plain structural recursion on $\fun{Form}$, which supplies recursively computed values only for immediate subformulas.
     
-    Defining substitution by strong recursion on the natural number $n\defeq\fun{ht}(\varphi)$ resolves this obstacle. At stage $n\colon\N$, the recursion hypothesis provides substitution for every formula $\chi\colon\fun{Form}$ satisfying $\fun{ht}(\chi)<n$. Consequently, whenever the clause for a formula $\phi$ invokes a recursive call on a formula $\chi$, well-typedness requires a proof of the strict inequality $\fun{ht}(\chi)<\fun{ht}(\phi)$. These obligations fall into two groups:
+    To overcome this obstacle, Definition~\ref{defn:substitution} proceeds by strong recursion on the natural number $n\defeq\fun{ht}(\phi)$. At stage $n\colon\N$, the recursion hypothesis provides substitution for every formula $\chi\colon\fun{Form}$ satisfying $\fun{ht}(\chi)<n$. Consequently, whenever the clause for a formula $\phi$ invokes a recursive call on a formula $\chi$, a witness of the strict inequality $\fun{ht}(\chi)<\fun{ht}(\phi)$ is required. There are two cases:
     \begin{itemize}
-        \item \textsl{Immediate subformulas.} The atomic clause $\tau_1\doteq\tau_2$ makes no recursive call on formulas. For $\neg\varphi$, $\varphi\imp\psi$, and the non-capturing branch of $\forall y\,\varphi$, the defining equations of $\fun{ht}$ directly yield
+        \item The atomic clause $\tau_1\doteq\tau_2$ makes no recursive call on formulas. For $\neg\varphi$, $\varphi\imp\psi$, and the non-capturing branch of $\forall y\,\varphi$, the defining equations of $\fun{ht}$ in Definitions~\ref{defn:ht-ren} directly yield
         \[
-            \fun{ht}(\varphi)<\fun{ht}(\neg\varphi),
-            \quad\fun{ht}(\varphi),\fun{ht}(\psi)
-                <\fun{ht}(\varphi\imp\psi),
-            \quad\fun{ht}(\varphi)<\fun{ht}(\forall y\,\varphi),
+            \fun{ht}(\varphi)
+            <
+            \fun{ht}(\neg\varphi),
+            \quad
+            \fun{ht}(\varphi),\fun{ht}(\psi)
+            <
+            \fun{ht}(\varphi\imp\psi),
+            \quad
+            \fun{ht}(\varphi)
+            <
+            \fun{ht}(\forall y\,\varphi).
         \]
-        without requiring induction on formulas.
         
-        \item \textsl{Renamed subformula.} In the capturing branch of $\forall y\,\varphi$, the non-structural call on $\fun{ren}(\varphi,y,z)$ requires a witness of $\fun{ht}(\fun{ren}(\varphi,y,z))<\fun{ht}(\forall y\,\varphi)$. Because direct variable renaming acts only on terms within atomic subformulas and leaves all logical connectives and quantifiers intact, ordinary structural induction on $\varphi$ constructs a path
+        \item In the capturing branch of $\forall y\,\varphi$, the non-structural call on $\fun{ren}(\varphi,y,z)$ requires a witness of $\fun{ht}\bigl(\fun{ren}(\varphi,y,z)\bigr)<\fun{ht}(\forall y\,\varphi)$. Lemma~\ref{lem:ren-preserves-ht} supplies a path
         \[
             p\colon\fun{ht}\bigl(
-                \fun{ren}(\varphi,y,z)
+            \fun{ren}(\varphi,y,z)
             \bigr)
             \eq\N
             \fun{ht}(\varphi).
         \]
-        Transporting the strict inequality $\fun{ht}(\varphi)<\fun{succ}(\fun{ht}(\varphi))\equiv\fun{ht}(\forall y\,\varphi)$ along $p^{-1}$ in the family $k\mapsto\bigl(k<\fun{ht}(\forall y\,\varphi)\bigr)$ yields the required witness of $\fun{ht}(\fun{ren}(\varphi,y,z))<\fun{ht}(\forall y\,\varphi)$.
+        Transporting an inhabitant $q\colon\fun{ht}(\varphi)<\fun{ht}(\forall y\,\varphi)\equiv\fun{succ}(\fun{ht}(\varphi))$) along $p^{-1}$ yields the required witness:
+        \[
+            \fun{transport}^{
+                k\,\mapsto k\,<\,\fun{ht}(\forall y\,\varphi)
+            }(p^{-1},q)
+            \colon
+                \fun{ht}(\fun{ren}(\varphi,y,z))
+                <
+                \fun{ht}(\forall y\,\varphi).
+        \]
     \end{itemize}
 \end{rem}
 
