@@ -9,6 +9,7 @@ on:
       - '**.sty'
       - '**.cls'
       - '.github/workflows/build-pdf.yml'
+      - '.md'
   workflow_dispatch:
 
 permissions:
