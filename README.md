@@ -4,7 +4,7 @@ A rigorous, constructive exposition and formalization of **first-order logic**, 
 
 This work develops formal deductive systems from the ground up as type-theoretic environments. It constructs well-formed terms, formulas, capture-avoiding substitution, and derivation trees as syntactic inductive types. The exposition culminates in the arithmetization of syntax and proof verification via **Gödel numbering**, demonstrating that logical proofs function as decidable mathematical relations.
 
-https://github.com/LeandroCaniglia/Formal_Systems/blob/main/Formal_Systems.pdf
+[Formal_Systems.pdf](https://github.com/LeandroCaniglia/Formal_Systems/blob/main/Formal_Systems.pdf)
 --- 
 
 ### **Key Topics & Coverage** 
