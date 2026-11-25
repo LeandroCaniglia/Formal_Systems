@@ -24,7 +24,7 @@ jobs:
       - name: Compile LaTeX book
         uses: xu-cheng/latex-action@v4
         with:
-          root_file: main.tex
+          root_file: 0-Formal-systems.tex
 
       - name: Commit updated PDF
         run: |
